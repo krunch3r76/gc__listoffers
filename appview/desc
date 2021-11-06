@@ -1,0 +1,1 @@
+this is the view. it runs in the main thread thus is prefixed "app"
