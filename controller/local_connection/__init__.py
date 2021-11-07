@@ -25,7 +25,10 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
                 results_d = await self.signal_cb(signal["id"], signal["msg"])
                 # result is in the form id: <id>, msg: { keys: [], rows: [] }
                 if results_d:
-                    self.q_out.put_nowait(results_d)
+                    print(f"[LocalConnection] got a result back from the callback and placing in queue to view!")
+                    msg_out = { "id": signal["id"], "msg": results_d }
+                    self.q_out.put_nowait(msg_out)
+
                 else:
                     errormsg="[LocalConnection::poll_loop] no results seen from callback"
                     print(errormsg, flush=True)

@@ -257,7 +257,7 @@ def build_database(con, offers):
         # com.pricing
         _insert_record('com.pricing', 'model', offer['props']['golem.com.pricing.model'])
         if offer['props']['golem.com.pricing.model'] == "linear":
-            # get linears coeffs given usage vecotr
+            # get linears coeffs given usage vector
             dict_of_linear_coeffs = dictionary_of_linear_coeffs(offer['props']['golem.com.usage.vector'], offer['props']['golem.com.pricing.model.linear.coeffs'])
             _insert_record('com.pricing.model.linear.coeffs', 'duration_sec', dict_of_linear_coeffs['duration_sec'], 'cpu_sec', dict_of_linear_coeffs['cpu_sec'], 'fixed', dict_of_linear_coeffs['fixed'])
 
@@ -268,10 +268,14 @@ def build_database(con, offers):
         # inf.cpu
         _insert_record('inf.cpu', 'architecture', props['golem.inf.cpu.architecture'], 'cores', props['golem.inf.cpu.cores'], 'threads', props['golem.inf.cpu.threads'])
         if props['golem.runtime.name']=="vm":
-            con.execute(
-                    "UPDATE 'inf.cpu' SET ( 'capabilities', 'model', 'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?"
-                    , (str(props['golem.inf.cpu.capabilities']), props['golem.inf.cpu.model'], props['golem.inf.cpu.vendor'], lastrow)
-                        )
+            try:
+                con.execute(
+                        "UPDATE 'inf.cpu' SET ( 'capabilities', 'model', 'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?"
+                        , (str(props['golem.inf.cpu.capabilities']), props['golem.inf.cpu.model'], props['golem.inf.cpu.vendor'], lastrow)
+                            )
+            except KeyError:
+                # some vm's don't provide capabilities
+                pass
 
         # node.debug
         _insert_record('node.debug', 'subnet', props['golem.node.debug.subnet'])
