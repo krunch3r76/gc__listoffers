@@ -21,6 +21,7 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
             except Empty:
                 signal = None
             if signal:
+                print(f"[LocalConnection] handling signal {signal}")
                 results_d = await self.signal_cb(signal["id"], signal["msg"])
                 # result is in the form id: <id>, msg: { keys: [], rows: [] }
                 if results_d:

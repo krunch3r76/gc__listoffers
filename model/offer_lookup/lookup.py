@@ -29,7 +29,6 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
         offers = []
         async with market_api.subscribe(dbuild.properties, dbuild.constraints) as subscription:
             offer_d = dict()
-            start_time=datetime.now().timestamp()
             ai = subscription.events().__aiter__()
             timed_out=False
             while not timed_out:
@@ -38,8 +37,7 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
                             ai.__anext__()
                             , timeout=1
                         ) # <class 'yapapi.rest.market.OfferProposal'>
-                    timestamp=datetime.now().timestamp()
-                    offer_d["timestamp"]=timestamp
+                    offer_d["timestamp"]=datetime.now() # note, naive
                     offer_d["offer-id"]=event.id
                     offer_d["issuer-address"]=event.issuer
                     offer_d["props"]=event.props # dict
