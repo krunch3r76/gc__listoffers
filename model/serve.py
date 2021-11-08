@@ -7,17 +7,25 @@ import asyncio
 from multiprocessing import Process, Queue
 from multiprocessing.queues import Empty
 import time
+import decimal
 
 offerLookup=OfferLookup()
 
 global_server_q_in = Queue()
 global_server_q_out = Queue()
 
+# https://stackoverflow.com/questions/1960516/python-json-serialize-a-decimal-object
+class DecimalEncoder(json.JSONEncoder):
+   def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return str(o)
+        return super(DecimalEncoder, self).default(o)
+
+
 class HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         content_len = int(self.headers.get('Content-Length'))
         b=self.rfile.read(content_len)
-        print(b.decode("utf-8"))
         msg=json.loads(b.decode("utf-8"))
         global_server_q_out.put_nowait(msg) # offer lookup on main thread
 
@@ -29,7 +37,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 signal = None
             if signal:
                 # relay signal as response
-                results_json = json.dumps(signal)
+                results_json = json.dumps(signal, cls=DecimalEncoder)
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -37,8 +45,12 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
             time.sleep(0.01)
 
-def _run_server(server_class=HTTPServer, handler_class=HTTPRequestHandler):
-    server_address=('localhost', 8000)
+
+
+
+
+def _run_server(ip, port, server_class=HTTPServer, handler_class=HTTPRequestHandler):
+    server_address=(ip, port)
 
     httpd=server_class(server_address, handler_class)
     httpd.serve_forever()
@@ -49,11 +61,11 @@ def _run_server(server_class=HTTPServer, handler_class=HTTPRequestHandler):
 
 
 
-async def async_run_server():
+async def async_run_server(ip, port):
     offerLookup=OfferLookup()
     q_out=global_server_q_in
     q_in=global_server_q_out
-    server_process=Process(target=_run_server, daemon=True)
+    server_process=Process(target=_run_server, args=(ip, port), daemon=True)
     server_process.start()
 
     while True:
@@ -68,15 +80,15 @@ async def async_run_server():
                 msg_out = { "id": signal["id"], "msg": results_d }
                 q_out.put_nowait(msg_out)
             else:
-                print("ERROR")
+                print("[async_run_server]::ERROR")
         await asyncio.sleep(0.01) 
 
 
-def run_server():
-    asyncio.run(async_run_server())
+def run_server(ip, port):
+    asyncio.run(async_run_server(ip, port))
 
 
 if __name__ == "main":
     # asyncio.run(async_run_server)
-    run_server()
+    run_server(ip="localhost", port=8000)
 
