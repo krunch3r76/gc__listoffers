@@ -85,6 +85,8 @@ async def async_run_server(ip, port):
 
 
 def run_server(ip, port):
+    if ip=='localhost':
+        ip=''
     asyncio.run(async_run_server(ip, port))
 
 
