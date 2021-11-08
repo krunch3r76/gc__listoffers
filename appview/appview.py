@@ -69,7 +69,7 @@ class AppView:
                 print(f"[AppView] got msg!")
                 results = msg_in["msg"]
                 print(msg_in["id"])
-            time.sleep(0.01)
+            time.sleep(0.1)
 
         for result in results:
             result=list(result)
@@ -112,7 +112,7 @@ class AppView:
                 print(f"[AppView] got msg!")
                 results = msg_in["msg"]
                 print(msg_in["id"])
-            time.sleep(0.01)
+            time.sleep(0.1)
         print(len(results)) 
         for result in results:
             result=list(result)

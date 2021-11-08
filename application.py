@@ -3,44 +3,52 @@
 from appview import AppView
 from controller.local_connection import LocalConnection
 from controller.remote_connection import RemoteConnection
-from multiprocessing import Process, Queue
-from model.offer_lookup import OfferLookup
-from model import run_server
+from multiprocessing import Process, Queue, freeze_support
 import sys
 
-ip="localhost"
-port=8000
+if __name__ == "__main__":
+    ip="localhost"
+    port=8000
+    SERVER=False
 
-# parse arguments
-if len(sys.argv) >=3:
-    ip=sys.argv[2]
-    if len(sys.argv) == 4:
-        port=int(sys.argv[3])
+    # parse arguments
+    if len(sys.argv) >=3:
+        ip=sys.argv[2]
+        if len(sys.argv) == 4:
+            port=int(sys.argv[3])
 
-if len(sys.argv) > 1:
-    if sys.argv[1]=="serve":
-        print(f"[application.py] launching server on {ip}:{port}")
-        run_server(ip, port)
-    
-    elif sys.argv[1]=="client":
-        print(f"[application.py] launching client to connect with {ip}:{port}")
-        # configure for controller to use remote connection
-        offerLookup=OfferLookup()
-        appView=AppView()
-        remoteConnection = RemoteConnection(appView.q_in, appView.q_out, ip, port)
-        controller_process = Process(target=remoteConnection, daemon=True)
-        controller_process.start()
-        appView()
+    if len(sys.argv) > 1:
+        if sys.argv[1]=="serve":
+            from model import run_server
+            from model.offer_lookup import OfferLookup
+            SERVER=True
+            from controller.remote_connection import RemoteConnection
+            print(f"[application.py] launching server on {ip}:{port}")
+            run_server(ip, port)
+        
+        elif sys.argv[1]=="client":
+            from controller.local_connection import LocalConnection
+            print(f"[application.py] launching client to connect with {ip}:{port}")
+            # configure for controller to use remote connection
+            # offerLookup=OfferLookup(SERVER)
+            appView=AppView()
+            remoteConnection = RemoteConnection(appView.q_in, appView.q_out, ip, port)
+            controller_process = Process(target=remoteConnection, daemon=True)
+            # freeze_support()
+            controller_process.start()
+            appView()
 
+        else:
+            print("invalid arguments", file=sys.stderr)
     else:
-        print("invalid arguments", file=sys.stderr)
-else:
-    # configure for controller to use local connection
-    offerLookup=OfferLookup()
-    appView=AppView()
+        # configure for controller to use local connection
+        from model.offer_lookup import OfferLookup
+        offerLookup=OfferLookup(SERVER)
+        appView=AppView()
 
-    localConnection = LocalConnection(appView.q_in, appView.q_out, offerLookup)
-    controller_process = Process(target=localConnection, daemon=True)
-    controller_process.start()
+        localConnection = LocalConnection(appView.q_in, appView.q_out, offerLookup)
+        controller_process = Process(target=localConnection, daemon=True)
+        # freeze_support()
+        controller_process.start()
 
-    appView()
+        appView()
