@@ -17,7 +17,7 @@ class AppView:
     def __init__(self):
         self.q_out=Queue()
         self.q_in=Queue()
-        self.gen_request_number = itertools.count(1)
+        # self.gen_request_number = itertools.count(1)
         self.tree = None
         self.session_id='0'
         self.order_by_last="'node.id'.name"
@@ -27,6 +27,7 @@ class AppView:
         self.cpusec_entry_var = StringVar()
         self.durationsec_entry = None
         self.durationsec_entry_var = StringVar()
+        self.resultcount_var = StringVar(value="0")
 
         decimal.getcontext().prec=7
 
@@ -55,9 +56,6 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
-        print(ss)
-
-
         self.q_out.put_nowait({"id": self.session_id, "msg": ss})
 
         results=None
@@ -71,19 +69,14 @@ class AppView:
                 print(f"[AppView] got msg!")
                 results = msg_in["msg"]
                 print(msg_in["id"])
-                # for result in results:
-                    # result=list(result)
-                    # print(f"name: {result[1]}, address: {result[2]}, cpu_hr: {result[3]*3600}, duration_hr: {result[4]*3600}, fixed: {result[5]}, timestamp: {result[6]}\n")
-                # print(f"count: {len(results)}")
             time.sleep(0.01)
-
-        print(f"[AppView::_update_cmd] length of args is {len(args)}")
-        print(f"{args[0]}")
-        print(f"[AppView::_update_cmd()] displaying {len(results)} results") 
 
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+
+        self.resultcount_var.set(str(len(results)))
+
 
     def _refresh_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
@@ -108,7 +101,6 @@ class AppView:
         print(ss)
         self.session_id=str(datetime.now().timestamp())
         self.q_out.put_nowait({"id": self.session_id, "msg": ss})
-        # self.q_out.put_nowait({"id": next(self.gen_request_number), "msg": ss})
         results=None
         msg_in = None
         while not msg_in:
@@ -120,15 +112,16 @@ class AppView:
                 print(f"[AppView] got msg!")
                 results = msg_in["msg"]
                 print(msg_in["id"])
-                # for result in results:
-                    # result=list(result)
-                    # print(f"name: {result[1]}, address: {result[2]}, cpu_hr: {result[3]*3600}, duration_hr: {result[4]*3600}, fixed: {result[5]}, timestamp: {result[6]}\n")
-                # print(f"count: {len(results)}")
             time.sleep(0.01)
         print(len(results)) 
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+
+        self.resultcount_var.set(str(len(results)))
+
+
+
 
     def _cb_cpusec_checkbutton(self, *args):
         if self.cpusec_entry.instate(['disabled']):
@@ -148,8 +141,16 @@ class AppView:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
 
+        mainframe=ttk.Frame(root)
+        mainframe.grid(column=0, row=0, sticky="news")
+        mainframe.columnconfigure(0, weight=1)
+        mainframe.rowconfigure(0, weight=1)
+
         inputframe=ttk.Frame(root)
-        inputframe.grid(column=0,row=0, sticky="news")
+        inputframe.grid(column=0,row=2, sticky="news")
+
+        statusframe=ttk.Frame(root)
+        statusframe.grid(column=0,row=1, stick="news")
 
         #cpusec check
         ttk.Checkbutton(inputframe, text="max cpu(/sec)", command=self._cb_cpusec_checkbutton).grid(column=0,row=0, sticky="w")
@@ -165,13 +166,10 @@ class AppView:
         self.durationsec_entry.state(['disabled'])
         self.durationsec_entry.grid(column=3,row=0,stick="w")
         
+        ttk.Button(statusframe, text="Refresh", command=self._refresh_cmd).grid(column=0,row=0)
+        ttk.Label(statusframe, text="count:").grid(column=1,row=0)
+        ttk.Label(statusframe, textvariable=self.resultcount_var).grid(column=2,row=0)
 
-        mainframe=ttk.Frame(root)
-        mainframe.grid(column=0, row=1, sticky="news")
-        mainframe.columnconfigure(0, weight=1)
-        mainframe.rowconfigure(0, weight=1)
-
-        ttk.Button(mainframe, text="Refresh", command=self._refresh_cmd).grid(column=1,row=2)
 
 
         tree = ttk.Treeview(mainframe, columns=('name','address','cpu', 'duration', 'fixed'))
