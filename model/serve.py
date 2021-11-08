@@ -10,8 +10,8 @@ import time
 
 offerLookup=OfferLookup()
 
-global_request_q_in = Queue()
-global_request_q_out = Queue()
+global_server_q_in = Queue()
+global_server_q_out = Queue()
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -19,12 +19,12 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         b=self.rfile.read(content_len)
         print(b.decode("utf-8"))
         msg=json.loads(b.decode("utf-8"))
-        global_request_q_out.put_nowait(msg) # offer lookup on main thread
+        global_server_q_out.put_nowait(msg) # offer lookup on main thread
 
         signal=None
         while not signal:
             try:
-                signal = global_request_q_in.get_nowait() # offer lookup's dictionary came back
+                signal = global_server_q_in.get_nowait() # offer lookup's dictionary came back
             except Empty:
                 signal = None
             if signal:
@@ -37,7 +37,7 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
             time.sleep(0.01)
 
-def run_server(server_class=HTTPServer, handler_class=HTTPRequestHandler):
+def _run_server(server_class=HTTPServer, handler_class=HTTPRequestHandler):
     server_address=('localhost', 8000)
 
     httpd=server_class(server_address, handler_class)
@@ -49,11 +49,11 @@ def run_server(server_class=HTTPServer, handler_class=HTTPRequestHandler):
 
 
 
-async def main():
+async def async_run_server():
     offerLookup=OfferLookup()
-    q_out=global_request_q_in
-    q_in=global_request_q_out
-    server_process=Process(target=run_server, daemon=True)
+    q_out=global_server_q_in
+    q_in=global_server_q_out
+    server_process=Process(target=_run_server, daemon=True)
     server_process.start()
 
     while True:
@@ -71,5 +71,12 @@ async def main():
                 print("ERROR")
         await asyncio.sleep(0.01) 
 
-asyncio.run(main())
+
+def run_server():
+    asyncio.run(async_run_server())
+
+
+if __name__ == "main":
+    # asyncio.run(async_run_server)
+    run_server()
 
