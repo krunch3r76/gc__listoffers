@@ -1,9 +1,7 @@
-from dataclasses import dataclass
 from multiprocessing import Queue
 from multiprocessing.queues import Empty
 import asyncio
 
-@dataclass
 class LocalConnection(): # later make subclass of abstract ControllerConnection
     """Class for connecting view to local model"""
     def __init__(self, q_out, q_in, signal_cb):
