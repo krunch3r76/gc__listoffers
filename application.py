@@ -43,7 +43,7 @@ if __name__ == "__main__":
     else:
         # configure for controller to use local connection
         from model.offer_lookup import OfferLookup
-        offerLookup=OfferLookup(SERVER)
+        offerLookup=OfferLookup()
         appView=AppView()
 
         localConnection = LocalConnection(appView.q_in, appView.q_out, offerLookup)
