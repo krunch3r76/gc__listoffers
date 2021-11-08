@@ -3,6 +3,7 @@ import sqlite3
 import sys # debug
 import datetime
 import itertools
+import decimal
 from decimal import Decimal
 
 def _create_table_statement_1(tablename, cols_and_types):
@@ -36,18 +37,16 @@ def _create_table_statement(tablename, cols_and_types):
 
 
 def create_database():
-    """
     def adapt_decimal(d):
         return str(d)
 
     def convert_decimal(s):
-        return Decimal(s)
+        return Decimal(s.decode('utf-8'))
 
-    sqlite3.register_adapter(D, adapt_decimal)
-    sqlite3.register_converter("decimal", convert_decimal)
-    """
+    sqlite3.register_adapter(Decimal, adapt_decimal)
+    sqlite3.register_converter("DECIMAL", convert_decimal)
 
-
+    decimal.getcontext().prec=24
 
     """return a new in-memory connection"""
     con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES, isolation_level=None)
@@ -61,7 +60,7 @@ def create_database():
     execute_create('com.payment.debit-notes',   [ 'accept_timeout INTEGER' ] )
     execute_create('com.payment.platform',      [ 'kind TEXT', 'address TEXT' ] )
     execute_create('com.pricing',               [ 'model TEXT' ] )
-    execute_create('com.pricing.model.linear.coeffs',   [ "duration_sec FLOAT", "cpu_sec FLOAT", "fixed FLOAT" ])
+    execute_create('com.pricing.model.linear.coeffs',   [ "duration_sec DECIMAL", "cpu_sec DECIMAL", "fixed FLOAT" ])
     execute_create('com.scheme',                [ 'name TEXT', 'interval_sec INTEGER' ] )
     execute_create('inf.cpu',                   [ 'architecture TEXT', 'capabilities TEXT DEFAULT "[]"', 'cores INTEGER', 'model TEXT DEFAULT ""', 'threads INTEGER', 'vendor TEXT DEFAULT ""' ] )
     execute_create('inf.mem',                   [ 'gib FLOAT' ] )
@@ -259,7 +258,7 @@ def build_database(con, offers):
         if offer['props']['golem.com.pricing.model'] == "linear":
             # get linears coeffs given usage vector
             dict_of_linear_coeffs = dictionary_of_linear_coeffs(offer['props']['golem.com.usage.vector'], offer['props']['golem.com.pricing.model.linear.coeffs'])
-            _insert_record('com.pricing.model.linear.coeffs', 'duration_sec', dict_of_linear_coeffs['duration_sec'], 'cpu_sec', dict_of_linear_coeffs['cpu_sec'], 'fixed', dict_of_linear_coeffs['fixed'])
+            _insert_record('com.pricing.model.linear.coeffs', 'duration_sec', Decimal(dict_of_linear_coeffs['duration_sec']), 'cpu_sec', Decimal(dict_of_linear_coeffs['cpu_sec']), 'fixed', Decimal(dict_of_linear_coeffs['fixed']))
 
         # com.scheme.payu
         scheme_name, scheme_field_name = find_scheme(offer['props'])
