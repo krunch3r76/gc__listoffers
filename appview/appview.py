@@ -36,7 +36,6 @@ class AppView:
 
     def _update_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
-
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
 
@@ -56,7 +55,7 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
-        self.q_out.put_nowait({"id": self.session_id, "msg": ss})
+        self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         results=None
         msg_in = None
@@ -80,6 +79,7 @@ class AppView:
 
     def _refresh_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
+        self.tree.update_idletasks()
 
 
         ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, max('offers'.ts)" \
@@ -98,9 +98,11 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
-        print(ss)
+        # print(ss)
         self.session_id=str(datetime.now().timestamp())
-        self.q_out.put_nowait({"id": self.session_id, "msg": ss})
+        msg_out = {"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} }
+        # print(f"[appview.py] {msg_out})")
+        self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
         results=None
         msg_in = None
         while not msg_in:
@@ -165,10 +167,12 @@ class AppView:
         # radio
         radio_frame=ttk.Frame(refreshframe)
         radio_frame.grid(column=0,row=0,stick="w")
-        publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta')
-        publicbeta_rb.state(['selected'])
+        #       ...publicbeta
+        publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
+        self.subnet_var.set('public-beta')
         publicbeta_rb.grid(column=0,row=0)
-        ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta').grid(column=1,row=0)
+        #       ...devnetbeta
+        ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta',command=self._refresh_cmd).grid(column=1,row=0)
         
         # refresh button
         ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd).grid(column=0,row=1,sticky="w,e")

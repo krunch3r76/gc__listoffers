@@ -34,9 +34,8 @@ class RemoteConnection():
             if signal:
                 print(f"[RemoteConnection] handling signal {signal}")
                 conn = http.client.HTTPConnection(self.addr, port=self.port)
-                body={ "id": signal["id"], "sql": signal["msg"] }
+                body={ "id": signal["id"], "msg": { "subnet-tag": signal["msg"]["subnet-tag"], "sql": signal["msg"]["sql"]} }
                 body_as_json=json.dumps(body)
-                print(body_as_json)
                 conn.request("GET", "/", body=body_as_json, headers={"Content-Length": len(body_as_json)})
                 r1 = conn.getresponse()
                 content=r1.read()

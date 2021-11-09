@@ -11,28 +11,37 @@ import decimal
 
 offerLookup=OfferLookup()
 
-global_server_q_in = Queue()
-global_server_q_out = Queue()
 
-# https://stackoverflow.com/questions/1960516/python-json-serialize-a-decimal-object
-class DecimalEncoder(json.JSONEncoder):
-   def default(self, o):
-        if isinstance(o, decimal.Decimal):
-            return str(o)
-        return super(DecimalEncoder, self).default(o)
+# kludgy message passing with HTTPRequestHandler by setting global queues
+g_handler_q_in = Queue()
+g_handler_q_out = Queue()
+
+
+
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
+    """process signals in the form of { id:, msg: { subnet:, sql: } } by placing into """
+
+
+    # https://stackoverflow.com/questions/1960516/python-json-serialize-a-decimal-object
+    class DecimalEncoder(json.JSONEncoder):
+       def default(self, o):
+            if isinstance(o, decimal.Decimal):
+                return str(o)
+            return super(DecimalEncoder, self).default(o)
+
+
     def do_GET(self):
         content_len = int(self.headers.get('Content-Length'))
         b=self.rfile.read(content_len)
         msg=json.loads(b.decode("utf-8"))
-        global_server_q_out.put_nowait(msg) # offer lookup on main thread
+        g_handler_q_out.put_nowait(msg) # relay the received content to async_run_server
 
         signal=None
         while not signal:
             try:
-                signal = global_server_q_in.get_nowait() # offer lookup's dictionary came back
+                signal = g_handler_q_in.get_nowait() # offer lookup's dictionary came back
             except Empty:
                 signal = None
             if signal:
@@ -63,18 +72,19 @@ def _run_server(ip, port, server_class=HTTPServer, handler_class=HTTPRequestHand
 
 async def async_run_server(ip, port):
     offerLookup=OfferLookup()
-    q_out=global_server_q_in
-    q_in=global_server_q_out
+    # identify the queues for message passing with HTTPRequestHandler
+    q_out=g_handler_q_in
+    q_in=g_handler_q_out
     server_process=Process(target=_run_server, args=(ip, port), daemon=True)
     server_process.start()
 
     while True:
         try:
-            signal = q_in.get_nowait() # get the id and sql over the remote wire
+            signal = q_in.get_nowait() # get http body json over the remote wire via HTTPRequestHandler
         except Empty:
             signal = None
         if signal: # interact with yagna to lookup the offer
-            results_d = await offerLookup(signal["id"], signal["sql"])
+            results_d = await offerLookup(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"])
 
             if results_d:
                 msg_out = { "id": signal["id"], "msg": results_d }

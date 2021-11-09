@@ -9,7 +9,6 @@ import sys
 if __name__ == "__main__":
     ip="localhost"
     port=8000
-    SERVER=False
 
     # parse arguments
     if len(sys.argv) >=3:
@@ -21,7 +20,6 @@ if __name__ == "__main__":
         if sys.argv[1]=="serve":
             from model import run_server
             from model.offer_lookup import OfferLookup
-            SERVER=True
             from controller.remote_connection import RemoteConnection
             print(f"[application.py] launching server on {ip}:{port}")
             run_server(ip, port)
