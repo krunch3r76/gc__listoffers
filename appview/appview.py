@@ -28,7 +28,7 @@ class AppView:
         self.durationsec_entry = None
         self.durationsec_entry_var = StringVar()
         self.resultcount_var = StringVar(value="0")
-
+        self.subnet_var = StringVar()
         decimal.getcontext().prec=7
 
 
@@ -145,36 +145,70 @@ class AppView:
         mainframe.grid(column=0, row=0, sticky="news")
         mainframe.columnconfigure(0, weight=1)
         mainframe.rowconfigure(0, weight=1)
+        mainframe['padding']=(0,0,0,10)
 
-        inputframe=ttk.Frame(root)
-        inputframe.grid(column=0,row=2, sticky="news")
+        subframe=ttk.Frame(root)
+        subframe.grid(column=0, row=1, sticky="news")
+        subframe.rowconfigure(0, weight=1)
+        subframe['padding']=(10)
+        # subframe['padding']=(0,0,0,10)
 
-        statusframe=ttk.Frame(root)
-        statusframe.grid(column=0,row=1, stick="news")
+        refreshframe=ttk.Frame(subframe)
+        refreshframe.grid(column=0,row=1, stick="news")
+        refreshframe.columnconfigure(0, weight=0)
+        refreshframe.columnconfigure(1, weight=0)
+        refreshframe.columnconfigure(2, weight=1)
+        refreshframe['padding']=(0, 0, 0, 10)
 
-        #cpusec check
-        ttk.Checkbutton(inputframe, text="max cpu(/sec)", command=self._cb_cpusec_checkbutton).grid(column=0,row=0, sticky="w")
-        #cpusec entry
-        self.cpusec_entry = ttk.Entry(inputframe,textvariable=self.cpusec_entry_var)
+
+
+        # radio
+        radio_frame=ttk.Frame(refreshframe)
+        radio_frame.grid(column=0,row=0,stick="w")
+        publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta')
+        publicbeta_rb.state(['selected'])
+        publicbeta_rb.grid(column=0,row=0)
+        ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta').grid(column=1,row=0)
+        
+        # refresh button
+        ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd).grid(column=0,row=1,sticky="w,e")
+
+        # count
+        count_frame=ttk.Frame(subframe)
+        count_frame.grid(column=1,row=1, sticky="w")
+        ttk.Label(count_frame, text="count:", padding=(0,0,0,0)).grid(column=1,row=1, sticky="w")
+        ttk.Label(count_frame, textvariable=self.resultcount_var).grid(column=2,row=1, sticky="w")
+
+
+        #cpusec
+        cpusec_entryframe=ttk.Frame(subframe)
+        cpusec_entryframe.grid(column=0,row=2,stick="w")
+        cpusec_entryframe['padding']=(0,0,50,0)
+        #cpusec .check
+        cbMaxCpuVar = StringVar()
+        ttk.Checkbutton(cpusec_entryframe, text="max cpu(/sec)", command=self._cb_cpusec_checkbutton, onvalue='maxcpu', offvalue='nomaxcpu', variable=cbMaxCpuVar, padding=(0,0,5,0)).grid(column=0,row=0, sticky="w")
+        #     ...entry
+        self.cpusec_entry = ttk.Entry(cpusec_entryframe,textvariable=self.cpusec_entry_var,width=12)
         self.cpusec_entry.state(['disabled'])
         self.cpusec_entry.grid(column=1,row=0,stick="w")
 
-        #durationsec check
-        ttk.Checkbutton(inputframe, text="max duration/sec)", command=self._cb_durationsec_checkbutton).grid(column=2,row=0,sticky="w")
-        #durationsec entry
-        self.durationsec_entry = ttk.Entry(inputframe,textvariable=self.durationsec_entry_var)
+        #dursec
+        dursec_entryframe=ttk.Frame(subframe)
+        dursec_entryframe.grid(column=1,row=2,stick="w")
+        #dursec .check
+        cbDurSecVar=StringVar()
+        ttk.Checkbutton(dursec_entryframe, text="max duration(/sec)", command=self._cb_durationsec_checkbutton, variable=cbDurSecVar, padding=(0,0,5,0)).grid(column=0,row=0,sticky="w")
+        #     ...entry
+        self.durationsec_entry = ttk.Entry(dursec_entryframe,textvariable=self.durationsec_entry_var, width=12)
         self.durationsec_entry.state(['disabled'])
-        self.durationsec_entry.grid(column=3,row=0,stick="w")
+        self.durationsec_entry.grid(column=1,row=0,stick="w")
         
-        ttk.Button(statusframe, text="Refresh", command=self._refresh_cmd).grid(column=0,row=0)
-        ttk.Label(statusframe, text="count:").grid(column=1,row=0)
-        ttk.Label(statusframe, textvariable=self.resultcount_var).grid(column=2,row=0)
 
 
 
         tree = ttk.Treeview(mainframe, columns=('name','address','cpu', 'duration', 'fixed'))
         self.tree = tree
-        self.tree.grid(column=0,row=1, columnspan=2, sticky="news")
+        self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
         tree.column('#0', width=0, stretch=NO)
         tree.heading('name', text='name'
                 , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
