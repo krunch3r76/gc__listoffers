@@ -195,6 +195,7 @@ class AppView:
         self.cpusec_entry = ttk.Entry(cpusec_entryframe,textvariable=self.cpusec_entry_var,width=12)
         self.cpusec_entry.state(['disabled'])
         self.cpusec_entry.grid(column=1,row=0,stick="w")
+        self.cpusec_entry.bind('<FocusOut>', lambda e: self._refresh_cmd())
 
         #dursec
         dursec_entryframe=ttk.Frame(subframe)
