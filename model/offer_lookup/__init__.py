@@ -28,5 +28,4 @@ class OfferLookup():
             
         rows = self._con.execute(sql).fetchall()
         print(f"[OfferLookup::__call__()] returning rows")
-        print(rows)
         return rows

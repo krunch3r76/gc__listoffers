@@ -19,7 +19,7 @@ class AppView:
         self.q_in=Queue()
         # self.gen_request_number = itertools.count(1)
         self.tree = None
-        self.session_id='0'
+        self.session_id=None
         self.order_by_last="'node.id'.name"
 
         self.root=Tk()
@@ -30,12 +30,15 @@ class AppView:
         self.resultcount_var = StringVar(value="0")
         self.subnet_var = StringVar()
         decimal.getcontext().prec=7
-
-
+        # self.last_max_cpu_entry_value=None
+        # self.last_max_dur_entry_value=None
 
 
     def _update_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
+        if not self.session_id:
+            return
+
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
 
@@ -130,12 +133,14 @@ class AppView:
             self.cpusec_entry.state(['!disabled'])
         else:
             self.cpusec_entry.state(['disabled'])
+        self._update_cmd()
 
     def _cb_durationsec_checkbutton(self, *args):
         if self.durationsec_entry.instate(['disabled']):
             self.durationsec_entry.state(['!disabled'])
         else:
             self.durationsec_entry.state(['disabled'])
+        self._update_cmd()
 
     def __call__(self):
         root=self.root
@@ -195,8 +200,8 @@ class AppView:
         self.cpusec_entry = ttk.Entry(cpusec_entryframe,textvariable=self.cpusec_entry_var,width=12)
         self.cpusec_entry.state(['disabled'])
         self.cpusec_entry.grid(column=1,row=0,stick="w")
-        self.cpusec_entry.bind('<FocusOut>', lambda e: self._refresh_cmd())
-
+        self.cpusec_entry.bind('<FocusOut>', lambda e: self._update_cmd())
+        self.cpusec_entry.bind('<Return>', lambda e: root.focus_set())
         #dursec
         dursec_entryframe=ttk.Frame(subframe)
         dursec_entryframe.grid(column=1,row=2,stick="w")
@@ -207,6 +212,8 @@ class AppView:
         self.durationsec_entry = ttk.Entry(dursec_entryframe,textvariable=self.durationsec_entry_var, width=12)
         self.durationsec_entry.state(['disabled'])
         self.durationsec_entry.grid(column=1,row=0,stick="w")
+        self.durationsec_entry.bind('<FocusOut>', lambda e: self._update_cmd())
+        self.durationsec_entry.bind('<Return>', lambda e: root.focus_set())
         
 
 
