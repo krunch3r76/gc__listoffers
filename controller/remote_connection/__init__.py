@@ -32,7 +32,7 @@ class RemoteConnection():
             except Empty:
                 signal = None
             if signal:
-                print(f"[RemoteConnection] handling signal {signal}")
+                # print(f"[RemoteConnection] handling signal {signal}")
                 conn = http.client.HTTPConnection(self.addr, port=self.port)
                 body={ "id": signal["id"], "msg": { "subnet-tag": signal["msg"]["subnet-tag"], "sql": signal["msg"]["sql"]} }
                 body_as_json=json.dumps(body)
@@ -41,7 +41,7 @@ class RemoteConnection():
                 content=r1.read()
                 results_d=json.loads(content.decode("utf-8")) # this is in the form { id, msg }
                 if results_d:
-                    print(f"[RemoteConnection] got a result back from the callback and placing in queue to view!")
+                    # print(f"[RemoteConnection] got a result back from the callback and placing in queue to view!")
                     self.q_out.put_nowait(results_d)
                 else:
                     errormsg="[LocalConnection::poll_loop] no results seen from callback"

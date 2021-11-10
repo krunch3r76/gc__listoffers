@@ -57,9 +57,9 @@ class AppView:
             except multiprocessing.queues.Empty:
                 msg_in = None
             if msg_in:
-                print(f"[AppView] got msg!")
+                # print(f"[AppView] got msg!")
                 results = msg_in["msg"]
-                print(msg_in["id"])
+                # print(msg_in["id"])
             time.sleep(0.1)
         results_json = json.loads(results[0][0])
         props=results_json["props"]
@@ -107,9 +107,9 @@ class AppView:
             except multiprocessing.queues.Empty:
                 msg_in = None
             if msg_in:
-                print(f"[AppView] got msg!")
+                # print(f"[AppView] got msg!")
                 results = msg_in["msg"]
-                print(msg_in["id"])
+                # print(msg_in["id"])
             time.sleep(0.1)
 
         for result in results:
@@ -156,10 +156,8 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
-        # print(ss)
         self.session_id=str(datetime.now().timestamp())
         msg_out = {"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} }
-        # print(f"[appview.py] {msg_out})")
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
         results=None
         msg_in = None
@@ -169,11 +167,11 @@ class AppView:
             except multiprocessing.queues.Empty:
                 msg_in = None
             if msg_in:
-                print(f"[AppView] got msg!")
+                # print(f"[AppView] got msg!")
                 results = msg_in["msg"]
-                print(msg_in["id"])
+                # print(msg_in["id"])
             time.sleep(0.1)
-        print(len(results)) 
+        # print(len(results)) 
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
@@ -295,7 +293,7 @@ class AppView:
         def do_popup(event):
             try:
                 # identify the coordinates of tree
-                print(tree.state())
+                # print(tree.state())
                 if 'hover' not in tree.state():
                 # if tree.state()[0] != 'hover':
                     return
@@ -303,7 +301,7 @@ class AppView:
                 if region != 'cell':
                     menu.grab_release()
                     return
-                print(f"{tree.item( tree.identify_row(event.y) )['values']}")
+                # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
                 menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
                 self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
                 menu.post(event.x_root, event.y_root)

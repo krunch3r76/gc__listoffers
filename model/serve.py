@@ -25,14 +25,16 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
 
 
     # https://stackoverflow.com/questions/1960516/python-json-serialize-a-decimal-object
-    class DecimalEncoder(json.JSONEncoder):
-       def default(self, o):
-            if isinstance(o, decimal.Decimal):
-                return str(o)
-            return super(DecimalEncoder, self).default(o)
 
 
     def do_GET(self):
+
+        class DecimalEncoder(json.JSONEncoder):
+           def default(self, o):
+                if isinstance(o, decimal.Decimal):
+                    return str(o)
+                return super(DecimalEncoder, self).default(o)
+
         content_len = int(self.headers.get('Content-Length'))
         b=self.rfile.read(content_len)
         msg=json.loads(b.decode("utf-8"))

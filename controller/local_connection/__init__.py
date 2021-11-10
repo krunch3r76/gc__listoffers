@@ -19,10 +19,10 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
             except Empty:
                 signal = None
             if signal:
-                print(f"[LocalConnection] handling signal {signal}")
+                # print(f"[LocalConnection] handling signal {signal}")
                 results_d = await self.signal_cb(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"]) # signal from view
                 if results_d:
-                    print(f"[LocalConnection] got a result back from the callback and placing in queue to view!")
+                    # print(f"[LocalConnection] got a result back from the callback and placing in queue to view!")
                     # revise callback, results should contain the id, as is the case with the remote server TODO
                     msg_out = { "id": signal["id"], "msg": results_d }
                     self.q_out.put_nowait(msg_out)

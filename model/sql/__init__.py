@@ -130,31 +130,6 @@ def build_database(con, offers):
     required by OfferLookup
     """
 
-    """
-    def insert_record_1(offer, offerRowID, tablename, unique_cols, colvals):
-        def to_csv():
-            csv=""
-            for unique_col in unique_cols:
-                csv=csv + unique_col + ", "
-            
-            csv = csv[:-2]
-            return csv
-
-        def to_placeholders():
-            placeholder_str="?, " # one for the offerRowID
-            for _ in range(len(unique_cols)):
-                placeholder_str+="?, "
-            return placeholder_str[:-2]
-
-        insert_statement=f"INSERT INTO '{tablename}' ('offerRowID', '{to_csv()}') VALUES ({to_placeholders()})"
-        print()
-        print(f"offerRowID: {offerRowID}")
-        print(f"colvals: {colvals}")
-        astuple=(offerRowID, *colvals)
-        print(f"astuple: {astuple}")
-        print(f"insert_statement: {insert_statement}, {astuple}")
-        con.execute(insert_statement, astuple )
-    """
 
 
     def insert_record(offer, offerRowID, tablename, *names_vals):
@@ -311,4 +286,3 @@ def build_database(con, offers):
 
         _insert_record('extra', 'json', json.dumps(offer,cls=DatetimeEncoder))
 
-    # debug_print_table('activity.caps.transfer')
