@@ -249,8 +249,39 @@ class AppView:
 
         style.configure("Treeview.Heading", foreground=DIC411)
         tree = ttk.Treeview(mainframe, columns=('name','address','cpu', 'duration', 'fixed'))
-        # tree.tag_configure('Theading', background='green')
         self.tree = tree
+
+        root.option_add('*tearOff', FALSE)
+
+
+
+        menu = Menu(root)
+        menu.add_command(label='<name>')
+        menu.entryconfigure(0, state=DISABLED)
+        menu.add_separator()
+        menu.add_command(label='view raw')
+        menu.add_command(label='exit menu')
+        def do_popup(event):
+            try:
+                # identify the coordinates of tree
+                print(tree.state())
+                if 'hover' not in tree.state():
+                # if tree.state()[0] != 'hover':
+                    return
+                region = tree.identify_region(event.x, event.y)
+                if region != 'cell':
+                    menu.grab_release()
+                    return
+                menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][0])
+                menu.post(event.x_root, event.y_root)
+            except IndexError:
+                pass
+            finally:
+                menu.grab_release()
+        # root.bind('<ButtonRelease-3>', do_popup )
+        root.bind('<3>', do_popup )
+
+        # tree.tag_configure('Theading', background='green')
         self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
         tree.column('#0', width=0, stretch=NO)
         tree.heading('name', text='name', anchor="w" 

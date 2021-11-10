@@ -69,8 +69,7 @@ def create_database():
     execute_create('node.id',                   [ 'name TEXT'] )
     execute_create('runtime',                   [ 'name TEXT', 'version TEXT', 'capabilities DEFAULT "[]"'] )
     execute_create('srv.caps',                  [ 'multi_activity TEXT' ] )
-
-
+    con.execute("create table extra ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER, json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
     return con
 
 
@@ -127,8 +126,10 @@ def build_database(con, offers):
     { 'timestamp': FLOAT/STR, 'offer-id': <hash:str>, 'issuer-address': <0xhash:str>,
         'props': { ... }
     }
+    required by OfferLookup
     """
 
+    """
     def insert_record_1(offer, offerRowID, tablename, unique_cols, colvals):
         def to_csv():
             csv=""
@@ -152,7 +153,7 @@ def build_database(con, offers):
         print(f"astuple: {astuple}")
         print(f"insert_statement: {insert_statement}, {astuple}")
         con.execute(insert_statement, astuple )
-
+    """
 
 
     def insert_record(offer, offerRowID, tablename, *names_vals):

@@ -51,6 +51,8 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
 
 
 async def list_offers(subnet_tag: str):
+    """scan yagna for offers then return results in a dictionary"""
+    """called by OfferLookup"""
     offers = None
     offers = await _list_offers(
                 Configuration()
