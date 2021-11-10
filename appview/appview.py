@@ -12,6 +12,8 @@ from functools import partial
 
 import time #debug
 
+DIC411="#003366"
+DIC544="#4D4D4D"
 
 class AppView:
     def __init__(self):
@@ -23,11 +25,17 @@ class AppView:
         self.order_by_last="'node.id'.name"
 
         self.root=Tk()
+        s = ttk.Style()
+        # self.root.tk.call('source', './Sun-Valley-ttk-theme/sun-valley.tcl')
+        self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
+        s.theme_use('forest-light')
         self.cpusec_entry = None
         self.cpusec_entry_var = StringVar()
         self.durationsec_entry = None
         self.durationsec_entry_var = StringVar()
         self.resultcount_var = StringVar(value="0")
+        self.resultdiffcount_var = StringVar(value="")
+        self.session_resultcount = None
         self.subnet_var = StringVar()
         decimal.getcontext().prec=7
         # self.last_max_cpu_entry_value=None
@@ -77,7 +85,23 @@ class AppView:
             result=list(result)
             self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
-        self.resultcount_var.set(str(len(results)))
+        new_resultcount=len(results)
+        resultcount=int(self.resultcount_var.get())
+        disp=""
+        if resultcount != 0 and new_resultcount != self.session_resultcount:
+            disp+="/" + str(self.session_resultcount) + "("
+            diff = new_resultcount - resultcount
+            POS=False
+            if diff >0:
+                POS=True
+            if POS:
+                disp+="+"
+            disp+=str(new_resultcount - resultcount) + ")"
+            self.resultdiffcount_var.set(disp)
+        else:
+            self.resultdiffcount_var.set("") # consider edge cases
+
+        self.resultcount_var.set(str(new_resultcount))
 
 
     def _refresh_cmd(self, *args):
@@ -123,6 +147,7 @@ class AppView:
             result=list(result)
             self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
+        self.session_resultcount=len(results)
         self.resultcount_var.set(str(len(results)))
 
 
@@ -144,6 +169,7 @@ class AppView:
 
     def __call__(self):
         root=self.root
+        style=ttk.Style()
         root.title("Provider View")
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
@@ -161,7 +187,7 @@ class AppView:
         # subframe['padding']=(0,0,0,10)
 
         refreshframe=ttk.Frame(subframe)
-        refreshframe.grid(column=0,row=1, stick="news")
+        refreshframe.grid(column=0,row=1, stick="e")
         refreshframe.columnconfigure(0, weight=0)
         refreshframe.columnconfigure(1, weight=0)
         refreshframe.columnconfigure(2, weight=1)
@@ -171,7 +197,7 @@ class AppView:
 
         # radio
         radio_frame=ttk.Frame(refreshframe)
-        radio_frame.grid(column=0,row=0,stick="w")
+        radio_frame.grid(column=0,row=0,sticky="w")
         #       ...publicbeta
         publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
         self.subnet_var.set('public-beta')
@@ -184,10 +210,14 @@ class AppView:
 
         # count
         count_frame=ttk.Frame(subframe)
-        count_frame.grid(column=1,row=1, sticky="w")
-        ttk.Label(count_frame, text="count:", padding=(0,0,0,0)).grid(column=1,row=1, sticky="w")
-        ttk.Label(count_frame, textvariable=self.resultcount_var).grid(column=2,row=1, sticky="w")
-
+        count_frame.grid(column=1,row=1, sticky="e")
+        # TkDefaultFont 10
+        count_label = ttk.Label(count_frame, textvariable=self.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
+        count_label.grid(column=1,row=1)
+        count_diff_label = ttk.Label(count_frame, textvariable=self.resultdiffcount_var, foreground=DIC544, font='TkDefaultFont 20')
+        count_diff_label.grid(column=2,row=1)
+        # TLabel
+        #style.configure('TLabel', )
 
         #cpusec
         cpusec_entryframe=ttk.Frame(subframe)
@@ -217,24 +247,25 @@ class AppView:
         
 
 
-
+        style.configure("Treeview.Heading", foreground=DIC411)
         tree = ttk.Treeview(mainframe, columns=('name','address','cpu', 'duration', 'fixed'))
+        # tree.tag_configure('Theading', background='green')
         self.tree = tree
         self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
         tree.column('#0', width=0, stretch=NO)
-        tree.heading('name', text='name'
+        tree.heading('name', text='name', anchor="w" 
                 , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
                 )
-        tree.heading('address', text='address'
+        tree.heading('address', text='address', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'offers'.address"})
                 )
-        tree.heading('cpu', text='cpu (/sec)'
+        tree.heading('cpu', text='cpu (/sec)', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"})
                 )
-        tree.heading('duration', text='duration (/sec)'
+        tree.heading('duration', text='duration (/sec)', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"})
                 )
-        tree.heading('fixed', text='fixed'
+        tree.heading('fixed', text='fixed', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.fixed"})
                 )
 

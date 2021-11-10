@@ -80,7 +80,7 @@ async def async_run_server(ip, port):
 
     while True:
         try:
-            signal = q_in.get_nowait() # get http body json over the remote wire via HTTPRequestHandler
+            signal = q_in.get_nowait() # get http body json over the remote wire via the synchronous HTTPRequestHandler
         except Empty:
             signal = None
         if signal: # interact with yagna to lookup the offer
