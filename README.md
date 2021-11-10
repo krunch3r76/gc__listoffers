@@ -46,3 +46,9 @@ $ cd gc__listoffers
 touch the radio button pertaining to the subnet of interest
 offer scanning can take up to a minute, please be patient
 check the boxes to set upper limits on cpu time and env time
+
+# TODO
+this is a very long list but i will start it with:
+1) provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
+2) prevent gui lockups
+3) provide view/column customization
