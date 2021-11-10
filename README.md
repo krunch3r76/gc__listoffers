@@ -43,7 +43,7 @@ $ git checkout v0.0.1
 (client) ./gc__listoffers $ python3 applicaion.py client <ip-address-of-server> 8000
 ```
 
-## usage
+## usage tips
 touch the radio button pertaining to the subnet of interest
 offer scanning can take up to a minute, please be patient
 check the boxes to set upper limits on cpu time and env time
