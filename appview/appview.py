@@ -76,6 +76,11 @@ class AppView:
         txt.grid(column=0, row=0, sticky="news")
         txt.insert('1.0', props_s)
         txt.configure(state='disabled')
+
+
+
+
+
     def _update_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
         if not self.session_id:
@@ -122,6 +127,8 @@ class AppView:
 
         new_resultcount=len(results)
         resultcount=int(self.resultcount_var.get())
+        self.resultcount_var.set("")
+        self.resultdiffcount_var.set("")
         disp=""
         if resultcount != 0 and new_resultcount != self.session_resultcount:
             disp+="/" + str(self.session_resultcount) + "("
@@ -181,6 +188,7 @@ class AppView:
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
         self.session_resultcount=len(results)
+        self.resultdiffcount_var.set("")
         self.resultcount_var.set(str(len(results)))
 
 
