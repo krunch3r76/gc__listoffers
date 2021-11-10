@@ -54,6 +54,7 @@ $ git checkout v0.0.2
 ```
 
 ## usage tips
+**DO NOT HIT REFRESH REPEATEDLY, PLEASE WAIT PATIENTLY** I will add alerts and or fixes later.
 touch the radio button pertaining to the subnet of interest
 offer scanning can take up to a minute, please be patient
 check the boxes to set upper limits on cpu time and env time
