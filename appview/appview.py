@@ -7,8 +7,9 @@ from tkinter import ttk
 from datetime import datetime
 import decimal
 from decimal import Decimal
+import json
 
-from functools import partial
+# from functools import partial
 
 import time #debug
 
@@ -37,10 +38,34 @@ class AppView:
         self.resultdiffcount_var = StringVar(value="")
         self.session_resultcount = None
         self.subnet_var = StringVar()
+        self.cursorOfferRowID = None
         decimal.getcontext().prec=7
         # self.last_max_cpu_entry_value=None
         # self.last_max_dur_entry_value=None
 
+
+    def _show_raw(self, *args):
+        ss = f"select json from extra WHERE offerRowID = {self.cursorOfferRowID}"
+        # review the need to pass subnet-tag on update TODO
+        self.q_out.put_nowait({ "id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
+
+        results=None
+        msg_in = None
+        while not msg_in:
+            try:
+                msg_in = self.q_in.get_nowait()
+            except multiprocessing.queues.Empty:
+                msg_in = None
+            if msg_in:
+                print(f"[AppView] got msg!")
+                results = msg_in["msg"]
+                print(msg_in["id"])
+            time.sleep(0.1)
+        results_json = json.loads(results[0][0])
+        props=results_json["props"]
+
+        # create a new window
+        
 
     def _update_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
@@ -66,6 +91,7 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
+        # TODO remove subnet-tag, it is already associated with the id
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         results=None
@@ -83,7 +109,7 @@ class AppView:
 
         for result in results:
             result=list(result)
-            self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
         new_resultcount=len(results)
         resultcount=int(self.resultcount_var.get())
@@ -145,7 +171,7 @@ class AppView:
         print(len(results)) 
         for result in results:
             result=list(result)
-            self.tree.insert('', 'end', values=(result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
         self.session_resultcount=len(results)
         self.resultcount_var.set(str(len(results)))
@@ -248,7 +274,7 @@ class AppView:
 
 
         style.configure("Treeview.Heading", foreground=DIC411)
-        tree = ttk.Treeview(mainframe, columns=('name','address','cpu', 'duration', 'fixed'))
+        tree = ttk.Treeview(mainframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed'))
         self.tree = tree
 
         root.option_add('*tearOff', FALSE)
@@ -259,7 +285,7 @@ class AppView:
         menu.add_command(label='<name>')
         menu.entryconfigure(0, state=DISABLED)
         menu.add_separator()
-        menu.add_command(label='view raw')
+        menu.add_command(label='view raw', command=self._show_raw)
         menu.add_command(label='exit menu')
         def do_popup(event):
             try:
@@ -272,18 +298,25 @@ class AppView:
                 if region != 'cell':
                     menu.grab_release()
                     return
-                menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][0])
+                print(f"{tree.item( tree.identify_row(event.y) )['values']}")
+                menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
+                self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
                 menu.post(event.x_root, event.y_root)
             except IndexError:
                 pass
             finally:
                 menu.grab_release()
         # root.bind('<ButtonRelease-3>', do_popup )
-        root.bind('<3>', do_popup )
+        if (root.tk.call('tk', 'windowingsystem')=='aqua'):
+            root.bind('<2>', do_popup)
+            root.bind('<Control-1>', do_popup)
+        else:
+            root.bind('<3>', do_popup )
 
         # tree.tag_configure('Theading', background='green')
         self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
         tree.column('#0', width=0, stretch=NO)
+        tree.column('offerRowID', width=0, stretch=NO)
         tree.heading('name', text='name', anchor="w" 
                 , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
                 )

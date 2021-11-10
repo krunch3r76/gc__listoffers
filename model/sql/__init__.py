@@ -5,6 +5,7 @@ import datetime
 import itertools
 import decimal
 from decimal import Decimal
+import json
 
 def _create_table_statement_1(tablename, cols_and_types):
     def substatement():
@@ -28,7 +29,7 @@ def _create_table_statement(tablename, cols_and_types):
         s=s[:-2]
         return s
 
-    statement=f"create table '{tablename}' ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER, {substatement()}, extra TEXT DEFAULT '' )"
+    statement=f"create table '{tablename}' ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER NOT NULL, {substatement()}, extra TEXT DEFAULT '' )"
 
     return statement
 
@@ -69,7 +70,7 @@ def create_database():
     execute_create('node.id',                   [ 'name TEXT'] )
     execute_create('runtime',                   [ 'name TEXT', 'version TEXT', 'capabilities DEFAULT "[]"'] )
     execute_create('srv.caps',                  [ 'multi_activity TEXT' ] )
-    con.execute("create table extra ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER, json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
+    con.execute("create table extra ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER NOT NULL, json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
     return con
 
 
@@ -298,5 +299,16 @@ def build_database(con, offers):
         # srv.caps
         _insert_record('srv.caps', 'multi_activity', str(props['golem.srv.caps.multi-activity']))
 
+        # extra
+
+        class DatetimeEncoder(json.JSONEncoder):
+           def default(self, o):
+                if isinstance(o, datetime.datetime):
+                    return str(o)
+                return super(datetime, self).default(o) # or return super().default(o)
+
+
+
+        _insert_record('extra', 'json', json.dumps(offer,cls=DatetimeEncoder))
 
     # debug_print_table('activity.caps.transfer')
