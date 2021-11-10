@@ -63,3 +63,5 @@ this is a very long list but i will start it with:
 2) prevent gui lockups
 3) provide view/column customization
 4) add graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
+5) add error handling. especially with regard to network connectivity
+6) refactor http server
