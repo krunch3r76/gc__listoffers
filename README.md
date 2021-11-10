@@ -5,6 +5,8 @@ the desktop is back! what? you like the pretty json stuff? then go back to stats
 
 the problem gc__listoffers solves is 1) for providers to see at a cursory glance how competitive they are on mainnet given prices they have set for cpu and environment, 2) for requestors to tweak a market strategy on a run-per-run basis.
 
+**NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
+
 # requirements
 **YAGNA_APPKEY must be in your environment for this to run successfuly**.
 either yagna or golemsp must be running
