@@ -148,6 +148,7 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
+        self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
         self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
