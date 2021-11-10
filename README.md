@@ -51,6 +51,7 @@ offer scanning can take up to a minute, please be patient
 check the boxes to set upper limits on cpu time and env time
 it is not necessary to refresh when tweaking values!
 the total number of offers is listed in large digits near the bottom left
+see offer details via the contextual menu system!
 
 
 # TODO
