@@ -63,10 +63,15 @@ class AppView:
             time.sleep(0.1)
         results_json = json.loads(results[0][0])
         props=results_json["props"]
-
+        props_s = json.dumps(props, indent=5)
         # create a new window
-        
-
+        t = Toplevel(self.root)        
+        f = ttk.Frame(t)
+        f.grid(column=0, row=0, sticky="news")
+        txt = Text(f)
+        txt.grid(column=0, row=0, sticky="news")
+        txt.insert('1.0', props_s)
+        txt.configure(state='disabled')
     def _update_cmd(self, *args):
         self.tree.delete(*self.tree.get_children())
         if not self.session_id:
