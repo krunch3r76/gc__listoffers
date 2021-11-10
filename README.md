@@ -7,6 +7,11 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 **NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
 
+# screenshot
+
+![ss_listoffers002](https://user-images.githubusercontent.com/46289600/141082826-e4b69b95-52a1-419a-a1ae-b61bd95ba245.png)
+
+
 # requirements
 **YAGNA_APPKEY must be in your environment for this to run successfuly**.
 
