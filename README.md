@@ -46,7 +46,7 @@ $ git checkout v0.0.2
 
 ### starting for remote interaction
 ```bash
-# on the machine running yagna/golemsp, e.g. in docker
+# on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
 (server) ./gc__listoffers $ python3 application.py serve localhost 8000
 
 # on the remote machine (Windows okay)
