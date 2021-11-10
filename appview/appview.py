@@ -82,6 +82,10 @@ class AppView:
 
 
     def _update_cmd(self, *args):
+        resultcount=int(self.resultcount_var.get())
+        self.resultcount_var.set("")
+        self.resultdiffcount_var.set("")
+
         self.tree.delete(*self.tree.get_children())
         if not self.session_id:
             return
@@ -126,9 +130,6 @@ class AppView:
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
         new_resultcount=len(results)
-        resultcount=int(self.resultcount_var.get())
-        self.resultcount_var.set("")
-        self.resultdiffcount_var.set("")
         disp=""
         if resultcount != 0 and new_resultcount != self.session_resultcount:
             disp+="/" + str(self.session_resultcount) + "("
@@ -147,6 +148,7 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
+        self.resultdiffcount_var.set("")
         self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
 
@@ -188,7 +190,6 @@ class AppView:
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
         self.session_resultcount=len(results)
-        self.resultdiffcount_var.set("")
         self.resultcount_var.set(str(len(results)))
 
 
