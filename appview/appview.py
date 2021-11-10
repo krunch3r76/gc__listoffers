@@ -66,8 +66,12 @@ class AppView:
         props_s = json.dumps(props, indent=5)
         # create a new window
         t = Toplevel(self.root)        
+        t.columnconfigure(0, weight=1)
+        t.rowconfigure(0, weight=1)
         f = ttk.Frame(t)
         f.grid(column=0, row=0, sticky="news")
+        f.columnconfigure(0, weight=1)
+        f.rowconfigure(0, weight=1)
         txt = Text(f)
         txt.grid(column=0, row=0, sticky="news")
         txt.insert('1.0', props_s)
