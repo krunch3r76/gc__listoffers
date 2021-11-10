@@ -47,6 +47,9 @@ $ git checkout v0.0.1
 touch the radio button pertaining to the subnet of interest
 offer scanning can take up to a minute, please be patient
 check the boxes to set upper limits on cpu time and env time
+it is not necessary to refresh when tweaking values!
+the total number of offers is listed in large digits near the bottom left
+
 
 # TODO
 this is a very long list but i will start it with:
