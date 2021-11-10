@@ -11,10 +11,10 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 **YAGNA_APPKEY must be in your environment for this to run successfuly**.
 either yagna or golemsp must be running
 yapapi must be installed
-python should have been compiled with Tcl support. this is the default on Windows. this is available as a package on ubuntu. see below. 
+_python should have been compiled with Tcl support_. this is the default on Windows. this is available as a package on ubuntu. see below. 
 
 ```bash
-$ sudo apt-get install python3-tk
+(ubuntu) $ sudo apt-get install python3-tk
 $ pip install yapapi -U
 # start yagna or golemsp
 $ yagna service run
