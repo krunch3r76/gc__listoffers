@@ -62,3 +62,4 @@ this is a very long list but i will start it with:
 1) provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
 2) prevent gui lockups
 3) provide view/column customization
+4) add graphics and sound! hey this is python not python GS.
