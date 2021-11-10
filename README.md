@@ -45,7 +45,7 @@ $ git checkout v0.0.1
 (server) ./gc__listoffers $ python3 application.py serve localhost 8000
 
 # on the remote machine (Windows okay)
-(client) ./gc__listoffers $ python3 applicaion.py client <ip-address-of-server> 8000
+(client) ./gc__listoffers $ python3 application.py client <ip-address-of-server> 8000
 ```
 
 ## usage tips
