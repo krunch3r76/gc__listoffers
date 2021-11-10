@@ -25,6 +25,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
+$ git checkout v0.0.1
 ```
 
 ## starting
