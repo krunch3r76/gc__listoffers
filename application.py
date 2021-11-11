@@ -5,6 +5,7 @@ from controller.local_connection import LocalConnection
 from controller.remote_connection import RemoteConnection
 from multiprocessing import Process, Queue, freeze_support
 import sys
+import debug
 
 if __name__ == "__main__":
     ip="localhost"
@@ -21,12 +22,13 @@ if __name__ == "__main__":
             from model import run_server
             from model.offer_lookup import OfferLookup
             from controller.remote_connection import RemoteConnection
-            print(f"[application.py] launching server on {ip}:{port}")
+            # _log_msg(f"[application.py] launching server on {ip}:{port}")
+            print(f"\033[1mlaunching server on {ip}:{port}\033[0m")
             run_server(ip, port)
         
         elif sys.argv[1]=="client":
             from controller.local_connection import LocalConnection
-            print(f"[application.py] launching client to connect with {ip}:{port}")
+            print(f"\033[1mlaunching client to connect with {ip}:{port}\033[0m")
             # configure for controller to use remote connection
             # offerLookup=OfferLookup(SERVER)
             appView=AppView()
@@ -41,6 +43,7 @@ if __name__ == "__main__":
     else:
         # configure for controller to use local connection
         from model.offer_lookup import OfferLookup
+        print(f"\033[1mrunning locally\033[0m")
         offerLookup=OfferLookup()
         appView=AppView()
 
