@@ -81,6 +81,10 @@ class AppView:
         if subnet != 'public-beta' and subnet != 'devnet-beta':
             self.other_entry.state(['disabled'])
 
+    def _on_other_entry_click(self, *args):
+        subnet=self.subnet_var.get()
+        if subnet != 'public-beta' and subnet != 'devnet-beta':
+            self.other_entry.state(['!disabled'])
 
     def _on_other_radio(self, *args):
         self.other_entry.state(['!disabled'])
@@ -330,8 +334,9 @@ class AppView:
         self.other_entry = ttk.Entry(radio_frame, textvariable=self.other_entry_var)
         self.other_entry.grid(column=1,row=1, sticky="w")
         self.other_entry.state(['disabled'])
-        self.other_entry.bind('<Return>', lambda e: self._refresh_cmd)
+        self.other_entry.bind('<Return>', lambda e: self._refresh_cmd())
         self.other_entry.bind('<FocusOut>', self._on_other_entry_focusout)
+        self.other_entry.bind('<Button-1>', self._on_other_entry_click)
         # refresh button
         self.refreshButton = ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd)
         self.refreshButton.grid(column=0,row=1,sticky="w,e")
