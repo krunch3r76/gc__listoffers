@@ -39,6 +39,7 @@ class AppView:
         self.session_resultcount = None
         self.subnet_var = StringVar()
         self.cursorOfferRowID = None
+        self.lastresultcount = 0
         decimal.getcontext().prec=7
 
         self.refreshButton=None
@@ -87,13 +88,36 @@ class AppView:
 
 
 
-    def _update(self, results):
+    def _update(self, results, refresh=True):
+        if refresh:
+            self.session_resultcount=len(results)
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
-        self.session_resultcount=len(results)
-        self.resultcount_var.set(str(len(results)))
+        current_resultcount=len(results)
+        self.resultcount_var.set(str(current_resultcount))
+        
+        if not refresh:
+            print(f"self.session_resultcount: {self.session_resultcount}")
+            print(f"self.lastresultcount: {self.lastresultcount}")
+            print(f"current_resultcount: {current_resultcount}")
+            print(f"current_resultcount - self.lastresultcount: {current_resultcount - self.lastresultcount}")
+            disp=""
+            if self.lastresultcount != 0 and self.session_resultcount != current_resultcount:
+                disp+="/" + str(self.session_resultcount) + "("
+                diff =  current_resultcount - self.lastresultcount
+                POS=False
+                if diff >0:
+                    disp+="+"
+                disp+=str(current_resultcount - self.lastresultcount) + ")"
+                self.resultdiffcount_var.set(disp)
+                # self.resultcount_var.set(str(new_resultcount))
+            else:
+                self.resultdiffcount_var.set("") # consider edge cases
+
+
+
 
         self.refreshButton.state(['!disabled'])
         self.publicbeta_rb.state(['!disabled'])
@@ -104,7 +128,15 @@ class AppView:
 
 
     def _update_cmd(self, *args):
-        resultcount=int(self.resultcount_var.get())
+        self.refreshButton.state(['!disabled'])
+        self.publicbeta_rb.state(['!disabled'])
+        self.publicdevnet_rb.state(['!disabled'])
+
+        if self.resultcount_var.get() != "":
+            self.lastresultcount=int(self.resultcount_var.get())
+        else:
+            self.lastresultcount=0
+
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
 
@@ -136,37 +168,9 @@ class AppView:
 
         results=None
         msg_in = None
-        while not msg_in:
-            try:
-                msg_in = self.q_in.get_nowait()
-            except multiprocessing.queues.Empty:
-                msg_in = None
-            if msg_in:
-                # print(f"[AppView] got msg!")
-                results = msg_in["msg"]
-                # print(msg_in["id"])
-            time.sleep(0.1)
 
-        for result in results:
-            result=list(result)
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+        self.root.after(1, lambda: self.handle_incoming_result(False))
 
-        new_resultcount=len(results)
-        disp=""
-        if resultcount != 0 and new_resultcount != self.session_resultcount:
-            disp+="/" + str(self.session_resultcount) + "("
-            diff = new_resultcount - resultcount
-            POS=False
-            if diff >0:
-                POS=True
-            if POS:
-                disp+="+"
-            disp+=str(new_resultcount - resultcount) + ")"
-            self.resultdiffcount_var.set(disp)
-        else:
-            self.resultdiffcount_var.set("") # consider edge cases
-
-        self.resultcount_var.set(str(new_resultcount))
 
 
     def _refresh_cmd(self, *args):
@@ -202,20 +206,21 @@ class AppView:
         results=None
         msg_in = None
 
-        def handle_incoming_result():
-            try:
-                msg_in = self.q_in.get_nowait()
-            except multiprocessing.queues.Empty:
-                msg_in = None
-                self.root.after(1, handle_incoming_result)
-            if msg_in:
-                # print(f"[AppView] got msg!")
-                results = msg_in["msg"]
-                self._update(results)
-                # print(msg_in["id"])
-        # print(len(results)) 
+        self.root.after(1, self.handle_incoming_result)
 
-        self.root.after(1, handle_incoming_result)
+    def handle_incoming_result(self, refresh=True):
+        try:
+            msg_in = self.q_in.get_nowait()
+        except multiprocessing.queues.Empty:
+            msg_in = None
+            self.root.after(1, lambda: self.handle_incoming_result(refresh))
+        if msg_in:
+            # print(f"[AppView] got msg!")
+            results = msg_in["msg"]
+            self._update(results, refresh)
+            # print(msg_in["id"])
+    # print(len(results)) 
+
 
 
     def _cb_cpusec_checkbutton(self, *args):
@@ -223,14 +228,16 @@ class AppView:
             self.cpusec_entry.state(['!disabled'])
         else:
             self.cpusec_entry.state(['disabled'])
-        self._update_cmd()
+        if self.cpusec_entry.get():
+            self._update_cmd()
 
     def _cb_durationsec_checkbutton(self, *args):
         if self.durationsec_entry.instate(['disabled']):
             self.durationsec_entry.state(['!disabled'])
         else:
             self.durationsec_entry.state(['disabled'])
-        self._update_cmd()
+        if self.durationsec_entry.get():
+            self._update_cmd()
 
     def __call__(self):
         root=self.root
