@@ -99,10 +99,6 @@ class AppView:
         self.resultcount_var.set(str(current_resultcount))
         
         if not refresh:
-            print(f"self.session_resultcount: {self.session_resultcount}")
-            print(f"self.lastresultcount: {self.lastresultcount}")
-            print(f"current_resultcount: {current_resultcount}")
-            print(f"current_resultcount - self.lastresultcount: {current_resultcount - self.lastresultcount}")
             disp=""
             if self.lastresultcount != 0 and self.session_resultcount != current_resultcount:
                 disp+="/" + str(self.session_resultcount) + "("
