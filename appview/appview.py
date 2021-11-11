@@ -81,6 +81,21 @@ class AppView:
 
 
 
+
+
+    def _update(self, results):
+        for result in results:
+            result=list(result)
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+
+        self.session_resultcount=len(results)
+        self.resultcount_var.set(str(len(results)))
+
+
+
+
+
+
     def _update_cmd(self, *args):
         resultcount=int(self.resultcount_var.get())
         self.resultcount_var.set("")
@@ -175,25 +190,21 @@ class AppView:
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
         results=None
         msg_in = None
-        while not msg_in:
+
+        def handle_incoming_result():
             try:
                 msg_in = self.q_in.get_nowait()
             except multiprocessing.queues.Empty:
                 msg_in = None
+                self.root.after(1, handle_incoming_result)
             if msg_in:
                 # print(f"[AppView] got msg!")
                 results = msg_in["msg"]
+                self._update(results)
                 # print(msg_in["id"])
-            time.sleep(0.1)
         # print(len(results)) 
-        for result in results:
-            result=list(result)
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
 
-        self.session_resultcount=len(results)
-        self.resultcount_var.set(str(len(results)))
-
-
+        self.root.after(1, handle_incoming_result)
 
 
     def _cb_cpusec_checkbutton(self, *args):
