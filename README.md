@@ -55,11 +55,17 @@ $ git checkout v0.0.3
 
 ## usage tips
 touch the radio button pertaining to the subnet of interest
+
 offer scanning can take up to a minute, please be patient
-check the boxes to set upper limits on cpu time and env time
+
+check the boxes to set upper limits on cpu time and env time. go to https://stats.golem.network and use the median values for cpu and env time as a starting point
+
 it is not necessary to refresh when tweaking values!
+
 the total number of offers is listed in large digits near the bottom left
+
 see offer details via the contextual menu system!
+
 
 
 # TODO
