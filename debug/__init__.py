@@ -11,9 +11,6 @@ def get_calling_script():
 
 def dlog(msg, debug_level=1, color=TEXT_COLOR_MAGENTA):
     def _get_calling_script():
-        # print(inspect.stack())
-        print(inspect.stack()[2][3])
-
         path_string = inspect.stack()[2][1]
         parts = PurePath(path_string).parts
         if len(parts) > 2:
@@ -36,5 +33,5 @@ def dlog(msg, debug_level=1, color=TEXT_COLOR_MAGENTA):
     if debug_level <= _DEBUGLEVEL:
         print(f"\n{TEXT_COLOR_BG_Y_FG_M}[{_get_calling_script()}::{_get_calling_script_function()}:{_get_calling_script_lineno()}]{TEXT_COLOR_DEFAULT}")
         for line in msg.splitlines():
-            print(f">{color}{line}{TEXT_COLOR_DEFAULT}\n", file=sys.stderr)
+            print(f">{color}{line}{TEXT_COLOR_DEFAULT}", file=sys.stderr)
         # print(f"\n[model.py] {utils.TEXT_COLOR_MAGENTA}{msg}{utils.TEXT_COLOR_DEFAULT}\n", file=sys.stderr)

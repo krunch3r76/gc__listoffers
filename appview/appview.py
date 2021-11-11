@@ -12,6 +12,7 @@ from datetime import datetime
 import decimal
 from decimal import Decimal
 import json
+import debug
 
 # from functools import partial
 
@@ -71,7 +72,20 @@ class AppView:
         self.refreshButton=None
         self.publicbeta_rb=None
         self.publicdevnet_rb=None
+        self.other_rb=None
+        self.other_entry = None
+        self.other_entry_var = StringVar()
 
+    def _on_other_entry_focusout(self, *args):
+        subnet=self.subnet_var.get()
+        if subnet != 'public-beta' and subnet != 'devnet-beta':
+            self.other_entry.state(['disabled'])
+
+
+    def _on_other_radio(self, *args):
+        self.other_entry.state(['!disabled'])
+        self.subnet_var.set( self.other_entry_var.get() )
+        self.other_rb['value']= self.other_entry_var.get()
 
     def _show_raw(self, *args):
         ss = f"select json from extra WHERE offerRowID = {self.cursorOfferRowID}"
@@ -300,7 +314,7 @@ class AppView:
 
         # radio
         radio_frame=ttk.Frame(refreshframe)
-        radio_frame.grid(column=0,row=0,sticky="w")
+        radio_frame.grid(column=0,row=0,sticky="w", pady=10)
         #       ...publicbeta
         self.publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
         self.subnet_var.set('public-beta')
@@ -309,6 +323,15 @@ class AppView:
         self.publicdevnet_rb = ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta',command=self._refresh_cmd)
         self.publicdevnet_rb.grid(column=1,row=0)
         
+        #       ...other
+        self.other_rb = ttk.Radiobutton(radio_frame, text='other', value='other', variable=self.subnet_var, command=self._on_other_radio)
+        self.other_rb.grid(column=0,row=1, sticky="w")
+        self.other_entry_var.set('devnet-beta.2')
+        self.other_entry = ttk.Entry(radio_frame, textvariable=self.other_entry_var)
+        self.other_entry.grid(column=1,row=1, sticky="w")
+        self.other_entry.state(['disabled'])
+        self.other_entry.bind('<Return>', lambda e: self._refresh_cmd)
+        self.other_entry.bind('<FocusOut>', self._on_other_entry_focusout)
         # refresh button
         self.refreshButton = ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd)
         self.refreshButton.grid(column=0,row=1,sticky="w,e")
