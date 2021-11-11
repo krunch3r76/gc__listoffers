@@ -16,20 +16,42 @@ import time #debug
 DIC411="#003366"
 DIC544="#4D4D4D"
 
+
+
+def _toggle_refresh_controls_closure(self):
+    disabled = False
+    def toggle():
+        nonlocal disabled
+        if not disabled:
+            self.refreshButton.state(['disabled'])
+            self.publicbeta_rb.state(['disabled'])
+            self.publicdevnet_rb.state(['disabled'])
+            disabled=True
+        else:
+            self.refreshButton.state(['!disabled'])
+            self.publicbeta_rb.state(['!disabled'])
+            self.publicdevnet_rb.state(['!disabled'])
+
+    return toggle
+
+
+
+
 class AppView:
     def __init__(self):
+        self._toggle_refresh_controls = _toggle_refresh_controls_closure(self)
+
         self.q_out=Queue()
         self.q_in=Queue()
-        # self.gen_request_number = itertools.count(1)
         self.tree = None
         self.session_id=None
         self.order_by_last="'node.id'.name"
 
         self.root=Tk()
         s = ttk.Style()
-        # self.root.tk.call('source', './Sun-Valley-ttk-theme/sun-valley.tcl')
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')
+
         self.cpusec_entry = None
         self.cpusec_entry_var = StringVar()
         self.durationsec_entry = None
@@ -45,8 +67,6 @@ class AppView:
         self.refreshButton=None
         self.publicbeta_rb=None
         self.publicdevnet_rb=None
-        # self.last_max_cpu_entry_value=None
-        # self.last_max_dur_entry_value=None
 
 
     def _show_raw(self, *args):
@@ -115,18 +135,14 @@ class AppView:
 
 
 
-        self.refreshButton.state(['!disabled'])
-        self.publicbeta_rb.state(['!disabled'])
-        self.publicdevnet_rb.state(['!disabled'])
+        self._toggle_refresh_controls()
 
 
 
 
 
     def _update_cmd(self, *args):
-        self.refreshButton.state(['!disabled'])
-        self.publicbeta_rb.state(['!disabled'])
-        self.publicdevnet_rb.state(['!disabled'])
+        self._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
             self.lastresultcount=int(self.resultcount_var.get())
@@ -143,21 +159,7 @@ class AppView:
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
 
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, max('offers'.ts)" \
-            " FROM 'node.id'" \
-            " INNER JOIN 'offers' USING (offerRowID)" \
-            " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
-            " INNER JOIN 'runtime'  USING (offerRowID)" \
-            " WHERE 'runtime'.name = 'vm' " \
-
-        if self.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal(3600.0)}"
-
-        if self.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
-
-        ss+=" GROUP BY 'node.id'.name"  \
-            f" ORDER BY {self.order_by_last}"
+        ss = self._update_or_refresh_sql()
 
         # TODO remove subnet-tag, it is already associated with the id
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
@@ -169,17 +171,10 @@ class AppView:
 
 
 
-    def _refresh_cmd(self, *args):
-        self.refreshButton.state(['disabled'])
-        self.publicbeta_rb.state(['disabled'])
-        self.publicdevnet_rb.state(['disabled'])
-
-        self.resultcount_var.set("")
-        self.resultdiffcount_var.set("")
-        self.tree.delete(*self.tree.get_children())
-        self.tree.update_idletasks()
 
 
+
+    def _update_or_refresh_sql(self):
         ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, max('offers'.ts)" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
@@ -196,6 +191,25 @@ class AppView:
         ss+=" GROUP BY 'node.id'.name"  \
             f" ORDER BY {self.order_by_last}"
 
+
+        return ss
+
+
+
+
+
+
+
+    def _refresh_cmd(self, *args):
+        self._toggle_refresh_controls()
+
+        self.resultcount_var.set("")
+        self.resultdiffcount_var.set("")
+        self.tree.delete(*self.tree.get_children())
+        self.tree.update_idletasks()
+
+        ss = self._update_or_refresh_sql()
+
         self.session_id=str(datetime.now().timestamp())
         msg_out = {"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} }
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
@@ -203,6 +217,12 @@ class AppView:
         msg_in = None
 
         self.root.after(1, self.handle_incoming_result)
+
+
+
+
+
+
 
     def handle_incoming_result(self, refresh=True):
         try:
@@ -219,6 +239,10 @@ class AppView:
 
 
 
+
+
+
+
     def _cb_cpusec_checkbutton(self, *args):
         if self.cpusec_entry.instate(['disabled']):
             self.cpusec_entry.state(['!disabled'])
@@ -227,6 +251,9 @@ class AppView:
         if self.cpusec_entry.get():
             self._update_cmd()
 
+
+
+
     def _cb_durationsec_checkbutton(self, *args):
         if self.durationsec_entry.instate(['disabled']):
             self.durationsec_entry.state(['!disabled'])
@@ -234,6 +261,10 @@ class AppView:
             self.durationsec_entry.state(['disabled'])
         if self.durationsec_entry.get():
             self._update_cmd()
+
+
+
+
 
     def __call__(self):
         root=self.root
