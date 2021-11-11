@@ -40,6 +40,10 @@ class AppView:
         self.subnet_var = StringVar()
         self.cursorOfferRowID = None
         decimal.getcontext().prec=7
+
+        self.refreshButton=None
+        self.publicbeta_rb=None
+        self.publicdevnet_rb=None
         # self.last_max_cpu_entry_value=None
         # self.last_max_dur_entry_value=None
 
@@ -91,6 +95,9 @@ class AppView:
         self.session_resultcount=len(results)
         self.resultcount_var.set(str(len(results)))
 
+        self.refreshButton.state(['!disabled'])
+        self.publicbeta_rb.state(['!disabled'])
+        self.publicdevnet_rb.state(['!disabled'])
 
 
 
@@ -163,6 +170,10 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
+        self.refreshButton.state(['disabled'])
+        self.publicbeta_rb.state(['disabled'])
+        self.publicdevnet_rb.state(['disabled'])
+
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
         self.tree.delete(*self.tree.get_children())
@@ -253,14 +264,16 @@ class AppView:
         radio_frame=ttk.Frame(refreshframe)
         radio_frame.grid(column=0,row=0,sticky="w")
         #       ...publicbeta
-        publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
+        self.publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
         self.subnet_var.set('public-beta')
-        publicbeta_rb.grid(column=0,row=0)
+        self.publicbeta_rb.grid(column=0,row=0)
         #       ...devnetbeta
-        ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta',command=self._refresh_cmd).grid(column=1,row=0)
+        self.publicdevnet_rb = ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta',command=self._refresh_cmd)
+        self.publicdevnet_rb.grid(column=1,row=0)
         
         # refresh button
-        ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd).grid(column=0,row=1,sticky="w,e")
+        self.refreshButton = ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd)
+        self.refreshButton.grid(column=0,row=1,sticky="w,e")
 
         # count
         count_frame=ttk.Frame(subframe)
