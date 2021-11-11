@@ -35,7 +35,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.0.2
+$ git checkout v0.0.3
 ```
 
 ## starting
@@ -65,9 +65,8 @@ see offer details via the contextual menu system!
 
 # TODO
 this is a very long list but i will start it with:
-1) provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
-2) prevent gui lockups (eliminate nested event loop)
-3) provide view/column customization
-4) add graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
-5) add error handling. especially with regard to network connectivity
-6) refactor http server
+- provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
+- provide view/column customization
+- add graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
+- add error handling. especially with regard to network connectivity
+- refactor http server
