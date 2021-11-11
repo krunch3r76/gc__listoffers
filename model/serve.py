@@ -8,20 +8,14 @@ from multiprocessing import Process, Queue
 from multiprocessing.queues import Empty
 import time
 import decimal
+from dataclasses import dataclass
 
 offerLookup=OfferLookup()
 
 
-# kludgy message passing with HTTPRequestHandler by setting global queues
-g_handler_q_in = Queue()
-g_handler_q_out = Queue()
-
-
-
-
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):
-    """process signals in the form of { id:, msg: { subnet:, sql: } } by placing into """
+    """process incoming signals in the form of { id:, msg: { subnet:, sql: } } by relaying via q_out_to_model """
 
 
     # https://stackoverflow.com/questions/1960516/python-json-serialize-a-decimal-object
@@ -38,12 +32,12 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.get('Content-Length'))
         b=self.rfile.read(content_len)
         msg=json.loads(b.decode("utf-8"))
-        g_handler_q_out.put_nowait(msg) # relay the received content to async_run_server
+        self.server.q_out_to_controller.put_nowait(msg) # relay the received content to async_run_server
 
         signal=None
         while not signal:
             try:
-                signal = g_handler_q_in.get_nowait() # offer lookup's dictionary came back
+                signal = self.server.q_in_from_controller.get_nowait() # offer lookup's dictionary came back
             except Empty:
                 signal = None
             if signal:
@@ -53,17 +47,19 @@ class HTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
                 self.wfile.write(results_json.encode(encoding='utf-8'))
-
+            
             time.sleep(0.01)
 
+class MyHTTPServer(HTTPServer):
+    q_in_from_controller= None
+    q_out_to_controller= None
 
 
-
-
-def _run_server(ip, port, server_class=HTTPServer, handler_class=HTTPRequestHandler):
+def _run_server(ip, port, q_in_from_controller, q_out_to_controller, server_class=MyHTTPServer, handler_class=HTTPRequestHandler):
     server_address=(ip, port)
-
     httpd=server_class(server_address, handler_class)
+    httpd.q_in_from_controller=q_in_from_controller
+    httpd.q_out_to_controller=q_out_to_controller
     httpd.serve_forever()
 
 
@@ -75,14 +71,15 @@ def _run_server(ip, port, server_class=HTTPServer, handler_class=HTTPRequestHand
 async def async_run_server(ip, port):
     offerLookup=OfferLookup()
     # identify the queues for message passing with HTTPRequestHandler
-    q_out=g_handler_q_in
-    q_in=g_handler_q_out
-    server_process=Process(target=_run_server, args=(ip, port), daemon=True)
+    q_out_to_httpbase=Queue()
+    q_in_from_httpbase=Queue()
+
+    server_process=Process(target=_run_server, args=(ip, port, q_out_to_httpbase, q_in_from_httpbase), daemon=True)
     server_process.start()
 
     while True:
         try:
-            signal = q_in.get_nowait() # get http body json over the remote wire via the synchronous HTTPRequestHandler
+            signal = q_in_from_httpbase.get_nowait() # get http body json over the remote wire via the synchronous HTTPRequestHandler
         except Empty:
             signal = None
         if signal: # interact with yagna to lookup the offer
@@ -90,7 +87,7 @@ async def async_run_server(ip, port):
 
             if results_d:
                 msg_out = { "id": signal["id"], "msg": results_d }
-                q_out.put_nowait(msg_out)
+                q_out_to_httpbase.put_nowait(msg_out)
             else:
                 print("[async_run_server]::ERROR")
         await asyncio.sleep(0.01) 
