@@ -29,8 +29,10 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
                     self.q_out.put_nowait(msg_out)
 
                 else:
-                    errormsg="[LocalConnection::poll_loop] no results seen from callback"
-                    print(errormsg, flush=True)
+                    errormsg="no results seen from callback"
+                    debug.dlog(errormsg)
+                    msg_out = { "id": signal["id"], "msg": dict() }
+                    self.q_out.put_nowait(msg_out)
                     #raise "unhandled exception in LocalConnection.poll_loop" \
                     #    "no results from callback"
             await asyncio.sleep(0.01)

@@ -25,17 +25,27 @@ DIC544="#4D4D4D"
 
 def _toggle_refresh_controls_closure(self):
     disabled = False
+    other_entry_was_enabled = False
     def toggle():
         nonlocal disabled
+        nonlocal other_entry_was_enabled
         if not disabled:
             self.refreshButton.state(['disabled'])
             self.publicbeta_rb.state(['disabled'])
             self.publicdevnet_rb.state(['disabled'])
+            if self.other_entry.instate(['!disabled']):
+                other_entry_was_enabled = True
+            self.other_rb.state(['disabled'])
+            self.other_entry.state(['disabled'])
             disabled=True
         else:
             self.refreshButton.state(['!disabled'])
             self.publicbeta_rb.state(['!disabled'])
             self.publicdevnet_rb.state(['!disabled'])
+            self.other_rb.state(['!disabled'])
+            if other_entry_was_enabled:
+                self.other_entry.state(['!disabled'])
+            disabled=False
 
     return toggle
 
@@ -75,6 +85,19 @@ class AppView:
         self.other_rb=None
         self.other_entry = None
         self.other_entry_var = StringVar()
+        self.rawwin = None
+
+    def _on_offer_text_selection(self, *args):
+        e=args[0]
+        selection_range=e.widget.tag_ranges('sel')
+        if selection_range:
+            selection = e.widget.get(*selection_range)
+            self.root.clipboard_clear()
+            self.root.clipboard_append(selection)
+
+    def _on_other_entry_change(self, *args):
+        self.other_rb['value']= self.other_entry_var.get()
+        self.subnet_var.set( self.other_entry_var.get() )
 
     def _on_other_entry_focusout(self, *args):
         subnet=self.subnet_var.get()
@@ -82,14 +105,16 @@ class AppView:
             self.other_entry.state(['disabled'])
 
     def _on_other_entry_click(self, *args):
-        subnet=self.subnet_var.get()
-        if subnet != 'public-beta' and subnet != 'devnet-beta':
-            self.other_entry.state(['!disabled'])
+        if self.other_rb.instate(['!disabled']):
+            subnet=self.subnet_var.get()
+            if subnet != 'public-beta' and subnet != 'devnet-beta':
+                self.other_entry.state(['!disabled'])
 
     def _on_other_radio(self, *args):
         self.other_entry.state(['!disabled'])
-        self.subnet_var.set( self.other_entry_var.get() )
+        # debug.dlog(self.other_entry_var.get() )
         self.other_rb['value']= self.other_entry_var.get()
+        self.subnet_var.set( self.other_entry_var.get() )
 
     def _show_raw(self, *args):
         ss = f"select json from extra WHERE offerRowID = {self.cursorOfferRowID}"
@@ -98,6 +123,7 @@ class AppView:
 
         results=None
         msg_in = None
+        # uh oh, another nested event loop. terminator assigned!
         while not msg_in:
             try:
                 msg_in = self.q_in.get_nowait()
@@ -108,14 +134,17 @@ class AppView:
                 results = msg_in["msg"]
                 # print(msg_in["id"])
             time.sleep(0.1)
+
+
         results_json = json.loads(results[0][0])
         props=results_json["props"]
         props_s = json.dumps(props, indent=5)
-        # create a new window
-        t = Toplevel(self.root)        
-        t.columnconfigure(0, weight=1)
-        t.rowconfigure(0, weight=1)
-        f = ttk.Frame(t)
+        # create/replace a new window
+        self.rawwin = Toplevel(self.root)        
+        self.rawwin.columnconfigure(0, weight=1)
+        self.rawwin.rowconfigure(0, weight=1)
+
+        f = ttk.Frame(self.rawwin)
         f.grid(column=0, row=0, sticky="news")
         f.columnconfigure(0, weight=1)
         f.rowconfigure(0, weight=1)
@@ -123,7 +152,7 @@ class AppView:
         txt.grid(column=0, row=0, sticky="news")
         txt.insert('1.0', props_s)
         txt.configure(state='disabled')
-
+        txt.bind('<<Selection>>', self._on_offer_text_selection)
 
 
 
@@ -335,6 +364,7 @@ class AppView:
         self.other_entry.grid(column=1,row=1, sticky="w")
         self.other_entry.state(['disabled'])
         self.other_entry.bind('<Return>', lambda e: self._refresh_cmd())
+        self.other_entry_var.trace_add("write", self._on_other_entry_change)
         self.other_entry.bind('<FocusOut>', self._on_other_entry_focusout)
         self.other_entry.bind('<Button-1>', self._on_other_entry_click)
         # refresh button

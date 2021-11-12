@@ -10,6 +10,7 @@ def get_calling_script():
     return inspect.stack()[1][1]
 
 def dlog(msg, debug_level=1, color=TEXT_COLOR_MAGENTA):
+    msg = str(msg)
     def _get_calling_script():
         path_string = inspect.stack()[2][1]
         parts = PurePath(path_string).parts
