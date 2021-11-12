@@ -124,35 +124,37 @@ class AppView:
         results=None
         msg_in = None
         # uh oh, another nested event loop. terminator assigned!
-        while not msg_in:
-            try:
-                msg_in = self.q_in.get_nowait()
-            except multiprocessing.queues.Empty:
-                msg_in = None
-            if msg_in:
-                # print(f"[AppView] got msg!")
-                results = msg_in["msg"]
-                # print(msg_in["id"])
-            time.sleep(0.1)
+        self.root.after(1, lambda: self.handle_incoming_result_extra())
 
 
-        results_json = json.loads(results[0][0])
-        props=results_json["props"]
-        props_s = json.dumps(props, indent=5)
-        # create/replace a new window
-        self.rawwin = Toplevel(self.root)        
-        self.rawwin.columnconfigure(0, weight=1)
-        self.rawwin.rowconfigure(0, weight=1)
+    def handle_incoming_result_extra(self):
+        try:
+            msg_in = self.q_in.get_nowait()
+        except multiprocessing.queues.Empty:
+            msg_in = None
+            self.root.after(1, lambda: self.handle_incoming_result_extra())
+        else:
+            # print(f"[AppView] got msg!")
+            results = msg_in["msg"]
+            # print(msg_in["id"])
 
-        f = ttk.Frame(self.rawwin)
-        f.grid(column=0, row=0, sticky="news")
-        f.columnconfigure(0, weight=1)
-        f.rowconfigure(0, weight=1)
-        txt = Text(f)
-        txt.grid(column=0, row=0, sticky="news")
-        txt.insert('1.0', props_s)
-        txt.configure(state='disabled')
-        txt.bind('<<Selection>>', self._on_offer_text_selection)
+            results_json = json.loads(results[0][0])
+            props=results_json["props"]
+            props_s = json.dumps(props, indent=5)
+            # create/replace a new window
+            self.rawwin = Toplevel(self.root)        
+            self.rawwin.columnconfigure(0, weight=1)
+            self.rawwin.rowconfigure(0, weight=1)
+
+            f = ttk.Frame(self.rawwin)
+            f.grid(column=0, row=0, sticky="news")
+            f.columnconfigure(0, weight=1)
+            f.rowconfigure(0, weight=1)
+            txt = Text(f)
+            txt.grid(column=0, row=0, sticky="news")
+            txt.insert('1.0', props_s)
+            txt.configure(state='disabled')
+            txt.bind('<<Selection>>', self._on_offer_text_selection)
 
 
 
@@ -218,7 +220,7 @@ class AppView:
         results=None
         msg_in = None
 
-        self.root.after(1, lambda: self.handle_incoming_result(False))
+        self.root.after(1, lambda: self.handle_incoming_result(refresh=False))
 
 
 
