@@ -41,6 +41,7 @@ $ git checkout v0.0.5
 ## starting
 ### starting locally
 ```bash
+# export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
 ./gc__listoffers $ python3 application.py
 ```
 
