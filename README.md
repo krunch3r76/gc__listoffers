@@ -35,7 +35,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.0.4
+$ git checkout v0.0.5
 ```
 
 ## starting
@@ -66,7 +66,31 @@ the total number of offers is listed in large digits near the bottom left
 
 see offer details via the contextual menu system!
 
-
+## what is an app key?
+an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers:
+```bash
+$ yagna app-key list --json
+{
+  "headers": [
+    "name",
+    "key",
+    "id",
+    "role",
+    "created"
+  ],
+  "values": [
+    [
+      "golem-cli",
+      "591184ff4e7d495aa32ce16c0c72228a", # this is the app key
+      "0xe50dd37bbd930b1bb860010385056ee016b392c3",
+      "manager",
+      "2021-11-13T01:36:34.907106973"
+    ]
+  ]
+}
+$ export YAGNA_APPKEY=591184ff4e7d495aa32ce16c0c72228a # use your key not mine
+$ python3 ./application.py
+```
 
 # TODO
 this is a very long list but i will start it with:
