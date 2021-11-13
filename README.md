@@ -11,8 +11,7 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 # screenshot
 
-![ss_listoffers002](https://user-images.githubusercontent.com/46289600/141082826-e4b69b95-52a1-419a-a1ae-b61bd95ba245.png)
-
+![image](https://user-images.githubusercontent.com/46289600/141601396-69b9133f-eaea-4d80-9398-b31e11fb427c.png)
 
 # requirements
 **YAGNA_APPKEY must be in your environment for this to run successfuly**.
