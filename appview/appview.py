@@ -164,9 +164,10 @@ class AppView:
     def _update(self, results, refresh=True):
         if refresh:
             self.session_resultcount=len(results)
+
         for result in results:
             result=list(result)
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7]))
 
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
@@ -184,9 +185,6 @@ class AppView:
                 # self.resultcount_var.set(str(new_resultcount))
             else:
                 self.resultdiffcount_var.set("") # consider edge cases
-
-
-
 
         self._toggle_refresh_controls()
 
@@ -228,11 +226,12 @@ class AppView:
 
 
     def _update_or_refresh_sql(self):
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
             " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
             " INNER JOIN 'runtime'  USING (offerRowID)" \
+            " INNER JOIN 'inf.cpu' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm' "
 
         if self.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
@@ -413,7 +412,7 @@ class AppView:
 
 
         style.configure("Treeview.Heading", foreground=DIC411)
-        tree = ttk.Treeview(mainframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed'))
+        tree = ttk.Treeview(mainframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
         self.tree = tree
 
         root.option_add('*tearOff', FALSE)
@@ -470,6 +469,12 @@ class AppView:
                 )
         tree.heading('fixed', text='fixed', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.fixed"})
+                )
+        tree.heading('cores', text='cores', anchor="w"
+                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.cores"})
+                )
+        tree.heading('threads', text='threads', anchor="w"
+                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.threads"})
                 )
 
         # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
