@@ -13,6 +13,7 @@ import decimal
 from decimal import Decimal
 import json
 import debug
+import subprocess
 
 # from functools import partial
 
@@ -267,7 +268,7 @@ class AppView:
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
         results=None
         msg_in = None
-
+# https://freesound.org/people/hykenfreak/sounds/248182/
         self.root.after(1, self.handle_incoming_result)
 
 
@@ -281,7 +282,8 @@ class AppView:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
             msg_in = None
-            self.root.after(1, lambda: self.handle_incoming_result(refresh))
+            subprocess.run(['aplay', 'gs/transformers.wav'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.root.after(10, lambda: self.handle_incoming_result(refresh))
         if msg_in:
             # print(f"[AppView] got msg!")
             results = msg_in["msg"]
