@@ -14,6 +14,9 @@ from decimal import Decimal
 import json
 import debug
 import subprocess
+import platform
+if platform.system()=='Windows':
+    import winsound
 
 # from functools import partial
 
@@ -88,6 +91,7 @@ class AppView:
         self.other_entry_var = StringVar()
         self.rawwin = None
 
+        self.sp = None
     def _on_offer_text_selection(self, *args):
         e=args[0]
         selection_range=e.widget.tag_ranges('sel')
@@ -282,7 +286,15 @@ class AppView:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
             msg_in = None
-            subprocess.run(['aplay', 'gs/transformers.wav'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if self.sp == None:
+                if platform.system()=='Windows':
+                    self.sp =Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
+                    self.sp.start()
+                else:
+                    pass
+            elif not self.sp.is_alive():
+                self.sp = None
+            # subprocess.run(['aplay', 'gs/transformers.wav'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.root.after(10, lambda: self.handle_incoming_result(refresh))
         if msg_in:
             # print(f"[AppView] got msg!")
