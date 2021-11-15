@@ -286,22 +286,25 @@ class AppView:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
             msg_in = None
-            if self.sp == None:
-                if platform.system()=='Windows':
-                    self.sp =Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
-                    self.sp.start()
+            if refresh:
+                if self.sp == None:
+                    if platform.system()=='Windows':
+                        self.sp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
+                        self.sp.start()
+                    else:
+                        self.sp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 else:
-                    pass
-            elif not self.sp.is_alive():
-                self.sp = None
-            # subprocess.run(['aplay', 'gs/transformers.wav'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    if isinstance(self.sp, subprocess.Popen):
+                        if self.sp.poll() == None:
+                            self.sp.wait()
+                            self.sp=None
+                    else: # Process
+                        if not self.sp.is_alive():
+                            self.sp = None
             self.root.after(10, lambda: self.handle_incoming_result(refresh))
         if msg_in:
-            # print(f"[AppView] got msg!")
             results = msg_in["msg"]
             self._update(results, refresh)
-            # print(msg_in["id"])
-    # print(len(results)) 
 
 
 
