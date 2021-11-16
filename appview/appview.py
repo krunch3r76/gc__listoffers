@@ -291,8 +291,11 @@ class AppView:
                     if platform.system()=='Windows':
                         self.sp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
                         self.sp.start()
-                    else:
+                    elif platform.system()=='Linux':
                         self.sp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    elif paltform.system()=='Darwin':
+                        self.sp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
                 else:
                     if isinstance(self.sp, subprocess.Popen):
                         if self.sp.poll() == None:
