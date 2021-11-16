@@ -293,7 +293,7 @@ class AppView:
                         self.sp.start()
                     elif platform.system()=='Linux':
                         self.sp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    elif paltform.system()=='Darwin':
+                    elif platform.system()=='Darwin':
                         self.sp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
                 else:
