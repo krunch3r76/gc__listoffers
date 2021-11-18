@@ -57,41 +57,62 @@ def _toggle_refresh_controls_closure(self):
 
 
 class AppView:
+    #############################################################################
+    #               the mother of all class methods                             #
+    #############################################################################
     def __init__(self):
         self._toggle_refresh_controls = _toggle_refresh_controls_closure(self)
 
+        # message queues used by controller to interface with this
         self.q_out=Queue()
         self.q_in=Queue()
-        self.tree = None
-        self.session_id=None
-        self.order_by_last="'node.id'.name"
 
+
+        self.session_id=None    # timestamp of last refresh
+        self.order_by_last="'node.id'.name" # current column to sort results on
+
+        # root Tk window and styling
         self.root=Tk()
         s = ttk.Style()
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')
 
+        # setup widgets and their linked variables
+        self.tree = None # displays query results in a TreeView
         self.cpusec_entry = None
         self.cpusec_entry_var = StringVar()
         self.durationsec_entry = None
         self.durationsec_entry_var = StringVar()
-        self.resultcount_var = StringVar(value="0")
-        self.resultdiffcount_var = StringVar(value="")
-        self.session_resultcount = None
-        self.subnet_var = StringVar()
-        self.cursorOfferRowID = None
-        self.lastresultcount = 0
-        decimal.getcontext().prec=7
-
         self.refreshButton=None
+
         self.publicbeta_rb=None
         self.publicdevnet_rb=None
         self.other_rb=None
+        self.subnet_var = StringVar()
+
         self.other_entry = None
         self.other_entry_var = StringVar()
-        self.rawwin = None
 
-        self.sp = None
+
+        # countlabel
+        self.resultcount_var = StringVar(value="0")
+
+        # countdifflabel
+        self.resultdiffcount_var = StringVar(value="")
+
+
+        self.session_resultcount = 0 # stores the number of rows currently on the table
+        self.lastresultcount = 0 # temporary to store the displayed result number count before refresh
+
+        self.cursorOfferRowID = None # stores the RowID of a selected row
+
+        decimal.getcontext().prec=7 # sets the precision of displayed decimal numbers
+
+        self.rawwin = None # a window for displaying raw results
+
+        self.ssp = None # current sound Process/Subprocess instance
+
+
     def _on_offer_text_selection(self, *args):
         e=args[0]
         selection_range=e.widget.tag_ranges('sel')
@@ -167,6 +188,9 @@ class AppView:
 
 
     def _update(self, results, refresh=True):
+        """update gui with the input results
+        called by: handle_incoming_result
+        """
         if refresh:
             self.session_resultcount=len(results)
 
@@ -272,7 +296,7 @@ class AppView:
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
         results=None
         msg_in = None
-# https://freesound.org/people/hykenfreak/sounds/248182/
+
         self.root.after(1, self.handle_incoming_result)
 
 
@@ -287,24 +311,26 @@ class AppView:
         except multiprocessing.queues.Empty:
             msg_in = None
             if refresh:
-                if self.sp == None:
+                if self.ssp == None:
                     if platform.system()=='Windows':
-                        self.sp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
-                        self.sp.start()
+                        self.ssp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
+                        self.ssp.start()
                     elif platform.system()=='Linux':
-                        self.sp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        self.ssp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     elif platform.system()=='Darwin':
-                        self.sp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        self.ssp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
                 else:
-                    if isinstance(self.sp, subprocess.Popen):
-                        if self.sp.poll() == None:
-                            self.sp.wait()
-                            self.sp=None
+                    if isinstance(self.ssp, subprocess.Popen):
+                        if self.ssp.poll() == None:
+                            self.ssp.wait()
+                            self.ssp=None
                     else: # Process
-                        if not self.sp.is_alive():
-                            self.sp = None
+                        if not self.ssp.is_alive():
+                            self.ssp = None
+
             self.root.after(10, lambda: self.handle_incoming_result(refresh))
+
         if msg_in:
             results = msg_in["msg"]
             self._update(results, refresh)
@@ -345,19 +371,20 @@ class AppView:
         root.columnconfigure(0, weight=1)
         root.rowconfigure(0, weight=1)
 
-        mainframe=ttk.Frame(root)
-        mainframe.grid(column=0, row=0, sticky="news")
-        mainframe.columnconfigure(0, weight=1)
-        mainframe.rowconfigure(0, weight=1)
-        mainframe['padding']=(0,0,0,10)
+        treeframe=ttk.Frame(root)
+        treeframe.grid(column=0, row=0, sticky="news")
+        treeframe.columnconfigure(0, weight=1)
+        treeframe.rowconfigure(0, weight=1)
+        treeframe['padding']=(0,0,0,10)
 
-        subframe=ttk.Frame(root)
-        subframe.grid(column=0, row=1, sticky="news")
-        subframe.rowconfigure(0, weight=1)
-        subframe['padding']=(10)
-        # subframe['padding']=(0,0,0,10)
+        baseframe=ttk.Frame(root)
+        baseframe.grid(column=0, row=1)
+        # baseframe.grid(column=0, row=1, sticky="news")
+        baseframe.rowconfigure(0, weight=1)
+        baseframe['padding']=(10)
+        # baseframe['padding']=(0,0,0,10)
 
-        refreshframe=ttk.Frame(subframe)
+        refreshframe=ttk.Frame(baseframe)
         refreshframe.grid(column=0,row=1, stick="e")
         refreshframe.columnconfigure(0, weight=0)
         refreshframe.columnconfigure(1, weight=0)
@@ -393,7 +420,7 @@ class AppView:
         self.refreshButton.grid(column=0,row=1,sticky="w,e")
 
         # count
-        count_frame=ttk.Frame(subframe)
+        count_frame=ttk.Frame(baseframe)
         count_frame.grid(column=1,row=1, sticky="e")
         # TkDefaultFont 10
         count_label = ttk.Label(count_frame, textvariable=self.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
@@ -404,7 +431,7 @@ class AppView:
         #style.configure('TLabel', )
 
         #cpusec
-        cpusec_entryframe=ttk.Frame(subframe)
+        cpusec_entryframe=ttk.Frame(baseframe)
         cpusec_entryframe.grid(column=0,row=2,stick="w")
         cpusec_entryframe['padding']=(0,0,50,0)
         #cpusec .check
@@ -417,7 +444,7 @@ class AppView:
         self.cpusec_entry.bind('<FocusOut>', lambda e: self._update_cmd())
         self.cpusec_entry.bind('<Return>', lambda e: root.focus_set())
         #dursec
-        dursec_entryframe=ttk.Frame(subframe)
+        dursec_entryframe=ttk.Frame(baseframe)
         dursec_entryframe.grid(column=1,row=2,stick="w")
         #dursec .check
         cbDurSecVar=StringVar()
@@ -432,7 +459,7 @@ class AppView:
 
 
         style.configure("Treeview.Heading", foreground=DIC411)
-        tree = ttk.Treeview(mainframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
+        tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
         self.tree = tree
 
         root.option_add('*tearOff', FALSE)
