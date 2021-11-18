@@ -11,7 +11,8 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 # screenshot
 
-![image](https://user-images.githubusercontent.com/46289600/141601396-69b9133f-eaea-4d80-9398-b31e11fb427c.png)
+![Screenshot from 2021-11-18 09-16-13](https://user-images.githubusercontent.com/46289600/142465133-12718e10-330b-46a0-ab18-2b8fccb4fbbf.png)
+
 
 # requirements
 **YAGNA_APPKEY must be in your environment for this to run successfuly**.
@@ -36,7 +37,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.0.6
+$ git checkout v0.0.7
 ```
 
 ## starting
