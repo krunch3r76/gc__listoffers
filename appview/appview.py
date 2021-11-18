@@ -80,9 +80,9 @@ class AppView:
         # setup widgets and their linked variables
         self.tree = None # displays query results in a TreeView
         self.cpusec_entry = None
-        self.cpusec_entry_var = StringVar()
+        self.cpusec_entry_var = StringVar(value='0.1')
         self.durationsec_entry = None
-        self.durationsec_entry_var = StringVar()
+        self.durationsec_entry_var = StringVar(value='0.02')
         self.refreshButton=None
 
         self.publicbeta_rb=None
@@ -368,21 +368,21 @@ class AppView:
         root=self.root
         style=ttk.Style()
         root.title("Provider View")
-        root.columnconfigure(0, weight=1)
-        root.rowconfigure(0, weight=1)
+        root.columnconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(0, weight=1) # ratio for children to resize against
 
         treeframe=ttk.Frame(root)
         treeframe.grid(column=0, row=0, sticky="news")
-        treeframe.columnconfigure(0, weight=1)
-        treeframe.rowconfigure(0, weight=1)
-        treeframe['padding']=(0,0,0,10)
+        treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
+        treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
+        treeframe['padding']=(0,0,0,5)
 
         baseframe=ttk.Frame(root)
         baseframe.grid(column=0, row=1)
         # baseframe.grid(column=0, row=1, sticky="news")
         baseframe.rowconfigure(0, weight=1)
-        baseframe['padding']=(10)
-        # baseframe['padding']=(0,0,0,10)
+        # baseframe['padding']=(10)
+        baseframe['padding']=(0,5,0,10)
 
         refreshframe=ttk.Frame(baseframe)
         refreshframe.grid(column=0,row=1, stick="e")
