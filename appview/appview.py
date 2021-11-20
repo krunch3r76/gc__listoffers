@@ -44,6 +44,7 @@ class AppView:
 
         # root Tk window and styling
         self.root=Tk()
+        self.root.geometry('1024x480+100+200')
         s = ttk.Style()
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')
@@ -75,11 +76,13 @@ class AppView:
 
         # treeframe
         treeframe = ttk.Frame(root)
-        treeframe.grid(column=0, row=0, sticky="news")
         treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
         treeframe['padding']=(0,0,0,5)
         self.tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
+        treeframe.grid(column=0, row=0, sticky="news")
+        self.tree.grid(column=0, row=0, sticky="news")
+
 
         self.subnet_var.set('public-beta')
         self.other_entry_var.set('devnet-beta.2')
@@ -88,14 +91,14 @@ class AppView:
         # baseframe
         baseframe = ttk.Frame(root)
         baseframe.grid(column=0, row=1)
-        baseframe.columnconfigure(0, weight=1)
-        baseframe.rowconfigure(0, weight=1)
+        # baseframe.columnconfigure(0, weight=1)
+        # baseframe.rowconfigure(0, weight=1)
         baseframe['padding']=(0,5,0,10)
 
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
         self.count_frame        = CountFrame(self, baseframe)
 
-        self.refreshFrame.w.grid(       column=0,row=0, sticky="w")
+        self.refreshFrame.w.grid(       column=0,row=0, sticky="w", padx=20)
         self.count_frame.w.grid(        column=1,row=0, sticky="e")
 
         # subbaseframe
@@ -111,7 +114,7 @@ class AppView:
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
         self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
 
-
+        root.bind('<Escape>', lambda e: root.destroy())
 
 
 
@@ -170,7 +173,7 @@ class AppView:
     def _on_other_entry_focusout(self, *args):
         subnet=self.subnet_var.get()
         if subnet != 'public-beta' and subnet != 'devnet-beta':
-            self.other_entry.state(['disabled'])
+            self.refreshFrame.radio_frame.other_entry.state(['disabled'])
 
 
 
@@ -178,14 +181,14 @@ class AppView:
         if self.other_rb.instate(['!disabled']):
             subnet=self.subnet_var.get()
             if subnet != 'public-beta' and subnet != 'devnet-beta':
-                self.other_entry.state(['!disabled'])
+                self.refreshFrame.radio_frame.other_entry.state(['!disabled'])
 
 
 
     def _on_other_radio(self, *args):
-        self.other_entry.state(['!disabled'])
+        self.refreshFrame.radio_frame.other_entry.state(['!disabled'])
         # debug.dlog(self.other_entry_var.get() )
-        self.other_rb['value']= self.other_entry_var.get()
+        self.refreshFrame.radio_frame.other_rb['value']= self.other_entry_var.get()
         self.subnet_var.set( self.other_entry_var.get() )
 
 
@@ -453,9 +456,17 @@ class AppView:
 
 
         # tree.tag_configure('Theading', background='green')
-        self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
+        # self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
         self.tree.column('#0', width=0, stretch=NO)
         self.tree.column('offerRowID', width=0, stretch=NO)
+        self.tree.column('name', width=0)
+        self.tree.column('address', width=0)
+        self.tree.column('cpu', width=0)
+        self.tree.column('duration', width=0)
+        self.tree.column('fixed', width=0)
+        self.tree.column('cores', width=0)
+        self.tree.column('threads', width=0)
+
         self.tree.heading('name', text='name', anchor="w" 
                 , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
                 )
