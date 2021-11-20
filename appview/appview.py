@@ -178,7 +178,8 @@ class AppView:
 
 
     def _on_other_entry_click(self, *args):
-        if self.other_rb.instate(['!disabled']):
+        radio_frame=self.refreshFrame.radio_frame
+        if radio_frame.other_rb.instate(['!disabled']):
             subnet=self.subnet_var.get()
             if subnet != 'public-beta' and subnet != 'devnet-beta':
                 self.refreshFrame.radio_frame.other_entry.state(['!disabled'])
