@@ -11,7 +11,7 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 # screenshot
 
-![Screenshot from 2021-11-18 09-16-13](https://user-images.githubusercontent.com/46289600/142465133-12718e10-330b-46a0-ab18-2b8fccb4fbbf.png)
+![image](https://user-images.githubusercontent.com/46289600/142739336-b3904dbc-303e-4c6e-85b9-4c25c8055d58.png)
 
 
 # requirements
