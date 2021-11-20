@@ -26,33 +26,106 @@ DIC411="#003366"
 DIC544="#4D4D4D"
 
 
+class RefreshFrame():
 
-def _toggle_refresh_controls_closure(self):
-    disabled = False
-    other_entry_was_enabled = False
-    def toggle():
-        nonlocal disabled
-        nonlocal other_entry_was_enabled
-        if not disabled:
-            self.refreshButton.state(['disabled'])
-            self.publicbeta_rb.state(['disabled'])
-            self.publicdevnet_rb.state(['disabled'])
-            if self.other_entry.instate(['!disabled']):
-                other_entry_was_enabled = True
-            self.other_rb.state(['disabled'])
+    
+    class RadioFrame():
+
+        def __init__(self, master, *args, **kwargs):
+            self.w = ttk.Frame(*args, **kwargs)
+            self.master = master
+
+            # create publicbeta_rb
+            self.publicbeta_rb = ttk.Radiobutton(self.w, text='public-beta',
+                    variable=self.master.subnet_var, value='public-beta', command=self.master._refresh_cmd)
+           
+            # create publicdevnet_rb
+            self.publicdevnet_rb = ttk.Radiobutton(self.w, text='devnet-beta',
+                    variable=self.master.subnet_var, value='devnet-beta', command=self.master._refresh_cmd)
+
+            # create other_db
+            self.other_rb = ttk.Radiobutton(self.w, text='other', value='other'
+                    , variable=self.master.subnet_var, command=self.master._on_other_radio)
+
+            # create other_entry
+            self.other_entry = ttk.Entry(self.w, textvariable=self.master.other_entry_var)
             self.other_entry.state(['disabled'])
-            disabled=True
-        else:
-            self.refreshButton.state(['!disabled'])
-            self.publicbeta_rb.state(['!disabled'])
-            self.publicdevnet_rb.state(['!disabled'])
-            self.other_rb.state(['!disabled'])
-            if other_entry_was_enabled:
-                self.other_entry.state(['!disabled'])
-            disabled=False
+            self.other_entry.bind('<Return>', lambda e: self.master._refresh_cmd())
+            self.other_entry.bind('<FocusOut>', self.master._on_other_entry_focusout)
+            self.other_entry.bind('<Button-1>', self.master._on_other_entry_click)
 
-    return toggle
+            # grid components
+            self.publicbeta_rb.grid(    column=0,row=0)
+            self.publicdevnet_rb.grid(  column=1,row=0)
+            self.other_rb.grid(         column=0,row=1, sticky="w")
+            self.other_entry.grid(      column=1,row=1, sticky="w")
 
+
+
+
+    def __init__(self, master, toggle_refresh_controls, *args, **kwargs):   
+        self.w = ttk.Frame(*args, **kwargs)
+        self._toggle_refresh_controls = toggle_refresh_controls
+        self.master = master
+
+        # self.w.grid(column=0, row=1, sticky="e")
+        self.w.columnconfigure(0, weight=0)
+        self.w.columnconfigure(1, weight=0)
+        self.w.columnconfigure(2, weight=1)
+        self.w['padding']=(0,0,0,10)
+        
+        self.refreshButton = ttk.Button(self.w, text="Refresh", command=self.master._refresh_cmd)
+
+        self.radio_frame=self.RadioFrame(self.master, self.w)
+
+        self.refreshButton.grid(column=0,row=0,sticky="w,e")
+        self.radio_frame.w.grid(column=0,row=1)
+
+
+class CountFrame():
+    def __init__(self, master, *args, **kwargs):
+        self.master=master
+        self.w = ttk.Frame(*args, **kwargs)
+
+        self.count_label = ttk.Label(self.w, textvariable=self.master.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
+        self.count_diff_label = ttk.Label(self.w, textvariable=self.master.resultdiffcount_var, foreground=DIC544, font='TkDefaultFont 20')
+
+        self.count_label.grid(column=1,row=1)
+        self.count_diff_label.grid(column=2,row=1)
+
+class CPUSecFrame():
+    def __init__(self, master, *args, **kwargs):
+        self.master=master
+        self.w = ttk.Frame(*args, **kwargs)
+        self.w['padding']=(0,0,50,0)
+
+        self.cbMaxCpuVar = StringVar()
+        self.cb= ttk.Checkbutton(self.w, text="max cpu(/sec)", command=self.master._cb_cpusec_checkbutton, onvalue='maxcpu', offvalue='nomaxcpu', variable=self.cbMaxCpuVar, padding=(0,0,5,0))
+        
+        self.cpusec_entry = ttk.Entry(self.w,textvariable=self.master.cpusec_entry_var,width=12)
+        self.cpusec_entry.state(['disabled'])
+        self.cpusec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
+        self.cpusec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
+
+        self.cb.grid(           column=0,row=0, sticky="w")
+        self.cpusec_entry.grid( column=1,row=0,stick="w")
+
+
+class DurSecFrame():
+    def __init__(self, master, *args, **kwargs):
+        self.master=master
+        self.w=ttk.Frame(*args, **kwargs)
+
+        self.cbDurSecVar=StringVar()
+        self.cb=ttk.Checkbutton(self.w, text="max duration(/sec)", command=self.master._cb_durationsec_checkbutton, variable=self.cbDurSecVar, padding=(0,0,5,0))
+        #     ...entry
+        self.durationsec_entry = ttk.Entry(self.w,textvariable=self.master.durationsec_entry_var, width=12)
+        self.durationsec_entry.state(['disabled'])
+        self.durationsec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
+        self.durationsec_entry.bind('<Return>', lambda e: root.master.focus_set())
+
+        self.cb.grid(column=0,row=0,sticky="w")
+        self.durationsec_entry.grid(column=1,row=0,stick="w")
 
 
 
@@ -61,12 +134,11 @@ class AppView:
     #               the mother of all class methods                             #
     #############################################################################
     def __init__(self):
-        self._toggle_refresh_controls = _toggle_refresh_controls_closure(self)
+        self.refreshFrame = None
 
         # message queues used by controller to interface with this
         self.q_out=Queue()
         self.q_in=Queue()
-
 
         self.session_id=None    # timestamp of last refresh
         self.order_by_last="'node.id'.name" # current column to sort results on
@@ -78,39 +150,98 @@ class AppView:
         s.theme_use('forest-light')
 
         # setup widgets and their linked variables
-        self.tree = None # displays query results in a TreeView
-        self.cpusec_entry = None
         self.cpusec_entry_var = StringVar(value='0.1')
-        self.durationsec_entry = None
         self.durationsec_entry_var = StringVar(value='0.02')
-        self.refreshButton=None
-
-        self.publicbeta_rb=None
-        self.publicdevnet_rb=None
-        self.other_rb=None
         self.subnet_var = StringVar()
-
-        self.other_entry = None
         self.other_entry_var = StringVar()
-
-
         # countlabel
         self.resultcount_var = StringVar(value="0")
-
         # countdifflabel
         self.resultdiffcount_var = StringVar(value="")
-
-
         self.session_resultcount = 0 # stores the number of rows currently on the table
         self.lastresultcount = 0 # temporary to store the displayed result number count before refresh
-
         self.cursorOfferRowID = None # stores the RowID of a selected row
-
         decimal.getcontext().prec=7 # sets the precision of displayed decimal numbers
-
         self.rawwin = None # a window for displaying raw results
-
         self.ssp = None # current sound Process/Subprocess instance
+
+        # configure layout
+        style=ttk.Style()
+        style.configure("Treeview.Heading", foreground=DIC411)
+
+        root=self.root
+        root.title("Provider View")
+        root.columnconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(0, weight=1) # ratio for children to resize against
+
+        # treeframe
+        treeframe = ttk.Frame(root)
+        treeframe.grid(column=0, row=0, sticky="news")
+        treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
+        treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
+        treeframe['padding']=(0,0,0,5)
+        self.tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
+
+        self.subnet_var.set('public-beta')
+        self.other_entry_var.set('devnet-beta.2')
+        self.other_entry_var.trace_add("write", self._on_other_entry_change)
+
+        # baseframe
+        baseframe = ttk.Frame(root)
+        baseframe.grid(column=0, row=1)
+        baseframe.columnconfigure(0, weight=1)
+        baseframe.rowconfigure(0, weight=1)
+        baseframe['padding']=(0,5,0,10)
+
+        self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
+        self.count_frame        = CountFrame(self, baseframe)
+
+        self.refreshFrame.w.grid(       column=0,row=0, sticky="w")
+        self.count_frame.w.grid(        column=1,row=0, sticky="e")
+
+        subbaseframe = ttk.Frame(root)
+        subbaseframe.grid(column=0, row=2)
+        self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
+        self.dursec_entryframe  = DurSecFrame(self, subbaseframe)
+        emptyframe_left=ttk.Frame(subbaseframe)
+        emptyframe_right=ttk.Frame(subbaseframe)
+        emptyframe_left.grid( column=0)
+        emptyframe_right.grid(column=3)
+
+        self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
+        self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
+
+    def _toggle_refresh_controls_closure(self):
+        disabled = False
+        other_entry_was_enabled = False
+
+        def toggle():
+            nonlocal disabled
+            nonlocal other_entry_was_enabled
+            radio_frame=self.refreshFrame.radio_frame
+            refreshFrame=self.refreshFrame
+            if not disabled:
+                refreshFrame.refreshButton.state(['disabled'])
+                radio_frame.publicbeta_rb.state(['disabled'])
+                radio_frame.publicdevnet_rb.state(['disabled'])
+                if radio_frame.other_entry.instate(['!disabled']):
+                    other_entry_was_enabled = True
+                radio_frame.other_rb.state(['disabled'])
+                radio_frame.other_entry.state(['disabled'])
+                disabled=True
+            else:
+                refreshFrame.refreshButton.state(['!disabled'])
+                radio_frame.publicbeta_rb.state(['!disabled'])
+                radio_frame.publicdevnet_rb.state(['!disabled'])
+                radio_frame.other_rb.state(['!disabled'])
+                if other_entry_was_enabled:
+                    radio_frame.other_entry.state(['!disabled'])
+                disabled=False
+
+        return toggle
+
+
+
 
 
     def _on_offer_text_selection(self, *args):
@@ -215,14 +346,14 @@ class AppView:
             else:
                 self.resultdiffcount_var.set("") # consider edge cases
 
-        self._toggle_refresh_controls()
+        self.refreshFrame._toggle_refresh_controls()
 
 
 
 
 
     def _update_cmd(self, *args):
-        self._toggle_refresh_controls()
+        self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
             self.lastresultcount=int(self.resultcount_var.get())
@@ -263,10 +394,10 @@ class AppView:
             " INNER JOIN 'inf.cpu' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm' "
 
-        if self.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
+        if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
          
-        if self.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
+        if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.dursec_entryframe.durationsec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
         ss+=" GROUP BY 'node.id'.name"  \
@@ -282,7 +413,7 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
-        self._toggle_refresh_controls()
+        self.refreshFrame._toggle_refresh_controls()
 
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
@@ -365,114 +496,19 @@ class AppView:
 
 
     def __call__(self):
-        root=self.root
-        style=ttk.Style()
-        root.title("Provider View")
-        root.columnconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(0, weight=1) # ratio for children to resize against
 
-        treeframe=ttk.Frame(root)
-        treeframe.grid(column=0, row=0, sticky="news")
-        treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
-        treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
-        treeframe['padding']=(0,0,0,5)
-
-        baseframe=ttk.Frame(root)
-        baseframe.grid(column=0, row=1)
-        # baseframe.grid(column=0, row=1, sticky="news")
-        baseframe.rowconfigure(0, weight=1)
-        # baseframe['padding']=(10)
-        baseframe['padding']=(0,5,0,10)
-
-        refreshframe=ttk.Frame(baseframe)
-        refreshframe.grid(column=0,row=1, stick="e")
-        refreshframe.columnconfigure(0, weight=0)
-        refreshframe.columnconfigure(1, weight=0)
-        refreshframe.columnconfigure(2, weight=1)
-        refreshframe['padding']=(0, 0, 0, 10)
-
-
-
-        # radio
-        radio_frame=ttk.Frame(refreshframe)
-        radio_frame.grid(column=0,row=0,sticky="w", pady=10)
-        #       ...publicbeta
-        self.publicbeta_rb = ttk.Radiobutton(radio_frame, text='public-beta', variable=self.subnet_var, value='public-beta', command=self._refresh_cmd)
-        self.subnet_var.set('public-beta')
-        self.publicbeta_rb.grid(column=0,row=0)
-        #       ...devnetbeta
-        self.publicdevnet_rb = ttk.Radiobutton(radio_frame, text='devnet-beta', variable=self.subnet_var, value='devnet-beta',command=self._refresh_cmd)
-        self.publicdevnet_rb.grid(column=1,row=0)
-        
-        #       ...other
-        self.other_rb = ttk.Radiobutton(radio_frame, text='other', value='other', variable=self.subnet_var, command=self._on_other_radio)
-        self.other_rb.grid(column=0,row=1, sticky="w")
-        self.other_entry_var.set('devnet-beta.2')
-        self.other_entry = ttk.Entry(radio_frame, textvariable=self.other_entry_var)
-        self.other_entry.grid(column=1,row=1, sticky="w")
-        self.other_entry.state(['disabled'])
-        self.other_entry.bind('<Return>', lambda e: self._refresh_cmd())
-        self.other_entry_var.trace_add("write", self._on_other_entry_change)
-        self.other_entry.bind('<FocusOut>', self._on_other_entry_focusout)
-        self.other_entry.bind('<Button-1>', self._on_other_entry_click)
-        # refresh button
-        self.refreshButton = ttk.Button(refreshframe, text="Refresh", command=self._refresh_cmd)
-        self.refreshButton.grid(column=0,row=1,sticky="w,e")
-
-        # count
-        count_frame=ttk.Frame(baseframe)
-        count_frame.grid(column=1,row=1, sticky="e")
-        # TkDefaultFont 10
-        count_label = ttk.Label(count_frame, textvariable=self.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
-        count_label.grid(column=1,row=1)
-        count_diff_label = ttk.Label(count_frame, textvariable=self.resultdiffcount_var, foreground=DIC544, font='TkDefaultFont 20')
-        count_diff_label.grid(column=2,row=1)
-        # TLabel
-        #style.configure('TLabel', )
-
-        #cpusec
-        cpusec_entryframe=ttk.Frame(baseframe)
-        cpusec_entryframe.grid(column=0,row=2,stick="w")
-        cpusec_entryframe['padding']=(0,0,50,0)
-        #cpusec .check
-        cbMaxCpuVar = StringVar()
-        ttk.Checkbutton(cpusec_entryframe, text="max cpu(/sec)", command=self._cb_cpusec_checkbutton, onvalue='maxcpu', offvalue='nomaxcpu', variable=cbMaxCpuVar, padding=(0,0,5,0)).grid(column=0,row=0, sticky="w")
-        #     ...entry
-        self.cpusec_entry = ttk.Entry(cpusec_entryframe,textvariable=self.cpusec_entry_var,width=12)
-        self.cpusec_entry.state(['disabled'])
-        self.cpusec_entry.grid(column=1,row=0,stick="w")
-        self.cpusec_entry.bind('<FocusOut>', lambda e: self._update_cmd())
-        self.cpusec_entry.bind('<Return>', lambda e: root.focus_set())
-        #dursec
-        dursec_entryframe=ttk.Frame(baseframe)
-        dursec_entryframe.grid(column=1,row=2,stick="w")
-        #dursec .check
-        cbDurSecVar=StringVar()
-        ttk.Checkbutton(dursec_entryframe, text="max duration(/sec)", command=self._cb_durationsec_checkbutton, variable=cbDurSecVar, padding=(0,0,5,0)).grid(column=0,row=0,sticky="w")
-        #     ...entry
-        self.durationsec_entry = ttk.Entry(dursec_entryframe,textvariable=self.durationsec_entry_var, width=12)
-        self.durationsec_entry.state(['disabled'])
-        self.durationsec_entry.grid(column=1,row=0,stick="w")
-        self.durationsec_entry.bind('<FocusOut>', lambda e: self._update_cmd())
-        self.durationsec_entry.bind('<Return>', lambda e: root.focus_set())
-        
-
-
-        style.configure("Treeview.Heading", foreground=DIC411)
-        tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
-        self.tree = tree
-
+        root = self.root
+        # popup menu
         root.option_add('*tearOff', FALSE)
-
-
-
         menu = Menu(root)
         menu.add_command(label='<name>')
         menu.entryconfigure(0, state=DISABLED)
         menu.add_separator()
         menu.add_command(label='view raw', command=self._show_raw)
         menu.add_command(label='exit menu')
+
         def do_popup(event):
+            tree=self.tree
             try:
                 # identify the coordinates of tree
                 # print(tree.state())
@@ -498,29 +534,30 @@ class AppView:
         else:
             root.bind('<3>', do_popup )
 
+
         # tree.tag_configure('Theading', background='green')
         self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
-        tree.column('#0', width=0, stretch=NO)
-        tree.column('offerRowID', width=0, stretch=NO)
-        tree.heading('name', text='name', anchor="w" 
+        self.tree.column('#0', width=0, stretch=NO)
+        self.tree.column('offerRowID', width=0, stretch=NO)
+        self.tree.heading('name', text='name', anchor="w" 
                 , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
                 )
-        tree.heading('address', text='address', anchor="w"
+        self.tree.heading('address', text='address', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'offers'.address"})
                 )
-        tree.heading('cpu', text='cpu (/sec)', anchor="w"
+        self.tree.heading('cpu', text='cpu (/sec)', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"})
                 )
-        tree.heading('duration', text='duration (/sec)', anchor="w"
+        self.tree.heading('duration', text='duration (/sec)', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"})
                 )
-        tree.heading('fixed', text='fixed', anchor="w"
+        self.tree.heading('fixed', text='fixed', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.fixed"})
                 )
-        tree.heading('cores', text='cores', anchor="w"
+        self.tree.heading('cores', text='cores', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.cores"})
                 )
-        tree.heading('threads', text='threads', anchor="w"
+        self.tree.heading('threads', text='threads', anchor="w"
                 , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.threads"})
                 )
 
