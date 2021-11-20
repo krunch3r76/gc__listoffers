@@ -18,7 +18,7 @@ if platform.system()=='Windows':
     import winsound
 
 
-import time #debug
+import os
 
 from .frames import *
 
@@ -314,7 +314,7 @@ class AppView:
         if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
          
-        if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.dursec_entryframe.durationsec_entry_var.get():
+        if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
         ss+=" GROUP BY 'node.id'.name"  \
@@ -390,22 +390,22 @@ class AppView:
 
 
     def _cb_cpusec_checkbutton(self, *args):
-        if self.cpusec_entry.instate(['disabled']):
-            self.cpusec_entry.state(['!disabled'])
+        if self.cpusec_entryframe.cpusec_entry.instate(['disabled']):
+            self.cpusec_entryframe.cpusec_entry.state(['!disabled'])
         else:
-            self.cpusec_entry.state(['disabled'])
-        if self.cpusec_entry.get():
+            self.cpusec_entryframe.cpusec_entry.state(['disabled'])
+        if self.cpusec_entryframe.cpusec_entry.get():
             self._update_cmd()
 
 
 
 
     def _cb_durationsec_checkbutton(self, *args):
-        if self.durationsec_entry.instate(['disabled']):
-            self.durationsec_entry.state(['!disabled'])
+        if self.dursec_entryframe.durationsec_entry.instate(['disabled']):
+            self.dursec_entryframe.durationsec_entry.state(['!disabled'])
         else:
-            self.durationsec_entry.state(['disabled'])
-        if self.durationsec_entry.get():
+            self.dursec_entryframe.durationsec_entry.state(['disabled'])
+        if self.dursec_entryframe.durationsec_entry.get():
             self._update_cmd()
 
 
