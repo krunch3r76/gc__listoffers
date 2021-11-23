@@ -113,8 +113,8 @@ class AppView:
         root.title("Provider View")
         root.columnconfigure(0, weight=1) # ratio for children to resize against
         root.rowconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(1, weight=1)
-
+        root.rowconfigure(1, weight=0)
+        root.rowconfigure(2, weight=0)
         # treeframe
         treeframe = ttk.Frame(root)
         treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
@@ -123,7 +123,8 @@ class AppView:
         self.tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
         treeframe.grid(column=0, row=0, sticky="news")
         self.tree.grid(column=0, row=0, sticky="news")
-
+#        self.tree.columnconfigure(0, weight=1)
+#        self.tree.rowconfigure(0, weight=1)
 
         self.subnet_var.set('public-beta')
         self.other_entry_var.set('devnet-beta.2')
@@ -131,7 +132,7 @@ class AppView:
 
         # baseframe
         baseframe = ttk.Frame(root)
-        baseframe.grid(column=0, row=1, sticky="wnes")
+        baseframe.grid(column=0, row=1, sticky="wes")
         baseframe.columnconfigure(0, weight=1)
         baseframe.columnconfigure(1, weight=1)
         baseframe.columnconfigure(2, weight=1)
@@ -162,20 +163,20 @@ class AppView:
         # emptyframe_right['relief']='sunken'
 
 
-        self.l_baseframe.grid(          column=0, row=0, sticky='wnes')
+        self.l_baseframe.grid(          column=0, row=0, sticky='wes')
         self.refreshFrame.w.grid(       column=1, row=0, sticky="s")
-        self.count_frame.w.grid(        column=2, row=0, sticky="n")
+        self.count_frame.w.grid(        column=2, row=0, )
         emptyframe_right.grid(          column=3, row=0, sticky='wnes')
         
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
         # l.columnconfigure(0, weight=1)
         # l.rowconfigure(0, weight=1)
         f = font.nametofont('TkDefaultFont')
         self.width_in_font_pixels = 30 * f.actual()['size']
         # l['relief']='sunken'
         self.console['wraplength']=self.width_in_font_pixels
-        self.console.grid(column=0, row=0, sticky='wnes')
+        self.console.grid(column=0, row=0, sticky='ws')
         motd=self.display_messages[0]
         self.message_being_displayed=True
         self.add_text_over_time_to_label(self.console, motd, len(motd))
