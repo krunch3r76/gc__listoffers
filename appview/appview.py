@@ -163,8 +163,8 @@ class AppView:
 
 
         self.l_baseframe.grid(          column=0, row=0, sticky='wnes')
-        self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
-        self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="s")
+        self.count_frame.w.grid(        column=2, row=0, sticky="n")
         emptyframe_right.grid(          column=3, row=0, sticky='wnes')
         
 
