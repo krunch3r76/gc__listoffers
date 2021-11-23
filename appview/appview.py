@@ -163,20 +163,23 @@ class AppView:
         # emptyframe_right['relief']='sunken'
 
 
-        self.l_baseframe.grid(          column=0, row=0, sticky='wes')
-        self.refreshFrame.w.grid(       column=1, row=0, sticky="s")
+        self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="ws")
         self.count_frame.w.grid(        column=2, row=0, )
         emptyframe_right.grid(          column=3, row=0, sticky='wnes')
         
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
+        # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
         # l.columnconfigure(0, weight=1)
         # l.rowconfigure(0, weight=1)
         f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels = 30 * f.actual()['size']
-        # l['relief']='sunken'
+        self.width_in_font_pixels = (30-3) * f.actual()['size'] 
+
+        # self.console['relief']='sunken'
+
         self.console['wraplength']=self.width_in_font_pixels
-        self.console.grid(column=0, row=0, sticky='ws')
+        self.console.grid(column=0, row=0, sticky='nw')
         motd=self.display_messages[0]
         self.message_being_displayed=True
         self.add_text_over_time_to_label(self.console, motd, len(motd))
