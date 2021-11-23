@@ -42,6 +42,7 @@ class AppView:
         if newmsg:
             label['text']=''
             newmsg=False
+            
         label['text']+=text[current]
         current+=1
         add_time=0
@@ -74,7 +75,6 @@ class AppView:
     #############################################################################
     def __init__(self):
         self.refreshFrame = None
-        self.message_being_displayed = False
         # message queues used by controller to interface with this
         self.q_out=Queue()
         self.q_in=Queue()
@@ -175,14 +175,11 @@ class AppView:
         # l.rowconfigure(0, weight=1)
         f = font.nametofont('TkDefaultFont')
         self.width_in_font_pixels = (30-3) * f.actual()['size'] 
+        self._rewrite_to_console(self.display_messages[0])
+
 
         # self.console['relief']='sunken'
 
-        self.console['wraplength']=self.width_in_font_pixels
-        self.console.grid(column=0, row=0, sticky='nw')
-        motd=self.display_messages[0]
-        self.message_being_displayed=True
-        self.add_text_over_time_to_label(self.console, motd, len(motd))
 
 
 
@@ -409,17 +406,26 @@ class AppView:
         return ss
 
 
+    def _rewrite_to_console(self, msg):
+        self.console.grid_remove()
 
-
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console.grid(column=0, row=0, sticky='nw')
+        self.console['wraplength']=self.width_in_font_pixels
+        self.add_text_over_time_to_label(self.console, msg, len(msg))
 
 
 
     def _refresh_cmd(self, *args):
+        self._rewrite_to_console(self.display_messages[1])
+        """
         self.console.grid_remove()
-        l = ttk.Label(self.l_baseframe, anchor='nw', width=30)
-        l.grid(column=0, row=0, sticky='wnes')
-        l['wraplength']=self.width_in_font_pixels
-        self.add_text_over_time_to_label(l, self.display_messages[1], len(self.display_messages[1]))
+
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console.grid(column=0, row=0, sticky='nw')
+        self.console['wraplength']=self.width_in_font_pixels
+        self.add_text_over_time_to_label(self.console, self.display_messages[1], len(self.display_messages[1]))
+        """
         # self.add_text_over_time_to_label(self.console, self.display_messages[1], len(self.display_messages[1]))
         self.refreshFrame._toggle_refresh_controls()
 
