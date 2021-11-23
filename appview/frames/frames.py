@@ -1,6 +1,6 @@
 from tkinter import *
 from tkinter import ttk
-
+import debug
 
 DIC411="#003366"
 DIC544="#4D4D4D"
@@ -33,11 +33,14 @@ class RefreshFrame():
             self.other_entry.bind('<FocusOut>', self.master._on_other_entry_focusout)
             self.other_entry.bind('<Button-1>', self.master._on_other_entry_click)
 
-            self.w.rowconfigure(0,pad=5)
+            self.w.rowconfigure(0,pad=5, weight=1)
+            self.w.rowconfigure(1, weight=1)
+            self.w.columnconfigure(0,weight=1)
+            self.w.columnconfigure(1,weight=1)
 
             # grid components
-            self.publicbeta_rb.grid(    column=0,row=0)
-            self.publicdevnet_rb.grid(  column=1,row=0)
+            self.publicbeta_rb.grid(    column=0,row=0, sticky="w")
+            self.publicdevnet_rb.grid(  column=1,row=0, sticky="w")
             self.other_rb.grid(         column=0,row=1, sticky="w")
             self.other_entry.grid(      column=1,row=1, sticky="w")
 
@@ -49,21 +52,20 @@ class RefreshFrame():
         self._toggle_refresh_controls = toggle_refresh_controls
         self.master = master
 
-        # self.w.grid(column=0, row=1, sticky="e")
-        self.w.columnconfigure(0, weight=0)
-        # self.w.columnconfigure(1, weight=0)
-        # self.w.columnconfigure(2, weight=1)
-#        self.w['padding']=(0,0,0,10)
-        
         self.refreshButton = ttk.Button(self.w, text="Refresh", command=self.master._refresh_cmd)
 
         self.radio_frame=self.RadioFrame(self.master, self.w)
 
-        self.refreshButton.grid(column=0,row=0,sticky="w,e")
 
         self.radio_frame.w['padding']=(0,5,0,5)
-        self.radio_frame.w.grid(column=0,row=1)
 
+
+        self.w.columnconfigure(0, weight=1)
+        self.w.rowconfigure(0, weight=1)
+        self.w.rowconfigure(1, weight=1)
+
+        self.refreshButton.grid(column=0,row=0, sticky=(W))
+        self.radio_frame.w.grid(column=0,row=1, sticky=(W))
 
 
 
@@ -72,11 +74,11 @@ class CountFrame():
         self.master=master
         self.w = ttk.Frame(*args, **kwargs)
 
-        self.count_label = ttk.Label(self.w, textvariable=self.master.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
+        self.count_label = ttk.Label(self.w, textvariable=self.master.resultcount_var, foreground=DIC544, font='TkDefaultFont 20', anchor="s")
         self.count_diff_label = ttk.Label(self.w, textvariable=self.master.resultdiffcount_var, foreground=DIC544, font='TkDefaultFont 20')
 
-        self.count_label.grid(column=1,row=1)
-        self.count_diff_label.grid(column=2,row=1)
+        self.count_label.grid(column=0,row=0, sticky="wnes")
+        self.count_diff_label.grid(column=1,row=0)
 
 
 

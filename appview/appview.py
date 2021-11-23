@@ -5,8 +5,11 @@
 import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
+
 from tkinter import *
 from tkinter import ttk
+from tkinter import font
+
 from datetime import datetime
 import decimal
 from decimal import Decimal
@@ -28,13 +31,50 @@ DIC544="#4D4D4D"
 
 
 
+        
+
+
+
+
 class AppView:
+
+    def add_text_over_time_to_label(self, label, text, end, current=0, time=25, newmsg=True):
+        if newmsg:
+            label['text']=''
+            newmsg=False
+        label['text']+=text[current]
+        current+=1
+        add_time=0
+        if current != end:
+            if text[current-1] == '.':
+                add_time=time*15
+            elif text[current-1] == ',':
+                add_time=time*10
+            self.root.after(time+add_time, lambda: self.add_text_over_time_to_label(label, text, end, current, time, newmsg) )
+
+    cancel_current_displayed_message = False
+    message_being_displayed = False
+
+    display_messages = [
+        "greetings. please press refresh to see the providers on the default"
+        " subnet, public-beta.\n\n"
+        "Note, if you are running golemsp on the same system, you won't"
+        " see yourself listed here!"
+    ,
+        "i am now collecting offers broadcast on the provider network.\n\n" \
+        "this may take some time especially if it has been awhile since" \
+        " i last checked. also, i do not always get all the offers, so" \
+        " if the number seems low, please refresh again."
+    ]
+
+
+
     #############################################################################
     #               the mother of all class methods                             #
     #############################################################################
     def __init__(self):
         self.refreshFrame = None
-
+        self.message_being_displayed = False
         # message queues used by controller to interface with this
         self.q_out=Queue()
         self.q_in=Queue()
@@ -73,6 +113,7 @@ class AppView:
         root.title("Provider View")
         root.columnconfigure(0, weight=1) # ratio for children to resize against
         root.rowconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(1, weight=1)
 
         # treeframe
         treeframe = ttk.Frame(root)
@@ -90,26 +131,62 @@ class AppView:
 
         # baseframe
         baseframe = ttk.Frame(root)
-        baseframe.grid(column=0, row=1)
-        # baseframe.columnconfigure(0, weight=1)
-        # baseframe.rowconfigure(0, weight=1)
+        baseframe.grid(column=0, row=1, sticky="wnes")
+        baseframe.columnconfigure(0, weight=1)
+        baseframe.columnconfigure(1, weight=1)
+        baseframe.columnconfigure(2, weight=1)
+        baseframe.columnconfigure(3, weight=1)
+        baseframe.rowconfigure(0, weight=1)
+
         baseframe['padding']=(0,5,0,10)
 
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
         self.count_frame        = CountFrame(self, baseframe)
 
-        self.refreshFrame.w.grid(       column=0,row=0, sticky="w", padx=20)
-        self.count_frame.w.grid(        column=1,row=0, sticky="e")
+        # self.refreshFrame.w['borderwidth']=2
+        # self.refreshFrame.w['relief']='sunken'
+        self.refreshFrame.w['padding']=(0,0,0,0)
+        self.count_frame.w['borderwidth']=2
+        self.count_frame.w['relief']='sunken'
+
+        self.l_baseframe=ttk.Frame(baseframe)
+        emptyframe_right=ttk.Frame(baseframe)
+
+        self.l_baseframe.columnconfigure(0, weight=1)
+        self.l_baseframe.rowconfigure(0, weight=1)
+
+        self.l_baseframe.columnconfigure(0, weight=1)
+        self.l_baseframe.rowconfigure(0, weight=1)
+
+        # emptyframe_right['borderwidth']=2
+        # emptyframe_right['relief']='sunken'
+
+
+        self.l_baseframe.grid(           column=0, row=0, sticky='wnes')
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
+        self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
+        emptyframe_right.grid(          column=3, row=0, sticky='wnes')
+        
+
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        # l.columnconfigure(0, weight=1)
+        # l.rowconfigure(0, weight=1)
+        f = font.nametofont('TkDefaultFont')
+        self.width_in_font_pixels = 30 * f.actual()['size']
+        # l['relief']='sunken'
+        self.console['wraplength']=self.width_in_font_pixels
+        self.console.grid(column=0, row=0, sticky='wnes')
+        motd=self.display_messages[0]
+        self.message_being_displayed=True
+        self.add_text_over_time_to_label(self.console, motd, len(motd))
+
+
 
         # subbaseframe
         subbaseframe = ttk.Frame(root)
         subbaseframe.grid(column=0, row=2)
         self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
         self.dursec_entryframe  = DurSecFrame(self, subbaseframe)
-        emptyframe_left=ttk.Frame(subbaseframe)
-        emptyframe_right=ttk.Frame(subbaseframe)
-        emptyframe_left.grid( column=0)
-        emptyframe_right.grid(column=3)
 
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
         self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
@@ -334,6 +411,12 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
+        self.console.grid_remove()
+        l = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        l.grid(column=0, row=0, sticky='wnes')
+        l['wraplength']=self.width_in_font_pixels
+        self.add_text_over_time_to_label(l, self.display_messages[1], len(self.display_messages[1]))
+        # self.add_text_over_time_to_label(self.console, self.display_messages[1], len(self.display_messages[1]))
         self.refreshFrame._toggle_refresh_controls()
 
         self.resultcount_var.set("")
@@ -371,16 +454,17 @@ class AppView:
                         self.ssp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     elif platform.system()=='Darwin':
                         self.ssp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
                 else:
                     if isinstance(self.ssp, subprocess.Popen):
-                        if self.ssp.poll() == None:
-                            self.ssp.wait()
+                        try:
+                            self.ssp.wait(0.01)
+                        except:
+                            pass
+                        else:
                             self.ssp=None
                     else: # Process
                         if not self.ssp.is_alive():
                             self.ssp = None
-
             self.root.after(10, lambda: self.handle_incoming_result(refresh))
 
         if msg_in:

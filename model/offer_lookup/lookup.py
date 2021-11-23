@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import json
 import sys
 import pathlib
-
+import debug
 
 from yapapi import props as yp
 from yapapi.log import enable_default_logger
@@ -19,6 +19,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
+
 async def _list_offers(conf: Configuration, subnet_tag: str):
     async with conf.market() as client:
         market_api = Market(client)
@@ -27,6 +28,7 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
 
         offers = []
+        timeout_max_count=2
         async with market_api.subscribe(dbuild.properties, dbuild.constraints) as subscription:
             offer_d = dict()
             ai = subscription.events().__aiter__()
@@ -35,12 +37,14 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
                 try:
                     event = await asyncio.wait_for(
                             ai.__anext__()
-                            , timeout=5
+                            , timeout=6
                         ) # <class 'yapapi.rest.market.OfferProposal'>
                     offer_d["timestamp"]=datetime.now() # note, naive
                     offer_d["offer-id"]=event.id
                     offer_d["issuer-address"]=event.issuer
                     offer_d["props"]=event.props # dict
+
+
                     offers.append(dict(offer_d)) # a dict copy, i.e. with a unique handle
                     offer_d.clear()
                 except TimeoutError:
