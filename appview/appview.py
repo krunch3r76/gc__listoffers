@@ -146,8 +146,8 @@ class AppView:
         # self.refreshFrame.w['borderwidth']=2
         # self.refreshFrame.w['relief']='sunken'
         self.refreshFrame.w['padding']=(0,0,0,0)
-        self.count_frame.w['borderwidth']=2
-        self.count_frame.w['relief']='sunken'
+        # self.count_frame.w['borderwidth']=2
+        # self.count_frame.w['relief']='sunken'
 
         self.l_baseframe=ttk.Frame(baseframe)
         emptyframe_right=ttk.Frame(baseframe)
@@ -162,7 +162,7 @@ class AppView:
         # emptyframe_right['relief']='sunken'
 
 
-        self.l_baseframe.grid(           column=0, row=0, sticky='wnes')
+        self.l_baseframe.grid(          column=0, row=0, sticky='wnes')
         self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
         self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
         emptyframe_right.grid(          column=3, row=0, sticky='wnes')
