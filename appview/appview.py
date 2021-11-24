@@ -17,6 +17,9 @@ import json
 import debug
 import subprocess
 import platform
+
+from . broca import fetch_new_dialog
+
 if platform.system()=='Windows':
     import winsound
 
@@ -55,18 +58,6 @@ class AppView:
 
     cancel_current_displayed_message = False
     message_being_displayed = False
-
-    display_messages = [
-        "greetings. please press refresh to see the providers on the default"
-        " subnet, public-beta.\n\n"
-        "Note, if you are running golemsp on the same system, you won't"
-        " see yourself listed here!"
-    ,
-        "i am now collecting offers broadcast on the provider network.\n\n" \
-        "this may take some time especially if it has been awhile since" \
-        " i last checked. also, i do not always get all the offers, so" \
-        " if the number seems low, please refresh again."
-    ]
 
 
 
@@ -174,8 +165,9 @@ class AppView:
         # l.columnconfigure(0, weight=1)
         # l.rowconfigure(0, weight=1)
         f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels = (30-3) * f.actual()['size'] 
-        self._rewrite_to_console(self.display_messages[0])
+        self.width_in_font_pixels = (30-4) * f.actual()['size'] 
+        self._rewrite_to_console(fetch_new_dialog(0))
+        # self._rewrite_to_console(self.display_messages[0])
 
 
         # self.console['relief']='sunken'
@@ -346,7 +338,7 @@ class AppView:
                 self.resultdiffcount_var.set("") # consider edge cases
 
         self.refreshFrame._toggle_refresh_controls()
-
+        self._rewrite_to_console(fetch_new_dialog(3))
 
 
 
@@ -417,7 +409,8 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
-        self._rewrite_to_console(self.display_messages[1])
+        self._rewrite_to_console(fetch_new_dialog(1))
+        # self._rewrite_to_console(self.display_messages[1])
         """
         self.console.grid_remove()
 
