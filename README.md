@@ -38,19 +38,23 @@ first clone it:
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
 $ git checkout v0.0.13
+$ python3 -m venv myvenv
+$ . myvenv/bin/activate
+(myvenv) $ pip install yapapi
+
 ```
 
 ## starting
 ### starting locally
 ```bash
 # export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
-./gc__listoffers $ python3 application.py
+(myvenv) $ python3 application.py
 ```
 
 ### starting for remote interaction
 ```bash
 # on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
-(server) ./gc__listoffers $ python3 application.py serve localhost 8000
+(server) ./gc__listoffers (myvenv) $ python3 application.py serve localhost 8000
 
 # on the remote machine (Windows okay)
 (client) ./gc__listoffers $ python3 application.py client <ip-address-of-server> 8000
