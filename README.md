@@ -105,4 +105,4 @@ this is a very long list but i will start it with:
 - provide view/column customization
 - add graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
 - add error handling. especially with regard to network connectivity
-- refactor http server
+
