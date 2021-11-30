@@ -40,7 +40,8 @@ class CustomTreeview(ttk.Treeview):
     """
     # note, the first offset is the rownum
     _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
-    _kheadings_init = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
+    _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
+    _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7' )
     _drag_start_column_number = None
    
     def __init__update_cmd(self):
@@ -64,10 +65,8 @@ class CustomTreeview(ttk.Treeview):
         self.bind("<B1-Motion>", self.on_drag_motion)
         self.bind("<ButtonRelease-1>", self.on_drag_release)
 
-        # tree.tag_configure('Theading', background='green')
-        # self.grid(column=0,row=0, columnspan=2, sticky="news")
         self.column('#0', width=0, stretch=NO)
-        self.column(0, width=0, stretch=NO) # offerRowID
+        self.column('0', width=0, stretch=NO) # offerRowID
         self.column(1, width=0) # name
         self.column(2, width=0) # address
         self.column(3, width=0) # cpu
@@ -75,22 +74,22 @@ class CustomTreeview(ttk.Treeview):
         self.column(5, width=0) # fixed
         self.column(6, width=0) # cores
         self.column(7, width=0) # threads
+
+        debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
 
     def _update_headings(self):
         """update headings with built in commands, called after a change to the heading order"""
+        debug.dlog(f"updating headings using heading map {self._heading_map}")
         def build_lambda(key):
             # return lambda *args: self._ctx._update_cmd(self._update_cmd_dict[key])
             return lambda : self._ctx._update_cmd(self._update_cmd_dict[key])
 
         for i, key in enumerate(self._update_cmd_dict.keys()):
             colno=i+1
-            # how is the key related to the col number?
-            # the key is at a specific offset in _kheadings_init
-            # the specific column number is in the dynamic heading_map
-            offset=self._kheadings_init.index(key)
-            colno=self._heading_map[offset]
+            offset=self._kheadings.index(key)
+            colno=self._heading_map.index(offset)
             self.heading(colno
                     , text=key
                     , anchor="w"
@@ -105,37 +104,32 @@ class CustomTreeview(ttk.Treeview):
         w._drag_start_y=event.y
         self._drag_start_column_number=w.identify_column(event.x)
 
-        debug.dlog(f"{w.identify_column(event.x)}", 2)
+        debug.dlog(f"{w.identify_column(event.x)}", 1)
 
     def on_drag_motion(self, event):
         widget = event.widget
         # x = widget.winfo_x() - widget._drag_start_x + event.x
         # y = widget.winfo_y() - widget._drag_start_y + event.y
         drag_motion_column_number = widget.identify_column(event.x)
+#        debug.dlog(f"{self._drag_start_column_number} cf. {drag_motion_column_number}", 1)
         if self._drag_start_column_number != drag_motion_column_number:
             self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
-            
-        debug.dlog(f"{widget.identify_column(event.x)}", 2)
+
+#        debug.dlog(f"{widget.identify_column(event.x)}", 1)
 
     def on_drag_release(self, event):
         widget = event.widget
         x = widget.winfo_x() - widget._drag_start_x + event.x
         y = widget.winfo_y() - widget._drag_start_y + event.y
-        debug.dlog(f"{widget.identify_column(event.x)}", 2)
+        debug.dlog(f"{widget.identify_column(event.x)}", 1)
+        # refresh
+        self._ctx._update_cmd()
 
-
-
-
-    def _headings_remapped(self):
-        """given the current _heading_map build the headings row"""
-        t = ()
-        for idx in self._heading_map:
-            t+=(self._kheadings_init[idx],)
-        return t
 
 
     def _values_reordered(self, values):
         """convert the standard values sequence into the internal sequence and return"""
+        debug.dlog(self._heading_map, 3)
         l = [None for _ in self._heading_map ] 
         for idx, value in enumerate(values):
             newoffset=self._heading_map.index(idx)
@@ -143,36 +137,52 @@ class CustomTreeview(ttk.Treeview):
         return tuple(l)
 
 
+
     def _swap_numbered_columns(self, numbered_col, numbered_col_other):
         """reorder _heading_map based on inputs that came from .identify_column on drag event
         note: does not change contents of underlying rows, if any
         """
         debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
+        # convert to heading offset
         numbered_col_internal = int(numbered_col[1])-1
-        
         numbered_col_other_internal = int(numbered_col_other[1])-1
-        idx_to_numbered_col = self._heading_map.index(numbered_col_internal)
-        idx_to_numbered_col_other = self._heading_map.index(numbered_col_other_internal)
-        self._heading_map[idx_to_numbered_col_other]=idx_to_numbered_col
-        self._heading_map[idx_to_numbered_col]=idx_to_numbered_col_other
+
+
+        # lookup 
+        heading_value_1 = self._heading_map[numbered_col_internal]
+        heading_value_1_offset = numbered_col_internal
+
+        heading_value_2 = self._heading_map[numbered_col_other_internal]
+        heading_value_2_offset = numbered_col_other_internal
+
+        self._heading_map[heading_value_1_offset] = heading_value_2
+        self._heading_map[heading_value_2_offset] = heading_value_1
+
+        """
+        heading_idx_col = self._heading_map.index(numbered_col_internal)
+        heading_idx_col_other = self._heading_map.index(numbered_col_other_internal)
+
+        debug.dlog(f"heading_idx_col: {heading_idx_col}, heading_idx_col_others: {heading_idx_col_other}")
+        heading_map_copy=self._heading_map.copy()
+        self._heading_map[heading_idx_col_other]=heading_map_copy[heading_idx_col]
+        self._heading_map[heading_idx_col]=heading_map_copy[heading_idx_col_other]
+        """
 
         self.clear()
-        debug.dlog(self._heading_map)
-        self['columns']=self._headings_remapped()
         self._update_headings()
-        for col, text in enumerate(self._headings_remapped()):
-            if col > 0:
-                col_pound="#" + str(col+1)
-                # debug.dlog(f"{col_pound} -> {text}")
-                self.heading(col_pound, text=text)
 
-        # self._ctx.root.update_idletasks()
-        debug.dlog(f"{self['columns']}")
-        self._drag_start_column_number = numbered_col_other
+        debug.dlog(f"now dragging {numbered_col_other}")
+
+        self._drag_start_column_number=numbered_col_other
+
+
+        debug.dlog(f"{self._heading_map}")
+
 
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
         super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+
 
     def clear(self):
         self.delete(*self.get_children())
