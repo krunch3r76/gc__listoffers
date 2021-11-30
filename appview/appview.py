@@ -31,12 +31,151 @@ from .frames import *
 DIC411="#003366"
 DIC544="#4D4D4D"
 
+class CustomTreeview(ttk.Treeview):
+    """notes:
+        #2 refers to the first column, which is always name
+        #3 refers to the second column, which is always address
+        the rest are variable
+        summary: subtract 1 to get the corresponding index
+    """
+    # note, the first offset is the rownum
+    _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+    _kheadings_init = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
+    _drag_start_column_number = None
+   
+    def __init__update_cmd(self):
+        self._update_cmd_dict={
+            "name": {"sort_on": "'node.id'.name"}
+            , "address": {"sort_on": "'offers'.address"}
+            , "cpu (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"}
+            , "duration (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"}
+            , "fixed": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.fixed"}
+            , "cores": {} # {"sort_on": "'inf.cpu'.cores"}
+            , "threads": {} # {"sort_on": "'inf.cpu'.threads"}
+                }
+
+
+    def __init__(self, ctx, *args, **kwargs):
+        self._ctx = ctx
+        self.__init__update_cmd()
+        kwargs['columns']=self._kheadings_init
+        super().__init__(*args, **kwargs)
+        self.bind("<Button-1>", self.on_drag_start)
+        self.bind("<B1-Motion>", self.on_drag_motion)
+        self.bind("<ButtonRelease-1>", self.on_drag_release)
+
+        # tree.tag_configure('Theading', background='green')
+        # self.grid(column=0,row=0, columnspan=2, sticky="news")
+        self.column('#0', width=0, stretch=NO)
+        self.column(0, width=0, stretch=NO) # offerRowID
+        self.column(1, width=0) # name
+        self.column(2, width=0) # address
+        self.column(3, width=0) # cpu
+        self.column(4, width=0) # duration
+        self.column(5, width=0) # fixed
+        self.column(6, width=0) # cores
+        self.column(7, width=0) # threads
+        self._update_headings()
+
+
+    def _update_headings(self):
+        """update headings with built in commands, called after a change to the heading order"""
+        def build_lambda(key):
+            # return lambda *args: self._ctx._update_cmd(self._update_cmd_dict[key])
+            return lambda : self._ctx._update_cmd(self._update_cmd_dict[key])
+
+        for i, key in enumerate(self._update_cmd_dict.keys()):
+            colno=i+1
+            # how is the key related to the col number?
+            # the key is at a specific offset in _kheadings_init
+            # the specific column number is in the dynamic heading_map
+            offset=self._kheadings_init.index(key)
+            colno=self._heading_map[offset]
+            self.heading(colno
+                    , text=key
+                    , anchor="w"
+                    , command=build_lambda(key)
+                    )
 
 
 
+    def on_drag_start(self, event):
+        w = event.widget
+        w._drag_start_x=event.x
+        w._drag_start_y=event.y
+        self._drag_start_column_number=w.identify_column(event.x)
+
+        debug.dlog(f"{w.identify_column(event.x)}", 2)
+
+    def on_drag_motion(self, event):
+        widget = event.widget
+        # x = widget.winfo_x() - widget._drag_start_x + event.x
+        # y = widget.winfo_y() - widget._drag_start_y + event.y
+        drag_motion_column_number = widget.identify_column(event.x)
+        if self._drag_start_column_number != drag_motion_column_number:
+            self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
+            
+        debug.dlog(f"{widget.identify_column(event.x)}", 2)
+
+    def on_drag_release(self, event):
+        widget = event.widget
+        x = widget.winfo_x() - widget._drag_start_x + event.x
+        y = widget.winfo_y() - widget._drag_start_y + event.y
+        debug.dlog(f"{widget.identify_column(event.x)}", 2)
+
+
+
+
+    def _headings_remapped(self):
+        """given the current _heading_map build the headings row"""
+        t = ()
+        for idx in self._heading_map:
+            t+=(self._kheadings_init[idx],)
+        return t
+
+
+    def _values_reordered(self, values):
+        """convert the standard values sequence into the internal sequence and return"""
+        l = [None for _ in self._heading_map ] 
+        for idx, value in enumerate(values):
+            newoffset=self._heading_map.index(idx)
+            l[newoffset]=value
+        return tuple(l)
+
+
+    def _swap_numbered_columns(self, numbered_col, numbered_col_other):
+        """reorder _heading_map based on inputs that came from .identify_column on drag event
+        note: does not change contents of underlying rows, if any
+        """
+        debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
+        numbered_col_internal = int(numbered_col[1])-1
         
+        numbered_col_other_internal = int(numbered_col_other[1])-1
+        idx_to_numbered_col = self._heading_map.index(numbered_col_internal)
+        idx_to_numbered_col_other = self._heading_map.index(numbered_col_other_internal)
+        self._heading_map[idx_to_numbered_col_other]=idx_to_numbered_col
+        self._heading_map[idx_to_numbered_col]=idx_to_numbered_col_other
 
+        self.clear()
+        debug.dlog(self._heading_map)
+        self['columns']=self._headings_remapped()
+        self._update_headings()
+        for col, text in enumerate(self._headings_remapped()):
+            if col > 0:
+                col_pound="#" + str(col+1)
+                # debug.dlog(f"{col_pound} -> {text}")
+                self.heading(col_pound, text=text)
 
+        # self._ctx.root.update_idletasks()
+        debug.dlog(f"{self['columns']}")
+        self._drag_start_column_number = numbered_col_other
+
+    def insert(self, *args, **kwargs):
+        """map ordering of results to internal ordering"""
+        super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+
+    def clear(self):
+        self.delete(*self.get_children())
 
 
 class AppView:
@@ -72,7 +211,7 @@ class AppView:
 
         self.session_id=None    # timestamp of last refresh
         self.order_by_last="'node.id'.name" # current column to sort results on
-
+        self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
         # root Tk window and styling
         self.root=Tk()
         self.root.geometry('1024x480+100+200')
@@ -111,9 +250,10 @@ class AppView:
         treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
         treeframe['padding']=(0,0,0,5)
-        self.tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
+        self.tree = CustomTreeview(self, treeframe)
         treeframe.grid(column=0, row=0, sticky="news")
         self.tree.grid(column=0, row=0, sticky="news")
+
 #        self.tree.columnconfigure(0, weight=1)
 #        self.tree.rowconfigure(0, weight=1)
 
@@ -315,7 +455,6 @@ class AppView:
         """
         if refresh:
             self.session_resultcount=len(results)
-
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7]))
@@ -543,39 +682,6 @@ class AppView:
             root.bind('<3>', do_popup )
 
 
-        # tree.tag_configure('Theading', background='green')
-        # self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
-        self.tree.column('#0', width=0, stretch=NO)
-        self.tree.column('offerRowID', width=0, stretch=NO)
-        self.tree.column('name', width=0)
-        self.tree.column('address', width=0)
-        self.tree.column('cpu', width=0)
-        self.tree.column('duration', width=0)
-        self.tree.column('fixed', width=0)
-        self.tree.column('cores', width=0)
-        self.tree.column('threads', width=0)
-
-        self.tree.heading('name', text='name', anchor="w" 
-                , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
-                )
-        self.tree.heading('address', text='address', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'offers'.address"})
-                )
-        self.tree.heading('cpu', text='cpu (/sec)', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"})
-                )
-        self.tree.heading('duration', text='duration (/sec)', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"})
-                )
-        self.tree.heading('fixed', text='fixed', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.fixed"})
-                )
-        self.tree.heading('cores', text='cores', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.cores"})
-                )
-        self.tree.heading('threads', text='threads', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.threads"})
-                )
 
         # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
         root.mainloop()
