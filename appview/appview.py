@@ -258,7 +258,7 @@ class AppView:
         # self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
         # root Tk window and styling
         self.root=Tk()
-        self.root.geometry('1024x480+100+200')
+        self.root.geometry('924x580+100+200')
         s = ttk.Style()
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')

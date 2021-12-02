@@ -37,7 +37,7 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
                 try:
                     event = await asyncio.wait_for(
                             ai.__anext__()
-                            , timeout=10
+                            , timeout=8
                         ) # <class 'yapapi.rest.market.OfferProposal'>
                     offer_d["timestamp"]=datetime.now() # note, naive
                     offer_d["offer-id"]=event.id
