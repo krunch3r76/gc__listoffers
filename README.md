@@ -10,8 +10,11 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 **NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
 
 # video
+https://user-images.githubusercontent.com/46289600/144350571-b750b914-18fb-4ca7-9c9c-fa0687ecdfee.mp4
 
-https://user-images.githubusercontent.com/46289600/144347738-f1b25bd5-57d9-4cef-8404-c377878f0832.mp4
+
+# how to interpet the interface
+if name or address headings are clicked on, sorting is strictly on either of these. however, if you click any of the other columns, sorting occurs from left to right, first sorting on the far left, then next level on the right, and so on.
 
 
 
@@ -104,6 +107,7 @@ $ python3 ./application.py
 this is a very long list but i will start it with:
 - provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
 - provide view/column customization
-- add graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
+- add more graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
 - add error handling. especially with regard to network connectivity
+- check for appkey
 
