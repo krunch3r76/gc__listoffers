@@ -42,8 +42,19 @@ class CustomTreeview(ttk.Treeview):
     _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
     _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
     _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7' )
+    _kheadings_sql_paths = (
+        None
+        , "'node.id'.name"
+        , "'offers'.address"
+        , "'com.pricing.model.linear.coeffs'.cpu_sec"
+        , "'com.pricing.model.linear.coeffs'.duration_sec"
+        , "'com.pricing.model.linear.coeffs'.fixed"
+        , "'inf.cpu'.cores"
+        , "'inf.cpu'.threads"
+            )
     _drag_start_column_number = None
-   
+    _order_by_other = False
+
     def __init__update_cmd(self):
         self._update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
@@ -67,6 +78,9 @@ class CustomTreeview(ttk.Treeview):
 
         self.column('#0', width=0, stretch=NO)
         self.column('0', width=0, stretch=NO) # offerRowID
+        for index in range(1,8):
+            self.column(index, width=0, anchor='w')
+        """
         self.column(1, width=0) # name
         self.column(2, width=0) # address
         self.column(3, width=0) # cpu
@@ -74,14 +88,26 @@ class CustomTreeview(ttk.Treeview):
         self.column(5, width=0) # fixed
         self.column(6, width=0) # cores
         self.column(7, width=0) # threads
-
-        debug.dlog(f"internal columns: {self['columns']}")
+        """
+        # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
+    def _model_sequence_from_headings(self):
+        """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
+        """analysis
+        the current ordering is found in self._heading_map, which lists pointer indices
+        _kheadings_sql_paths contain the sql path at the corresponding indices
+        we are not interested at this time in anything before 'cpu (/sec)', so we start at index 3
+        """
+        t = ()
+        for index in range(3, len(self._heading_map)):
+            heading_index = self._heading_map[index]
+            t+=(self._kheadings_sql_paths[heading_index],)
+        return t
 
     def _update_headings(self):
         """update headings with built in commands, called after a change to the heading order"""
-        debug.dlog(f"updating headings using heading map {self._heading_map}")
+        # debug.dlog(f"updating headings using heading map {self._heading_map}")
         def build_lambda(key):
             # return lambda *args: self._ctx._update_cmd(self._update_cmd_dict[key])
             return lambda : self._ctx._update_cmd(self._update_cmd_dict[key])
@@ -92,8 +118,7 @@ class CustomTreeview(ttk.Treeview):
             colno=self._heading_map.index(offset)
             self.heading(colno
                     , text=key
-                    , anchor="w"
-                    , command=build_lambda(key)
+#                    , command=build_lambda(key)
                     )
 
 
@@ -104,32 +129,38 @@ class CustomTreeview(ttk.Treeview):
         w._drag_start_y=event.y
         self._drag_start_column_number=w.identify_column(event.x)
 
-        debug.dlog(f"{w.identify_column(event.x)}", 1)
 
     def on_drag_motion(self, event):
+        """swap columns when moved into a new column (except where restricted)"""
         widget = event.widget
         # x = widget.winfo_x() - widget._drag_start_x + event.x
         # y = widget.winfo_y() - widget._drag_start_y + event.y
         drag_motion_column_number = widget.identify_column(event.x)
-#        debug.dlog(f"{self._drag_start_column_number} cf. {drag_motion_column_number}", 1)
-        if self._drag_start_column_number != drag_motion_column_number:
-            self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
+        if drag_motion_column_number not in ("#2", "#3") and self._drag_start_column_number not in ("#2", "#3"):
+            if self._drag_start_column_number != drag_motion_column_number:
+                self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
 
-#        debug.dlog(f"{widget.identify_column(event.x)}", 1)
 
     def on_drag_release(self, event):
+        """update display when a column has been moved (assumed non-movable columns not moved)"""
         widget = event.widget
         x = widget.winfo_x() - widget._drag_start_x + event.x
         y = widget.winfo_y() - widget._drag_start_y + event.y
-        debug.dlog(f"{widget.identify_column(event.x)}", 1)
         # refresh
-        self._ctx._update_cmd()
+        curcol=widget.identify_column(event.x)
+        if self._drag_start_column_number not in ("#2", "#3") and curcol not in ("#2", "#3"): # kludgey
+            self._ctx._update_cmd()
+        elif self._drag_start_column_number == curcol:
+            if curcol=="#2":
+                self._ctx._update_cmd(self._update_cmd_dict['name'])
+            else:
+                self._ctx._update_cmd(self._update_cmd_dict['address'])
 
 
 
     def _values_reordered(self, values):
         """convert the standard values sequence into the internal sequence and return"""
-        debug.dlog(self._heading_map, 3)
+        # debug.dlog(values,3)
         l = [None for _ in self._heading_map ] 
         for idx, value in enumerate(values):
             newoffset=self._heading_map.index(idx)
@@ -183,7 +214,6 @@ class CustomTreeview(ttk.Treeview):
         """map ordering of results to internal ordering"""
         super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
-
     def clear(self):
         self.delete(*self.get_children())
 
@@ -191,6 +221,10 @@ class CustomTreeview(ttk.Treeview):
 class AppView:
 
     def add_text_over_time_to_label(self, label, text, end, current=0, time=25, newmsg=True):
+        if end == 0:
+            label['text']=''
+            return
+
         if newmsg:
             label['text']=''
             newmsg=False
@@ -221,7 +255,7 @@ class AppView:
 
         self.session_id=None    # timestamp of last refresh
         self.order_by_last="'node.id'.name" # current column to sort results on
-        self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
+        # self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
         # root Tk window and styling
         self.root=Tk()
         self.root.geometry('1024x480+100+200')
@@ -465,6 +499,7 @@ class AppView:
         """
         if refresh:
             self.session_resultcount=len(results)
+
         for result in results:
             result=list(result)
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7]))
@@ -487,12 +522,16 @@ class AppView:
                 self.resultdiffcount_var.set("") # consider edge cases
 
         self.refreshFrame._toggle_refresh_controls()
-        self._rewrite_to_console(fetch_new_dialog(3))
+        if refresh:
+            self._rewrite_to_console(fetch_new_dialog(3))
+        else:
+            self._rewrite_to_console(None)
 
 
 
 
     def _update_cmd(self, *args):
+        """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
         self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
@@ -509,6 +548,8 @@ class AppView:
 
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
+        else:
+            self.order_by_last=None
 
         ss = self._update_or_refresh_sql()
 
@@ -534,15 +575,45 @@ class AppView:
             " INNER JOIN 'inf.cpu' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm' "
 
+        """
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+            " FROM 'offers'" \
+            " NATURAL JOIN 'node.id'" \
+            " NATURAL JOIN 'com.pricing.model.linear.coeffs'" \
+            " NATURAL JOIN 'runtime'" \
+            " NATURAL JOIN 'inf.cpu'" \
+            " WHERE 'runtime'.name = 'vm' "
+        """
+
         if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
          
         if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
-        ss+=" GROUP BY 'node.id'.name"  \
-            f" ORDER BY {self.order_by_last}"
+        # here we build the order by statement
 
+#        ss+=" GROUP BY 'node.id'.name"  \
+#            f" ORDER BY {self.order_by_last}"
+
+        
+#        if self.tree._order_by_other:
+        if self.order_by_last:
+            #ss+=" GROUP BY 'offers'.address"
+            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=f" ORDER BY {self.order_by_last}"
+            pass
+        else:
+            path_tuple = self.tree._model_sequence_from_headings()
+            # debug.dlog(path_tuple)
+            # ss+=" GROUP BY 'offers'.address"
+            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=" ORDER BY "
+            for i in range(len(path_tuple)-1):
+                ss+=f"{path_tuple[i]}, "
+            ss+=f"{path_tuple[len(path_tuple)-1]}"
+
+        debug.dlog(ss)
 
         return ss
 
@@ -553,11 +624,15 @@ class AppView:
         self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
         self.console.grid(column=0, row=0, sticky='nw')
         self.console['wraplength']=self.width_in_font_pixels
-        self.add_text_over_time_to_label(self.console, msg, len(msg))
+        if msg:
+            self.add_text_over_time_to_label(self.console, msg, len(msg))
+        else:
+            self.add_text_over_time_to_label(self.console, "", 0)
 
 
 
     def _refresh_cmd(self, *args):
+        """create a new session and query model before handing off control to self.handle_incoming_result"""
         self._rewrite_to_console(fetch_new_dialog(1))
         # self._rewrite_to_console(self.display_messages[1])
         """
@@ -593,6 +668,7 @@ class AppView:
 
 
     def handle_incoming_result(self, refresh=True):
+        """wait for results from model before passing control over to self._update"""
         try:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:

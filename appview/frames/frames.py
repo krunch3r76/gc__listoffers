@@ -112,7 +112,7 @@ class DurSecFrame():
         self.durationsec_entry = ttk.Entry(self.w,textvariable=self.master.durationsec_entry_var, width=12)
         self.durationsec_entry.state(['disabled'])
         self.durationsec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
-        self.durationsec_entry.bind('<Return>', lambda e: self.master.focus_set())
+        self.durationsec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
 
         self.cb.grid(column=0,row=0,sticky="w")
         self.durationsec_entry.grid(column=1,row=0,stick="w")

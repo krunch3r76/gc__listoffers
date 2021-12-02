@@ -6,7 +6,9 @@ import itertools
 import decimal
 from decimal import Decimal
 import json
+import debug
 
+"""
 def _create_table_statement_1(tablename, cols_and_types):
     def substatement():
         # created a comma delimited list of each tuple (colname, native_type)
@@ -18,7 +20,7 @@ def _create_table_statement_1(tablename, cols_and_types):
 
     statement=f"create table '{tablename}' ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER, {substatement()}, extra TEXT DEFAULT '')"
     return statement
-
+"""
     
 def _create_table_statement(tablename, cols_and_types):
     def substatement():
@@ -29,7 +31,7 @@ def _create_table_statement(tablename, cols_and_types):
         s=s[:-2]
         return s
 
-    statement=f"create table '{tablename}' ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER NOT NULL, {substatement()}, extra TEXT DEFAULT '' )"
+    statement=f"create table '{tablename}' ( offerRowID INTEGER NOT NULL REFERENCES offers(offerRowID), {substatement()}, extra TEXT DEFAULT '' )"
 
     return statement
 
@@ -70,7 +72,7 @@ def create_database():
     execute_create('node.id',                   [ 'name TEXT'] )
     execute_create('runtime',                   [ 'name TEXT', 'version TEXT', 'capabilities DEFAULT "[]"'] )
     execute_create('srv.caps',                  [ 'multi_activity TEXT' ] )
-    con.execute("create table extra ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER NOT NULL, json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
+    con.execute("create table extra ( offerRowID INTEGER NOT NULL REFERENCES offers(offerRowID), json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
     return con
 
 

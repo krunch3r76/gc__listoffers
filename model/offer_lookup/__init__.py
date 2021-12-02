@@ -2,6 +2,7 @@ from model.sql import create_database, build_database
 from .lookup import list_offers
 import sys # debug
 import json
+import debug
 # from . lookupoffers import lookupoffers
 class OfferLookup():
 
@@ -13,19 +14,23 @@ class OfferLookup():
         """d/l offers, recreate database, execute sql, return sqlite rows"""
         # print(f"[OfferLookup::__call__()] called with id {id_}")
 
-
         if id_ != self._session_id:
-            # print(f"[OfferLookup::__call__()] replacing session calling list_offers with subnet_tag {subnet_tag}")
+            # scan offers anew
             offers = await list_offers(subnet_tag) # this is the one on mainnet
 
             if self._con:
                 self._con.close()
+
             self._con = create_database()
 
-            # print(f"[OfferLookup::__call__()] building database")
             build_database(self._con, offers)
             self._session_id=id_
-            
-        rows = self._con.execute(sql).fetchall()
-        # print(f"[OfferLookup::__call__()] returning rows")
+        
+        cur = self._con.cursor()
+        cur.execute("PRAGMA foreign_keys=ON")
+        r = cur.fetchone()
+        # debug.dlog(r)
+
+        rows = cur.execute(sql).fetchall()
+        # rows = self._con.execute(sql).fetchall()
         return rows
