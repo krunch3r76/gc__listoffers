@@ -9,9 +9,10 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 **NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
 
-# screenshot
+# video
 
-![image](https://user-images.githubusercontent.com/46289600/142739336-b3904dbc-303e-4c6e-85b9-4c25c8055d58.png)
+https://user-images.githubusercontent.com/46289600/144347738-f1b25bd5-57d9-4cef-8404-c377878f0832.mp4
+
 
 
 # requirements
@@ -37,7 +38,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.0.13
+$ git checkout v0.0.14
 $ python3 -m venv myvenv
 $ . myvenv/bin/activate
 (myvenv) $ pip install yapapi
