@@ -80,15 +80,6 @@ class CustomTreeview(ttk.Treeview):
         self.column('0', width=0, stretch=NO) # offerRowID
         for index in range(1,8):
             self.column(index, width=0, anchor='w')
-        """
-        self.column(1, width=0) # name
-        self.column(2, width=0) # address
-        self.column(3, width=0) # cpu
-        self.column(4, width=0) # duration
-        self.column(5, width=0) # fixed
-        self.column(6, width=0) # cores
-        self.column(7, width=0) # threads
-        """
         # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
@@ -125,36 +116,49 @@ class CustomTreeview(ttk.Treeview):
 
     def on_drag_start(self, event):
         w = event.widget
-        w._drag_start_x=event.x
-        w._drag_start_y=event.y
-        self._drag_start_column_number=w.identify_column(event.x)
+        region = w.identify_region(event.x, event.y)
+        # debug.dlog(region, 2)
+        if region == "heading":
+            w._drag_start_x=event.x
+            w._drag_start_y=event.y
+            self._drag_start_column_number=w.identify_column(event.x)
+        else:
+            self._drag_start_column_number=None
 
 
     def on_drag_motion(self, event):
         """swap columns when moved into a new column (except where restricted)"""
         widget = event.widget
+        region = widget.identify_region(event.x, event.y)
+        # debug.dlog(region, 3)
+        if region == "heading":
         # x = widget.winfo_x() - widget._drag_start_x + event.x
         # y = widget.winfo_y() - widget._drag_start_y + event.y
-        drag_motion_column_number = widget.identify_column(event.x)
-        if drag_motion_column_number not in ("#2", "#3") and self._drag_start_column_number not in ("#2", "#3"):
-            if self._drag_start_column_number != drag_motion_column_number:
-                self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
+            if self._drag_start_column_number:
+               
+                drag_motion_column_number = widget.identify_column(event.x)
+                if drag_motion_column_number not in ("#2", "#3") and self._drag_start_column_number not in ("#2", "#3"):
+                    if self._drag_start_column_number != drag_motion_column_number:
+                        self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
 
 
     def on_drag_release(self, event):
         """update display when a column has been moved (assumed non-movable columns not moved)"""
         widget = event.widget
-        x = widget.winfo_x() - widget._drag_start_x + event.x
-        y = widget.winfo_y() - widget._drag_start_y + event.y
-        # refresh
-        curcol=widget.identify_column(event.x)
-        if self._drag_start_column_number not in ("#2", "#3") and curcol not in ("#2", "#3"): # kludgey
-            self._ctx._update_cmd()
-        elif self._drag_start_column_number == curcol:
-            if curcol=="#2":
-                self._ctx._update_cmd(self._update_cmd_dict['name'])
-            else:
-                self._ctx._update_cmd(self._update_cmd_dict['address'])
+        region = widget.identify_region(event.x, event.y)
+        # debug.dlog(region, 2)
+        if region == "heading":
+        # x = widget.winfo_x() - widget._drag_start_x + event.x
+        # y = widget.winfo_y() - widget._drag_start_y + event.y
+
+            curcol=widget.identify_column(event.x)
+            if self._drag_start_column_number not in ("#2", "#3") and curcol not in ("#2", "#3"): # kludgey
+                self._ctx._update_cmd()
+            elif self._drag_start_column_number == curcol:
+                if curcol=="#2":
+                    self._ctx._update_cmd(self._update_cmd_dict['name'])
+                else:
+                    self._ctx._update_cmd(self._update_cmd_dict['address'])
 
 
 
