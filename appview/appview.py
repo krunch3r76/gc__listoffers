@@ -31,17 +31,200 @@ from .frames import *
 DIC411="#003366"
 DIC544="#4D4D4D"
 
+class CustomTreeview(ttk.Treeview):
+    """notes:
+        #2 refers to the first column, which is always name
+        #3 refers to the second column, which is always address
+        the rest are variable
+        summary: subtract 1 to get the corresponding index
+    """
+    # note, the first offset is the rownum
+    _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+    _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
+    _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7' )
+    _kheadings_sql_paths = (
+        None
+        , "'node.id'.name"
+        , "'offers'.address"
+        , "'com.pricing.model.linear.coeffs'.cpu_sec"
+        , "'com.pricing.model.linear.coeffs'.duration_sec"
+        , "'com.pricing.model.linear.coeffs'.fixed"
+        , "'inf.cpu'.cores"
+        , "'inf.cpu'.threads"
+            )
+    _drag_start_column_number = None
+    _order_by_other = False
+
+    def __init__update_cmd(self):
+        self._update_cmd_dict={
+            "name": {"sort_on": "'node.id'.name"}
+            , "address": {"sort_on": "'offers'.address"}
+            , "cpu (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"}
+            , "duration (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"}
+            , "fixed": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.fixed"}
+            , "cores": {} # {"sort_on": "'inf.cpu'.cores"}
+            , "threads": {} # {"sort_on": "'inf.cpu'.threads"}
+                }
+
+
+    def __init__(self, ctx, *args, **kwargs):
+        self._ctx = ctx
+        self.__init__update_cmd()
+        kwargs['columns']=self._kheadings_init
+        super().__init__(*args, **kwargs)
+        self.bind("<Button-1>", self.on_drag_start)
+        self.bind("<B1-Motion>", self.on_drag_motion)
+        self.bind("<ButtonRelease-1>", self.on_drag_release)
+
+        self.column('#0', width=0, stretch=NO)
+        self.column('0', width=0, stretch=NO) # offerRowID
+        for index in range(1,8):
+            self.column(index, width=0, anchor='w')
+        """
+        self.column(1, width=0) # name
+        self.column(2, width=0) # address
+        self.column(3, width=0) # cpu
+        self.column(4, width=0) # duration
+        self.column(5, width=0) # fixed
+        self.column(6, width=0) # cores
+        self.column(7, width=0) # threads
+        """
+        # debug.dlog(f"internal columns: {self['columns']}")
+        self._update_headings()
+
+    def _model_sequence_from_headings(self):
+        """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
+        """analysis
+        the current ordering is found in self._heading_map, which lists pointer indices
+        _kheadings_sql_paths contain the sql path at the corresponding indices
+        we are not interested at this time in anything before 'cpu (/sec)', so we start at index 3
+        """
+        t = ()
+        for index in range(3, len(self._heading_map)):
+            heading_index = self._heading_map[index]
+            t+=(self._kheadings_sql_paths[heading_index],)
+        return t
+
+    def _update_headings(self):
+        """update headings with built in commands, called after a change to the heading order"""
+        # debug.dlog(f"updating headings using heading map {self._heading_map}")
+        def build_lambda(key):
+            # return lambda *args: self._ctx._update_cmd(self._update_cmd_dict[key])
+            return lambda : self._ctx._update_cmd(self._update_cmd_dict[key])
+
+        for i, key in enumerate(self._update_cmd_dict.keys()):
+            colno=i+1
+            offset=self._kheadings.index(key)
+            colno=self._heading_map.index(offset)
+            self.heading(colno
+                    , text=key
+#                    , command=build_lambda(key)
+                    )
 
 
 
-        
+    def on_drag_start(self, event):
+        w = event.widget
+        w._drag_start_x=event.x
+        w._drag_start_y=event.y
+        self._drag_start_column_number=w.identify_column(event.x)
 
 
+    def on_drag_motion(self, event):
+        """swap columns when moved into a new column (except where restricted)"""
+        widget = event.widget
+        # x = widget.winfo_x() - widget._drag_start_x + event.x
+        # y = widget.winfo_y() - widget._drag_start_y + event.y
+        drag_motion_column_number = widget.identify_column(event.x)
+        if drag_motion_column_number not in ("#2", "#3") and self._drag_start_column_number not in ("#2", "#3"):
+            if self._drag_start_column_number != drag_motion_column_number:
+                self._swap_numbered_columns(self._drag_start_column_number, drag_motion_column_number)
+
+
+    def on_drag_release(self, event):
+        """update display when a column has been moved (assumed non-movable columns not moved)"""
+        widget = event.widget
+        x = widget.winfo_x() - widget._drag_start_x + event.x
+        y = widget.winfo_y() - widget._drag_start_y + event.y
+        # refresh
+        curcol=widget.identify_column(event.x)
+        if self._drag_start_column_number not in ("#2", "#3") and curcol not in ("#2", "#3"): # kludgey
+            self._ctx._update_cmd()
+        elif self._drag_start_column_number == curcol:
+            if curcol=="#2":
+                self._ctx._update_cmd(self._update_cmd_dict['name'])
+            else:
+                self._ctx._update_cmd(self._update_cmd_dict['address'])
+
+
+
+    def _values_reordered(self, values):
+        """convert the standard values sequence into the internal sequence and return"""
+        # debug.dlog(values,3)
+        l = [None for _ in self._heading_map ] 
+        for idx, value in enumerate(values):
+            newoffset=self._heading_map.index(idx)
+            l[newoffset]=value
+        return tuple(l)
+
+
+
+    def _swap_numbered_columns(self, numbered_col, numbered_col_other):
+        """reorder _heading_map based on inputs that came from .identify_column on drag event
+        note: does not change contents of underlying rows, if any
+        """
+        debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
+        # convert to heading offset
+        numbered_col_internal = int(numbered_col[1])-1
+        numbered_col_other_internal = int(numbered_col_other[1])-1
+
+
+        # lookup 
+        heading_value_1 = self._heading_map[numbered_col_internal]
+        heading_value_1_offset = numbered_col_internal
+
+        heading_value_2 = self._heading_map[numbered_col_other_internal]
+        heading_value_2_offset = numbered_col_other_internal
+
+        self._heading_map[heading_value_1_offset] = heading_value_2
+        self._heading_map[heading_value_2_offset] = heading_value_1
+
+        """
+        heading_idx_col = self._heading_map.index(numbered_col_internal)
+        heading_idx_col_other = self._heading_map.index(numbered_col_other_internal)
+
+        debug.dlog(f"heading_idx_col: {heading_idx_col}, heading_idx_col_others: {heading_idx_col_other}")
+        heading_map_copy=self._heading_map.copy()
+        self._heading_map[heading_idx_col_other]=heading_map_copy[heading_idx_col]
+        self._heading_map[heading_idx_col]=heading_map_copy[heading_idx_col_other]
+        """
+
+        self.clear()
+        self._update_headings()
+
+        debug.dlog(f"now dragging {numbered_col_other}")
+
+        self._drag_start_column_number=numbered_col_other
+
+
+        debug.dlog(f"{self._heading_map}")
+
+
+    def insert(self, *args, **kwargs):
+        """map ordering of results to internal ordering"""
+        super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+
+    def clear(self):
+        self.delete(*self.get_children())
 
 
 class AppView:
 
     def add_text_over_time_to_label(self, label, text, end, current=0, time=25, newmsg=True):
+        if end == 0:
+            label['text']=''
+            return
+
         if newmsg:
             label['text']=''
             newmsg=False
@@ -72,7 +255,7 @@ class AppView:
 
         self.session_id=None    # timestamp of last refresh
         self.order_by_last="'node.id'.name" # current column to sort results on
-
+        # self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
         # root Tk window and styling
         self.root=Tk()
         self.root.geometry('1024x480+100+200')
@@ -111,9 +294,10 @@ class AppView:
         treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
         treeframe['padding']=(0,0,0,5)
-        self.tree = ttk.Treeview(treeframe, columns=('offerRowID', 'name','address','cpu', 'duration', 'fixed', 'cores', 'threads'))
+        self.tree = CustomTreeview(self, treeframe)
         treeframe.grid(column=0, row=0, sticky="news")
         self.tree.grid(column=0, row=0, sticky="news")
+
 #        self.tree.columnconfigure(0, weight=1)
 #        self.tree.rowconfigure(0, weight=1)
 
@@ -338,12 +522,16 @@ class AppView:
                 self.resultdiffcount_var.set("") # consider edge cases
 
         self.refreshFrame._toggle_refresh_controls()
-        self._rewrite_to_console(fetch_new_dialog(3))
+        if refresh:
+            self._rewrite_to_console(fetch_new_dialog(3))
+        else:
+            self._rewrite_to_console(None)
 
 
 
 
     def _update_cmd(self, *args):
+        """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
         self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
@@ -360,6 +548,8 @@ class AppView:
 
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
+        else:
+            self.order_by_last=None
 
         ss = self._update_or_refresh_sql()
 
@@ -385,15 +575,45 @@ class AppView:
             " INNER JOIN 'inf.cpu' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm' "
 
+        """
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+            " FROM 'offers'" \
+            " NATURAL JOIN 'node.id'" \
+            " NATURAL JOIN 'com.pricing.model.linear.coeffs'" \
+            " NATURAL JOIN 'runtime'" \
+            " NATURAL JOIN 'inf.cpu'" \
+            " WHERE 'runtime'.name = 'vm' "
+        """
+
         if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
          
         if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
-        ss+=" GROUP BY 'node.id'.name"  \
-            f" ORDER BY {self.order_by_last}"
+        # here we build the order by statement
 
+#        ss+=" GROUP BY 'node.id'.name"  \
+#            f" ORDER BY {self.order_by_last}"
+
+        
+#        if self.tree._order_by_other:
+        if self.order_by_last:
+            #ss+=" GROUP BY 'offers'.address"
+            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=f" ORDER BY {self.order_by_last}"
+            pass
+        else:
+            path_tuple = self.tree._model_sequence_from_headings()
+            # debug.dlog(path_tuple)
+            # ss+=" GROUP BY 'offers'.address"
+            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=" ORDER BY "
+            for i in range(len(path_tuple)-1):
+                ss+=f"{path_tuple[i]}, "
+            ss+=f"{path_tuple[len(path_tuple)-1]}"
+
+        debug.dlog(ss)
 
         return ss
 
@@ -404,11 +624,15 @@ class AppView:
         self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
         self.console.grid(column=0, row=0, sticky='nw')
         self.console['wraplength']=self.width_in_font_pixels
-        self.add_text_over_time_to_label(self.console, msg, len(msg))
+        if msg:
+            self.add_text_over_time_to_label(self.console, msg, len(msg))
+        else:
+            self.add_text_over_time_to_label(self.console, "", 0)
 
 
 
     def _refresh_cmd(self, *args):
+        """create a new session and query model before handing off control to self.handle_incoming_result"""
         self._rewrite_to_console(fetch_new_dialog(1))
         # self._rewrite_to_console(self.display_messages[1])
         """
@@ -444,6 +668,7 @@ class AppView:
 
 
     def handle_incoming_result(self, refresh=True):
+        """wait for results from model before passing control over to self._update"""
         try:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
@@ -543,39 +768,6 @@ class AppView:
             root.bind('<3>', do_popup )
 
 
-        # tree.tag_configure('Theading', background='green')
-        # self.tree.grid(column=0,row=0, columnspan=2, sticky="news")
-        self.tree.column('#0', width=0, stretch=NO)
-        self.tree.column('offerRowID', width=0, stretch=NO)
-        self.tree.column('name', width=0)
-        self.tree.column('address', width=0)
-        self.tree.column('cpu', width=0)
-        self.tree.column('duration', width=0)
-        self.tree.column('fixed', width=0)
-        self.tree.column('cores', width=0)
-        self.tree.column('threads', width=0)
-
-        self.tree.heading('name', text='name', anchor="w" 
-                , command=lambda *args: self._update_cmd({"sort_on": "'node.id'.name"})
-                )
-        self.tree.heading('address', text='address', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'offers'.address"})
-                )
-        self.tree.heading('cpu', text='cpu (/sec)', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"})
-                )
-        self.tree.heading('duration', text='duration (/sec)', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"})
-                )
-        self.tree.heading('fixed', text='fixed', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'com.pricing.model.linear.coeffs'.fixed"})
-                )
-        self.tree.heading('cores', text='cores', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.cores"})
-                )
-        self.tree.heading('threads', text='threads', anchor="w"
-                , command=lambda *args: self._update_cmd({"sort_on": "'inf.cpu'.threads"})
-                )
 
         # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
         root.mainloop()
