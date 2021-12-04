@@ -27,6 +27,7 @@ class OfferLookup():
                 offers = await list_offers(subnet_tag) # this is the one on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(['error', e.status]) # 401 is invalid application key
+                debug.dlog(rows)
             except yapapi.rest.configuration.MissingConfiguration:
                 rows.extend(['error', 401])
             else:
