@@ -8,6 +8,7 @@ import sys
 import debug
 
 if __name__ == "__main__":
+    INVALID_CLA=False
     if len(sys.argv) == 1:
         # <script>
         # configure for controller to use local connection
@@ -28,6 +29,9 @@ if __name__ == "__main__":
         # <script> <client|serve> <host> [<port>]
             if len(sys.argv) >=3:
                 ip=sys.argv[2]
+                if ip.isdigit():
+                    # assume user accidently skipped hostname and assign as localhost
+                    ip="localhost"
             else:
                 ip="localhost"
 
@@ -55,5 +59,10 @@ if __name__ == "__main__":
                 # freeze_support()
                 controller_process.start()
                 appView()
+            else:
+                INVALID_CLA=True
     else:
-        print(f"usage: {} <client|serve> [<host=localhost>] [<port=8000>]".format(sys.argv[0]))
+        INVALID_CLA=True
+
+    if INVALID_CLA:
+        print("usage: {} <client|serve> [<host=localhost>] [<port=8000>]".format(sys.argv[0]))
