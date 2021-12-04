@@ -695,7 +695,6 @@ class AppView:
         else:
             results = msg_in["msg"]
             if len(results) > 1:
-                debug.dlog(results)
                 if results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))
