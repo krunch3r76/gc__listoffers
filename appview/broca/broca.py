@@ -74,6 +74,17 @@ dialog6={"script": "wtf! i didn't get any results." \
         }
 dialogs.append(dialog6)
 
+
+
+dialog7={"script": "uh oh! it looks like your API key on the server is invalid." \
+            " please exit to double check it, then restart the server and this client." \
+            " the environment variables to set on the server is YAGNA_APPKEY." \
+            " if you don't know what to do, please refer to the README on github."
+            , "substitutions": { "uh oh!": ['oh gosh!', 'oh-my-gosh!', 'oh bother.']
+                }
+            }
+dialogs.append(dialog7)
+
 def yes_or_no():
     """randomly return T or F"""
     flip=random.getrandbits(1)

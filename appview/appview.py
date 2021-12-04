@@ -698,6 +698,8 @@ class AppView:
                 if results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))
+                    elif results[1]=='invalid api key server side':
+                        self._rewrite_to_console(fetch_new_dialog(6))
                     else:
                         self._rewrite_to_console(fetch_new_dialog(5))
                 else:

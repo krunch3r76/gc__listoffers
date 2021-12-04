@@ -88,7 +88,7 @@ async def async_run_server(ip, port):
 
             if results_l and len(results_l)>0:
                 if results_l[0]=='error' and results_l[1]==401:
-                    msg=['error', 'invalid api key']
+                    msg=['error', 'invalid api key server side']
                     msg_out = { "id": signal["id"], "msg": msg }
                     q_out_to_httpbase.put_nowait(msg_out)
                 else:
