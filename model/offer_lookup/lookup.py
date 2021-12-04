@@ -55,19 +55,19 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
 
         except ya_market.exceptions.ApiException as e:
             raise e
-        except yapapi.rest.configuration.MissingConfiguration:
-            debug.dlog("raising apiexception")
-            raise ya_market.exceptions.ApiException
 
 
 async def list_offers(subnet_tag: str):
     """scan yagna for offers then return results in a dictionary"""
     """called by OfferLookup"""
     offers = None
-    offers = await _list_offers(
-                Configuration()
-                , subnet_tag
-                )
+    try:
+        offers = await _list_offers(
+                    Configuration()
+                    , subnet_tag
+                    )
+    except yapapi.rest.configuration.MissingConfiguration:
+        raise ya_market.exceptions.ApiException
 
     return offers
 
