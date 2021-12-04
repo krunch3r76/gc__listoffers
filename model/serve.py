@@ -9,6 +9,7 @@ from multiprocessing.queues import Empty
 import time
 import decimal
 from dataclasses import dataclass
+import sys
 
 offerLookup=OfferLookup()
 
@@ -83,13 +84,18 @@ async def async_run_server(ip, port):
         except Empty:
             signal = None
         if signal: # interact with yagna to lookup the offer
-            results_d = await offerLookup(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"])
+            results_l = await offerLookup(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"])
 
-            if results_d:
-                msg_out = { "id": signal["id"], "msg": results_d }
-                q_out_to_httpbase.put_nowait(msg_out)
+            if results_l and len(results_l)>0:
+                if results_l[0]=='error' and results_l[1]==401:
+                    msg=['error', 'invalid api key']
+                    msg_out = { "id": signal["id"], "msg": msg }
+                    q_out_to_httpbase.put_nowait(msg_out)
+                else:
+                    msg_out = { "id": signal["id"], "msg": results_l }
+                    q_out_to_httpbase.put_nowait(msg_out)
             else:
-                print("[async_run_server]::ERROR")
+                print("[async_run_server]::ERROR", file=sys.stderr)
         await asyncio.sleep(0.01) 
 
 
