@@ -259,7 +259,6 @@ class AppView:
 
         self.session_id=None    # timestamp of last refresh
         self.order_by_last="'node.id'.name" # current column to sort results on
-        # self.order_by_last="'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.threads"
         # root Tk window and styling
         self.root=Tk()
         self.root.geometry('924x580+100+200')
@@ -637,32 +636,25 @@ class AppView:
 
     def _refresh_cmd(self, *args):
         """create a new session and query model before handing off control to self.handle_incoming_result"""
+        # describe what's happening to client in console area
         self._rewrite_to_console(fetch_new_dialog(1))
-        # self._rewrite_to_console(self.display_messages[1])
-        """
-        self.console.grid_remove()
-
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
-        self.console.grid(column=0, row=0, sticky='nw')
-        self.console['wraplength']=self.width_in_font_pixels
-        self.add_text_over_time_to_label(self.console, self.display_messages[1], len(self.display_messages[1]))
-        """
-        # self.add_text_over_time_to_label(self.console, self.display_messages[1], len(self.display_messages[1]))
+        # disable controls
         self.refreshFrame._toggle_refresh_controls()
-
+        # reset widgets to be refreshed
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
         self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
-
+        # build sql statement
         ss = self._update_or_refresh_sql()
-
+        # create new session id (current time)
         self.session_id=str(datetime.now().timestamp())
+
+        # ask controller to query model for results
         msg_out = {"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} }
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
-        results=None
-        msg_in = None
 
+        # wait on reply
         self.root.after(1, self.handle_incoming_result)
 
 
