@@ -10,6 +10,7 @@ import sys
 import pathlib
 import debug
 
+import ya_market
 from yapapi import props as yp
 from yapapi.log import enable_default_logger
 from yapapi.props.builder import DemandBuilder
@@ -29,28 +30,31 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
 
         offers = []
         timeout_max_count=2
-        async with market_api.subscribe(dbuild.properties, dbuild.constraints) as subscription:
-            offer_d = dict()
-            ai = subscription.events().__aiter__()
-            timed_out=False
-            while not timed_out:
-                try:
-                    event = await asyncio.wait_for(
-                            ai.__anext__()
-                            , timeout=8
-                        ) # <class 'yapapi.rest.market.OfferProposal'>
-                    offer_d["timestamp"]=datetime.now() # note, naive
-                    offer_d["offer-id"]=event.id
-                    offer_d["issuer-address"]=event.issuer
-                    offer_d["props"]=event.props # dict
+        try:
+            async with market_api.subscribe(dbuild.properties, dbuild.constraints) as subscription:
+                offer_d = dict()
+                ai = subscription.events().__aiter__()
+                timed_out=False
+                while not timed_out:
+                    try:
+                        event = await asyncio.wait_for(
+                                ai.__anext__()
+                                , timeout=8
+                            ) # <class 'yapapi.rest.market.OfferProposal'>
+                        offer_d["timestamp"]=datetime.now() # note, naive
+                        offer_d["offer-id"]=event.id
+                        offer_d["issuer-address"]=event.issuer
+                        offer_d["props"]=event.props # dict
 
 
-                    offers.append(dict(offer_d)) # a dict copy, i.e. with a unique handle
-                    offer_d.clear()
-                except TimeoutError:
-                    timed_out=True
-        return offers
+                        offers.append(dict(offer_d)) # a dict copy, i.e. with a unique handle
+                        offer_d.clear()
+                    except TimeoutError:
+                        timed_out=True
+            return offers
 
+        except ya_market.exceptions.ApiException as e:
+            raise e
 
 
 

@@ -13,7 +13,7 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
     async def poll_loop(self):
         """monitors and handles signals from q_in
         places results of handle in q_out"""
-        results_d=None
+        results_l=None
         while True:
             try:
                 signal = self.q_in.get_nowait()
@@ -21,17 +21,22 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
                 signal = None
             if signal:
                 # print(f"[LocalConnection] handling signal {signal}")
-                results_d = await self.signal_cb(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"]) # signal from view
-                if results_d:
-                    debug.dlog(f"got a result back from the callback and placing in queue to view!")
-                    # revise callback, results should contain the id, as is the case with the remote server TODO
-                    msg_out = { "id": signal["id"], "msg": results_d }
-                    self.q_out.put_nowait(msg_out)
-
+                results_l = await self.signal_cb(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"]) # signal from view
+                if results_l and len(results_l)>0:
+                    if results_l[0]=='error' and results_l[1]==401:
+                        msg=['error', 'invalid api key']
+                        msg_out = { "id": signal["id"], "msg": msg }
+                        self.q_out.put_nowait(msg_out)
+                    else:
+                        debug.dlog(f"got a result back from the callback and placing in queue to view!")
+                        # revise callback, results should contain the id, as is the case with the remote server TODO
+                        msg_out = { "id": signal["id"], "msg": results_l }
+                        self.q_out.put_nowait(msg_out)
                 else:
                     errormsg="no results seen from callback"
-                    debug.dlog(errormsg)
-                    msg_out = { "id": signal["id"], "msg": dict() }
+                    debug.dlog(errormsg,0)
+                    msg=['error', 'no results']
+                    msg_out = { "id": signal["id"], "msg": msg }
                     self.q_out.put_nowait(msg_out)
                     #raise "unhandled exception in LocalConnection.poll_loop" \
                     #    "no results from callback"

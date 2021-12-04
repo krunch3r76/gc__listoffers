@@ -53,6 +53,25 @@ dialog4={"script": "okay, the offers i found are displayed in the table" \
     }
 dialogs.append(dialog4)
 
+
+dialog5={"script": "uh oh! it looks like your API key is invalid." \
+            " please exit to double check it, then restart."
+            , "substitutions": { "uh oh!": ['oh gosh!', 'oh-my-gosh!', 'oh bother.']
+                }
+            }
+dialogs.append(dialog5)
+
+
+dialog6={"script": "wtf! i didn't get any results." \
+        " this is most unusual. i am not equipped for this." \
+        " sorry i can't be of more help here!"
+        , "substitutions": { "wtf!": ['holy cow!', 'oh man!', 'dude!', 'holy crap!', 'oh sh*t!']
+            , "unusual": ['bizarre']
+            , 'i am not equipped for this.': ["i didn't sign up for this."]
+            }
+        }
+dialogs.append(dialog6)
+
 def yes_or_no():
     """randomly return T or F"""
     flip=random.getrandbits(1)

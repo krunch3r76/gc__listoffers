@@ -668,7 +668,7 @@ class AppView:
         try:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
-            msg_in = None
+            # msg_in = None
             if refresh:
                 if self.ssp == None:
                     if platform.system()=='Windows':
@@ -689,11 +689,19 @@ class AppView:
                     else: # Process
                         if not self.ssp.is_alive():
                             self.ssp = None
+
             self.root.after(10, lambda: self.handle_incoming_result(refresh))
 
-        if msg_in:
+        else:
             results = msg_in["msg"]
-            self._update(results, refresh)
+            if len(results) > 1:
+                if results[0] == 'error':
+                    if results[1]=='invalid api key':
+                        self._rewrite_to_console(fetch_new_dialog(4))
+                    else:
+                        self._rewrite_to_console(fetch_new_dialog(5))
+                else:
+                    self._update(results, refresh)
 
 
 
