@@ -68,6 +68,9 @@ async def list_offers(subnet_tag: str):
                     )
     except yapapi.rest.configuration.MissingConfiguration:
         raise ya_market.exceptions.ApiException
-
+    except Exception as e:
+        debug.dlog(e)
+        debug.dlog(type(e))
+        debug.dlog(e.__class__.__name__)
     return offers
 
