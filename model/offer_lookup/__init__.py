@@ -5,7 +5,11 @@ import json
 import debug
 # from . lookupoffers import lookupoffers
 
-import ya_market # this creates a dependency on yapapi and may be avoided using custom exceptions
+#
+ # this creates a dependency on yapapi and may be avoided using custom exceptions
+import yapapi
+import ya_market
+#
 
 class OfferLookup():
 
@@ -22,8 +26,9 @@ class OfferLookup():
             try:
                 offers = await list_offers(subnet_tag) # this is the one on mainnet
             except ya_market.exceptions.ApiException as e:
-                debug.dlog("ApiException")
                 rows.extend(['error', e.status]) # 401 is invalid application key
+            except yapapi.rest.configuration.MissingConfiguration:
+                rows.extend(['error', 401])
             else:
                 if self._con:
                     self._con.close()
