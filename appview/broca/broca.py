@@ -55,7 +55,9 @@ dialogs.append(dialog4)
 
 
 dialog5={"script": "uh oh! it looks like your API key is invalid." \
-            " please exit to double check it, then restart."
+            " please exit to double check it, then restart." \
+            " the environment variables to set is YAGNA_APPKEY." \
+            " if you don't know what to do, please refer to the README on github."
             , "substitutions": { "uh oh!": ['oh gosh!', 'oh-my-gosh!', 'oh bother.']
                 }
             }
