@@ -2,6 +2,8 @@
 from multiprocessing.queues import Empty
 import asyncio
 import json
+import debug
+import sys
 
 """
 messages come in from the view on a queue as in LocalConnection
@@ -18,6 +20,7 @@ it shall attempt to connect then send the request and get the server's response 
 
 import http.client
 class RemoteConnection():
+    """functor that sets up full duplex queues to the view and monitors for then relays requests to remote model"""
     def __init__(self, q_out, q_in, addr, port):
         self.q_out = q_out
         self.q_in = q_in
@@ -26,26 +29,30 @@ class RemoteConnection():
 
     async def poll_loop(self):
         results_d=None
+        signal = None
         while True:
             try:
                 signal = self.q_in.get_nowait()
             except Empty:
-                signal = None
-            if signal:
-                # print(f"[RemoteConnection] handling signal {signal}")
+                pass
+            else:
                 conn = http.client.HTTPConnection(self.addr, port=self.port)
                 body={ "id": signal["id"], "msg": { "subnet-tag": signal["msg"]["subnet-tag"], "sql": signal["msg"]["sql"]} }
                 body_as_json=json.dumps(body)
-                conn.request("GET", "/", body=body_as_json, headers={"Content-Length": len(body_as_json)})
-                r1 = conn.getresponse()
-                content=r1.read()
-                results_d=json.loads(content.decode("utf-8")) # this is in the form { id, msg }
+                try:
+                    conn.request("GET", "/", body=body_as_json, headers={"Content-Length": len(body_as_json)})
+                except ConnectionRefusedError as e:
+                    results_d={ "id": signal["id"], "msg": ['error', "connection refused"] }
+                else:
+                    r1 = conn.getresponse()
+                    content=r1.read()
+                    results_d=json.loads(content.decode("utf-8")) # this is in the form { id, msg }
                 if results_d:
-                    # print(f"[RemoteConnection] got a result back from the callback and placing in queue to view!")
                     self.q_out.put_nowait(results_d)
                 else:
+                    # revise to have view handle this! TODO
                     errormsg="[LocalConnection::poll_loop] no results seen from callback"
-                    print(errormsg, flush=True)
+                    print(errormsg, file=sys.stderr, flush=True)
             await asyncio.sleep(0.01)
 
     def __call__(self):

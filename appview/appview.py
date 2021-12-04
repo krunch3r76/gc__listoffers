@@ -695,13 +695,17 @@ class AppView:
         else:
             results = msg_in["msg"]
             if len(results) > 1:
+                debug.dlog(results)
                 if results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))
                     elif results[1]=='invalid api key server side':
                         self._rewrite_to_console(fetch_new_dialog(6))
+                    elif results[1]=='connection refused':
+                        self._rewrite_to_console(fetch_new_dialog(7))
                     else:
                         self._rewrite_to_console(fetch_new_dialog(5))
+                    self.refreshFrame._toggle_refresh_controls()
                 else:
                     self._update(results, refresh)
 

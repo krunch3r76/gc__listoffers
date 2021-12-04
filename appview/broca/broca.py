@@ -85,6 +85,15 @@ dialog7={"script": "uh oh! it looks like your API key on the server is invalid."
             }
 dialogs.append(dialog7)
 
+
+dialog8={"script": "the remote connection failed. please make sure you are running a separate" \
+        " instance of the application and that the ip address and port are accessible!"
+        , "substitutions": { "failed": ['could not be made.', 'rejected the connection attempt.']
+            , "make sure": ['ensure']
+            }
+        }
+dialogs.append(dialog8)
+
 def yes_or_no():
     """randomly return T or F"""
     flip=random.getrandbits(1)
