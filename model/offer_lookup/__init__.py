@@ -22,6 +22,7 @@ class OfferLookup():
             try:
                 offers = await list_offers(subnet_tag) # this is the one on mainnet
             except ya_market.exceptions.ApiException as e:
+                debug.dlog("ApiException")
                 rows.extend(['error', e.status]) # 401 is invalid application key
             else:
                 if self._con:
