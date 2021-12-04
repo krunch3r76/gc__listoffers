@@ -6,8 +6,8 @@ import debug
 class LocalConnection(): # later make subclass of abstract ControllerConnection
     """Class for connecting view to local model"""
     def __init__(self, q_out, q_in, signal_cb):
-        self.q_out = q_out
-        self.q_in = q_in
+        self.q_out = q_out # out to view
+        self.q_in = q_in # in from view
         self.signal_cb = signal_cb
 
     async def poll_loop(self):
