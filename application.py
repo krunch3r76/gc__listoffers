@@ -56,4 +56,4 @@ if __name__ == "__main__":
                 controller_process.start()
                 appView()
     else:
-        print(f"usage: {} <client|serve> [<host=localhost>] [<port=8000>]")
+        print(f"usage: {} <client|serve> [<host=localhost>] [<port=8000>]", sys.argv[0])
