@@ -41,7 +41,7 @@ first clone it:
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.0.15
+$ git checkout v0.0.16
 $ python3 -m venv myvenv
 $ . myvenv/bin/activate
 (myvenv) $ pip install yapapi
