@@ -331,20 +331,26 @@ class AppView:
         self.l_baseframe=ttk.Frame(baseframe)
         emptyframe_right=ttk.Frame(baseframe)
 
+
         self.l_baseframe.columnconfigure(0, weight=1)
         self.l_baseframe.rowconfigure(0, weight=1)
 
         self.l_baseframe.columnconfigure(0, weight=1)
         self.l_baseframe.rowconfigure(0, weight=1)
+
+        self.label_logo = ttk.Label(emptyframe_right, anchor='center')
+        self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png').subsample(12,12)
+        self.label_logo['image']=self.fe_image
+        self.label_logo.grid(column=0, row=0, sticky='wnes')
 
         # emptyframe_right['borderwidth']=2
         # emptyframe_right['relief']='sunken'
 
 
         self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
-        self.refreshFrame.w.grid(       column=1, row=0, sticky="ws")
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="nes")
         self.count_frame.w.grid(        column=2, row=0, )
-        emptyframe_right.grid(          column=3, row=0, sticky='wnes')
+        emptyframe_right.grid(          column=3, row=0)
         
 
         # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)

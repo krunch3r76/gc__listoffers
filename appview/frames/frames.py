@@ -65,7 +65,7 @@ class RefreshFrame():
         self.w.rowconfigure(1, weight=1)
 
         self.refreshButton.grid(column=0,row=0, sticky=(W))
-        self.radio_frame.w.grid(column=0,row=1, sticky=(W))
+        self.radio_frame.w.grid(column=0,row=1, sticky=(W,N))
 
 
 
