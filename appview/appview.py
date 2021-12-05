@@ -339,7 +339,7 @@ class AppView:
         self.l_baseframe.rowconfigure(0, weight=1)
 
         self.label_logo = ttk.Label(emptyframe_right, anchor='center')
-        self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png').subsample(12,12)
+        self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
         self.label_logo['image']=self.fe_image
         self.label_logo.grid(column=0, row=0, sticky='wnes')
 
@@ -354,11 +354,11 @@ class AppView:
         
 
         # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=35)
         # l.columnconfigure(0, weight=1)
         # l.rowconfigure(0, weight=1)
         f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels = (30-4) * f.actual()['size'] 
+        self.width_in_font_pixels = (35-10) * f.actual()['size'] 
         self._rewrite_to_console(fetch_new_dialog(0))
         # self._rewrite_to_console(self.display_messages[0])
 
@@ -630,7 +630,7 @@ class AppView:
     def _rewrite_to_console(self, msg):
         self.console.grid_remove()
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=35)
         self.console.grid(column=0, row=0, sticky='nw')
         self.console['wraplength']=self.width_in_font_pixels
         if msg:
