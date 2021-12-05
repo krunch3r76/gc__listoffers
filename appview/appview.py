@@ -340,11 +340,12 @@ class AppView:
 
         self.label_logo = ttk.Label(emptyframe_right, anchor='center')
         self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
+        self.fe_image_ico=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48.png')
 
         self.label_logo['image']=self.fe_image
         self.label_logo.grid(column=0, row=0, sticky='wnes')
 
-        self.root.iconphoto(True, self.fe_image)
+        self.root.iconphoto(True, self.fe_image_ico)
         # emptyframe_right['borderwidth']=2
         # emptyframe_right['relief']='sunken'
 
