@@ -611,15 +611,15 @@ class AppView:
         
 #        if self.tree._order_by_other:
         if self.order_by_last:
-            #ss+=" GROUP BY 'offers'.address"
-            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=" GROUP BY 'offers'.address"
+            # ss+=" GROUP BY 'node.id'.offerRowID"
             ss+=f" ORDER BY {self.order_by_last}"
             pass
         else:
             path_tuple = self.tree._model_sequence_from_headings()
             # debug.dlog(path_tuple)
-            # ss+=" GROUP BY 'offers'.address"
-            ss+=" GROUP BY 'node.id'.offerRowID"
+            ss+=" GROUP BY 'offers'.address"
+            # ss+=" GROUP BY 'node.id'.offerRowID"
             ss+=" ORDER BY "
             for i in range(len(path_tuple)-1):
                 ss+=f"{path_tuple[i]}, "
