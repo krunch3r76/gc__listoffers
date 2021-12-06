@@ -597,25 +597,20 @@ class AppView:
 
         # here we build the order by statement
 
-#        ss+=" GROUP BY 'node.id'.name"  \
-#            f" ORDER BY {self.order_by_last}"
-
         
-#        if self.tree._order_by_other:
         if self.order_by_last:
             ss+=" GROUP BY 'offers'.address"
-            # ss+=" GROUP BY 'node.id'.offerRowID"
             ss+=f" ORDER BY {self.order_by_last}"
+            ss+=" COLLATE NOCASE"
             pass
         else:
             path_tuple = self.tree._model_sequence_from_headings()
-            # debug.dlog(path_tuple)
             ss+=" GROUP BY 'offers'.address"
-            # ss+=" GROUP BY 'node.id'.offerRowID"
             ss+=" ORDER BY "
             for i in range(len(path_tuple)-1):
                 ss+=f"{path_tuple[i]}, "
             ss+=f"{path_tuple[len(path_tuple)-1]}"
+            ss+=" COLLATE NOCASE"
 
         debug.dlog(ss)
 
