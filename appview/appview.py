@@ -322,11 +322,7 @@ class AppView:
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
         self.count_frame        = CountFrame(self, baseframe)
 
-        # self.refreshFrame.w['borderwidth']=2
-        # self.refreshFrame.w['relief']='sunken'
         self.refreshFrame.w['padding']=(0,0,0,0)
-        # self.count_frame.w['borderwidth']=2
-        # self.count_frame.w['relief']='sunken'
 
         self.l_baseframe=ttk.Frame(baseframe)
         emptyframe_right=ttk.Frame(baseframe)
@@ -335,8 +331,6 @@ class AppView:
         self.l_baseframe.columnconfigure(0, weight=1)
         self.l_baseframe.rowconfigure(0, weight=1)
 
-        self.l_baseframe.columnconfigure(0, weight=1)
-        self.l_baseframe.rowconfigure(0, weight=1)
 
         self.label_logo = ttk.Label(emptyframe_right, anchor='center')
         self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
@@ -349,24 +343,22 @@ class AppView:
         # emptyframe_right['borderwidth']=2
         # emptyframe_right['relief']='sunken'
 
+        self.console_character_width=40
+
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
+        self.console.grid(column=0, row=0, sticky='nw')
+
+        debug.dlog(f"console gridinfo: {self.console.grid_info()}")
+        f = font.nametofont('TkDefaultFont')
+        self.width_in_font_pixels=self.console_character_width * (f.actual()['size']*0.90)
+        self.console['wraplength']=self.width_in_font_pixels
+
+
 
         self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
-        self.refreshFrame.w.grid(       column=1, row=0, sticky="nes")
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
         self.count_frame.w.grid(        column=2, row=0, )
         emptyframe_right.grid(          column=3, row=0)
-        
-
-        # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=30)
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=35)
-        # l.columnconfigure(0, weight=1)
-        # l.rowconfigure(0, weight=1)
-        f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels = (35-10) * f.actual()['size'] 
-        self._rewrite_to_console(fetch_new_dialog(0))
-        # self._rewrite_to_console(self.display_messages[0])
-
-
-        # self.console['relief']='sunken'
 
 
 
@@ -380,10 +372,10 @@ class AppView:
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
         self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
 
+        # bind to method and inspect event widget TODO
         root.bind('<Escape>', lambda e: root.destroy())
 
-
-
+        self._rewrite_to_console(fetch_new_dialog(0))
 
     def _toggle_refresh_controls_closure(self):
         disabled = False
@@ -633,7 +625,7 @@ class AppView:
     def _rewrite_to_console(self, msg):
         self.console.grid_remove()
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=35)
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
         self.console.grid(column=0, row=0, sticky='nw')
         self.console['wraplength']=self.width_in_font_pixels
         if msg:
@@ -711,6 +703,8 @@ class AppView:
                         self._rewrite_to_console(fetch_new_dialog(6))
                     elif results[1]=='connection refused':
                         self._rewrite_to_console(fetch_new_dialog(7))
+                    elif results[1]=='cannot connect to yagna':
+                        self._rewrite_to_console(fetch_new_dialog(8))
                     else:
                         self._rewrite_to_console(fetch_new_dialog(5))
                     self.refreshFrame._toggle_refresh_controls()

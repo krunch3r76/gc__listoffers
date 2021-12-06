@@ -94,6 +94,14 @@ dialog8={"script": "the remote connection failed. please make sure you are runni
         }
 dialogs.append(dialog8)
 
+dialog9={"script": "uh oh, it looks like yagna is not running." \
+        " be sure you are running either yagna or golemsp!"
+        , "substitutions": { "uh oh": ['oh crap', 'oh bother']
+            , "make sure": ['ensure']
+            }
+        }
+dialogs.append(dialog9)
+
 def yes_or_no():
     """randomly return T or F"""
     flip=random.getrandbits(1)

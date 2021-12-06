@@ -16,7 +16,7 @@ from yapapi.log import enable_default_logger
 from yapapi.props.builder import DemandBuilder
 from yapapi.rest import Configuration, Market, Activity, Payment  # noqa
 import yapapi
-
+import aiohttp
 examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
@@ -70,6 +70,8 @@ async def list_offers(subnet_tag: str):
         debug.dlog("raising yapapi.rest.configuration.MissingConfiguration")
         raise e
     except ya_market.exceptions.ApiException as e:
+        raise e
+    except aiohttp.client_exceptions.ClientConnectorError as e:
         raise e
     except Exception as e:
         debug.dlog(e)

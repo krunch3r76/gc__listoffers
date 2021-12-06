@@ -27,6 +27,10 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
                         msg=['error', 'invalid api key']
                         msg_out = { "id": signal["id"], "msg": msg }
                         self.q_out.put_nowait(msg_out)
+                    elif results_l[0]=='error' and results_l[1]==111:
+                        msg=['error', 'cannot connect to yagna']
+                        msg_out = { "id": signal["id"], "msg": msg }
+                        self.q_out.put_nowait(msg_out)
                     else:
                         debug.dlog(f"got a result back from the callback and placing in queue to view!")
                         # revise callback, results should contain the id, as is the case with the remote server TODO

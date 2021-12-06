@@ -3,6 +3,7 @@ from .lookup import list_offers
 import sys # debug
 import json
 import debug
+import aiohttp
 # from . lookupoffers import lookupoffers
 
 #
@@ -19,6 +20,7 @@ class OfferLookup():
 
     async def __call__(self, id_, subnet_tag, sql):
         """d/l offers, recreate database, execute sql, return sqlite rows"""
+
         # print(f"[OfferLookup::__call__()] called with id {id_}")
         rows = []
         if id_ != self._session_id:
@@ -30,6 +32,8 @@ class OfferLookup():
                 debug.dlog(rows)
             except yapapi.rest.configuration.MissingConfiguration:
                 rows.extend(['error', 401])
+            except aiohttp.client_exceptions.ClientConnectorError:
+                rows.extend(['error', 111])
             else:
                 if self._con:
                     self._con.close()
