@@ -10,6 +10,7 @@ import time
 import decimal
 from dataclasses import dataclass
 import sys
+import debug
 
 offerLookup=OfferLookup()
 
@@ -85,10 +86,13 @@ async def async_run_server(ip, port):
             signal = None
         if signal: # interact with yagna to lookup the offer
             results_l = await offerLookup(signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"])
-
             if results_l and len(results_l)>0:
                 if results_l[0]=='error' and results_l[1]==401:
                     msg=['error', 'invalid api key server side']
+                    msg_out = { "id": signal["id"], "msg": msg }
+                    q_out_to_httpbase.put_nowait(msg_out)
+                elif results_l[0]=='error' and results_l[1]==111:
+                    msg=['error', 'cannot connect to yagna']
                     msg_out = { "id": signal["id"], "msg": msg }
                     q_out_to_httpbase.put_nowait(msg_out)
                 else:

@@ -35,13 +35,14 @@ class OfferLookup():
             except aiohttp.client_exceptions.ClientConnectorError:
                 rows.extend(['error', 111])
             else:
-                if self._con:
-                    self._con.close()
+                if offers != None: # kludge
+                    if self._con:
+                        self._con.close()
 
-                self._con = create_database()
+                    self._con = create_database()
 
-                build_database(self._con, offers)
-                self._session_id=id_
+                    build_database(self._con, offers)
+                    self._session_id=id_
         if len(rows) == 0:
             cur = self._con.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
