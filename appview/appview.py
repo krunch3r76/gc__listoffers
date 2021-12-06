@@ -350,7 +350,7 @@ class AppView:
 
         debug.dlog(f"console gridinfo: {self.console.grid_info()}")
         f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels=self.console_character_width * (f.actual()['size']*0.85)
+        self.width_in_font_pixels=self.console_character_width * (f.actual()['size']*0.80)
         self.console['wraplength']=self.width_in_font_pixels
 
 
