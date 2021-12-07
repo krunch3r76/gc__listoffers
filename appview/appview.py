@@ -321,15 +321,18 @@ class AppView:
 
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
         self.count_frame        = CountFrame(self, baseframe)
+        self.count_frame.w.grid(        column=2, row=0, )
 
         self.refreshFrame.w['padding']=(0,0,0,0)
+        self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
+
+        emptyframe_right=ttk.Frame(baseframe)
+        emptyframe_right.grid(          column=3, row=0)
 
         self.l_baseframe=ttk.Frame(baseframe)
-        emptyframe_right=ttk.Frame(baseframe)
-
-
         self.l_baseframe.columnconfigure(0, weight=1)
         self.l_baseframe.rowconfigure(0, weight=1)
+        self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
 
 
         self.label_logo = ttk.Label(emptyframe_right, anchor='center')
@@ -343,23 +346,13 @@ class AppView:
         # emptyframe_right['borderwidth']=2
         # emptyframe_right['relief']='sunken'
 
+
+        # setup console with at least 40 characters of width       
         self.console_character_width=40
-
         self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
-        self.console.grid(column=0, row=0, sticky='nw')
-
-        debug.dlog(f"console gridinfo: {self.console.grid_info()}")
-        f = font.nametofont('TkDefaultFont')
-        self.width_in_font_pixels=self.console_character_width * (f.actual()['size']*0.80)
-        self.console['wraplength']=self.width_in_font_pixels
-
-
-
-        self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
-        self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
-        self.count_frame.w.grid(        column=2, row=0, )
-        emptyframe_right.grid(          column=3, row=0)
-
+        self.width_in_font_pixels=self.console_character_width * (font.nametofont('TkDefaultFont').actual()['size']*0.80)
+        self.console['wraplength']=self.console_character_width
+        self.console.grid(column=0, row=0, sticky='nwes')
 
 
 
@@ -620,9 +613,15 @@ class AppView:
     def _rewrite_to_console(self, msg):
         self.console.grid_remove()
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
-        self.console.grid(column=0, row=0, sticky='nw')
-        self.console['wraplength']=self.width_in_font_pixels
+
+        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
+        self.console.grid(column=0, row=0, sticky='nwes')
+        self.root.update()
+        self.console_character_width=self.l_baseframe.winfo_width() // font.nametofont('TkDefaultFont').actual()['size']
+        self.console['width']=self.console_character_width
+        self.console['wraplength']=self.l_baseframe.winfo_width()*0.80
+        #self.root.update()
+
         if msg:
             self.add_text_over_time_to_label(self.console, msg, len(msg))
         else:
