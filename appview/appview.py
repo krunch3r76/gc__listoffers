@@ -6,7 +6,14 @@ import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
 
-from tkinter import *
+try:
+    from tkinter import *
+except ModuleNotFoundError:
+    import sys
+    print("omigosh your python isn't linked with tcl.\nyou should install python that is. on ubuntu you could do this with its package manager by running the following command:")
+    print("$ \033[1msudo apt install python3-tk\033[0m")
+    print("plese do this and run again!")
+    sys.exit(1)
 from tkinter import ttk
 from tkinter import font
 
