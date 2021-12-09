@@ -121,6 +121,51 @@ the offer element props looks like:
         "vpn"
     ],
 }
+
+>0.9.0
+{
+     "golem.activity.caps.transfer.protocol": [
+          "http",
+          "gftp",
+          "https"
+     ],
+     "golem.com.payment.debit-notes.accept-timeout?": 240,
+     "golem.com.payment.platform.erc20-mainnet-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
+     "golem.com.payment.platform.erc20-polygon-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
+     "golem.com.payment.platform.zksync-mainnet-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
+     "golem.com.pricing.model": "linear",
+     "golem.com.pricing.model.linear.coeffs": [
+          1.388888888888889e-06,
+          0.0,
+          0.0
+     ],
+     "golem.com.scheme": "payu",
+     "golem.com.scheme.payu.interval_sec": 120.0,
+     "golem.com.usage.vector": [
+          "golem.usage.cpu_sec",
+          "golem.usage.duration_sec"
+     ],
+     "golem.inf.cpu.architecture": "x86_64",
+     "golem.inf.cpu.capabilities": [
+          "sse3", "pclmulqdq", "dtes64", "monitor", "dscpl", "vmx", "smx", "eist", "tm2", "ssse3", "fma", "cmpxchg16b", "pdcm", "pcid", "sse41", "sse42", "x2apic", "movbe", "popcnt", "tsc_deadline", "aesni", "xsave", "osxsave", "avx", "f16c", "rdrand", "fpu", "vme", "de", "pse", "tsc", "msr", "pae", "mce", "cx8", "apic", "sep", "mtrr", "pge", "mca", "cmov", "pat", "pse36", "clfsh", "ds", "acpi", "mmx", "fxsr", "sse", "sse2", "ss", "htt", "tm", "pbe", "fsgsbase", "adjust_msr", "smep", "rep_movsb_stosb", "invpcid", "deprecate_fpu_cs_ds", "mpx", "rdseed", "rdseed", "adx", "smap", "clflushopt", "processor_trace", "sgx"
+     ],
+     "golem.inf.cpu.cores": 4,
+     "golem.inf.cpu.model": "Stepping 9 Family 6 Model 158",
+     "golem.inf.cpu.threads": 8,
+     "golem.inf.cpu.vendor": "GenuineIntel",
+     "golem.inf.mem.gib": 10.531209409236908,
+     "golem.inf.storage.gib": 8.978179931640625,
+     "golem.node.debug.subnet": "public-beta",
+     "golem.node.id.name": "saturn5",
+     "golem.runtime.capabilities": [
+          "vpn"
+     ],
+     "golem.runtime.name": "vm",
+     "golem.runtime.version": "0.2.10",
+     "golem.srv.caps.multi-activity": true
+}
+
+
 """
 
 
