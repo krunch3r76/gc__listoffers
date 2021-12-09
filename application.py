@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 
+import importlib.util
+yapapi_loader = importlib.util.find_spec('yapapi')
+if not yapapi_loader:
+    import sys
+    print("\033[1m", end="")
+    print("omigosh!")
+    print("\033[0;32m", end="")
+    print("you aren't running python with the \033[4myapapi\033[24m" + " module installed.")
+    print("please see the readme about how to set up a virtual environment and install yapapi then run again")
+    print("\033[0m")
+    sys.exit(2)
+
 from appview import AppView
 from controller.local_connection import LocalConnection
 from controller.remote_connection import RemoteConnection
