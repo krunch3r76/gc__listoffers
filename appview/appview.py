@@ -161,6 +161,8 @@ class CustomTreeview(ttk.Treeview):
                     self._ctx._update_cmd(self._update_cmd_dict['name'])
                 else:
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
+            else:
+                self._ctx._update_cmd()
 
 
 
