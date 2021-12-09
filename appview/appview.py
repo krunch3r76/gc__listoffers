@@ -501,7 +501,7 @@ class AppView:
 
         for result in results:
             result=list(result)
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]))
 
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
@@ -566,7 +566,7 @@ class AppView:
 
 
     def _update_or_refresh_sql(self):
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
             " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
@@ -575,7 +575,7 @@ class AppView:
             " WHERE 'runtime'.name = 'vm' "
 
         """
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
             " FROM 'offers'" \
             " NATURAL JOIN 'node.id'" \
             " NATURAL JOIN 'com.pricing.model.linear.coeffs'" \

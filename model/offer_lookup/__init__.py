@@ -36,6 +36,7 @@ class OfferLookup():
                 rows.extend(['error', 111])
             else:
                 if offers != None: # kludge
+                    debug.dlog(offers[0])
                     if self._con:
                         self._con.close()
 
