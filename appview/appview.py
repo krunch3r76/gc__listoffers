@@ -46,9 +46,9 @@ class CustomTreeview(ttk.Treeview):
         summary: subtract 1 to get the corresponding index
     """
     # note, the first offset is the rownum
-    _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7 ]
-    _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads')
-    _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7' )
+    _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
+    _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads', 'version')
+    _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7', '8' )
     _kheadings_sql_paths = (
         None
         , "'node.id'.name"
@@ -58,6 +58,7 @@ class CustomTreeview(ttk.Treeview):
         , "'com.pricing.model.linear.coeffs'.fixed"
         , "'inf.cpu'.cores"
         , "'inf.cpu'.threads"
+        , "'runtime'.version"
             )
     _drag_start_column_number = None
     _order_by_other = False
@@ -66,11 +67,12 @@ class CustomTreeview(ttk.Treeview):
         self._update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
             , "address": {"sort_on": "'offers'.address"}
-            , "cpu (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.cpu_sec"}
-            , "duration (/sec)": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.duration_sec"}
-            , "fixed": {} # {"sort_on": "'com.pricing.model.linear.coeffs'.fixed"}
-            , "cores": {} # {"sort_on": "'inf.cpu'.cores"}
-            , "threads": {} # {"sort_on": "'inf.cpu'.threads"}
+            , "cpu (/sec)": {}
+            , "duration (/sec)": {}
+            , "fixed": {}
+            , "cores": {}
+            , "threads": {}
+            , 'version': {}
                 }
 
 
@@ -85,7 +87,7 @@ class CustomTreeview(ttk.Treeview):
 
         self.column('#0', width=0, stretch=NO)
         self.column('0', width=0, stretch=NO) # offerRowID
-        for index in range(1,8):
+        for index in range(1,len(self._kheadings_init)):
             self.column(index, width=0, anchor='w')
         # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
@@ -166,6 +168,8 @@ class CustomTreeview(ttk.Treeview):
                     self._ctx._update_cmd(self._update_cmd_dict['name'])
                 else:
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
+            else:
+                self._ctx._update_cmd()
 
 
 
@@ -506,7 +510,7 @@ class AppView:
 
         for result in results:
             result=list(result)
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]))
 
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
@@ -571,7 +575,7 @@ class AppView:
 
 
     def _update_or_refresh_sql(self):
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
             " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
@@ -580,7 +584,7 @@ class AppView:
             " WHERE 'runtime'.name = 'vm' "
 
         """
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
             " FROM 'offers'" \
             " NATURAL JOIN 'node.id'" \
             " NATURAL JOIN 'com.pricing.model.linear.coeffs'" \
