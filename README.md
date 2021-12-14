@@ -10,7 +10,11 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 **NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
 
 # video
-https://user-images.githubusercontent.com/46289600/144350571-b750b914-18fb-4ca7-9c9c-fa0687ecdfee.mp4
+
+
+https://user-images.githubusercontent.com/46289600/145339421-674182ae-457d-4111-83b7-2a636b7b1d91.mp4
+
+
 
 
 # how to interpet the interface
