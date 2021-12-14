@@ -47,7 +47,7 @@ class CustomTreeview(ttk.Treeview):
     """
     # note, the first offset is the rownum
     _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
-    _kheadings = ('offerRowID', 'name','address','cpu (/sec)', 'duration (/sec)', 'fixed', 'cores', 'threads', 'version')
+    _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'fixed', 'cores', 'threads', 'version')
     _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7', '8' )
     _kheadings_sql_paths = (
         None
@@ -67,8 +67,8 @@ class CustomTreeview(ttk.Treeview):
         self._update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
             , "address": {"sort_on": "'offers'.address"}
-            , "cpu (/sec)": {}
-            , "duration (/sec)": {}
+            , "cpu (/hr)": {}
+            , "duration (/hr)": {}
             , "fixed": {}
             , "cores": {}
             , "threads": {}
@@ -97,7 +97,7 @@ class CustomTreeview(ttk.Treeview):
         """analysis
         the current ordering is found in self._heading_map, which lists pointer indices
         _kheadings_sql_paths contain the sql path at the corresponding indices
-        we are not interested at this time in anything before 'cpu (/sec)', so we start at index 3
+        we are not interested at this time in anything before 'cpu (/hr)', so we start at index 3
         """
         t = ()
         for index in range(3, len(self._heading_map)):
@@ -381,6 +381,18 @@ class AppView:
 
         self._rewrite_to_console(fetch_new_dialog(0))
 
+        self._states=dict()
+
+    def _stateRefreshing(self, b=None):
+        if b == True:
+            self._states['refreshing'] = True
+        elif b == False:
+            self._states['refreshing'] = False
+        elif b == None:
+            return self._states.get('refreshing', False)
+
+    
+
     def _toggle_refresh_controls_closure(self):
         disabled = False
         other_entry_was_enabled = False
@@ -398,6 +410,8 @@ class AppView:
                     other_entry_was_enabled = True
                 radio_frame.other_rb.state(['disabled'])
                 radio_frame.other_entry.state(['disabled'])
+                self.cpusec_entryframe.disable()
+                self.dursec_entryframe.disable()
                 disabled=True
             else:
                 refreshFrame.refreshButton.state(['!disabled'])
@@ -406,6 +420,8 @@ class AppView:
                 radio_frame.other_rb.state(['!disabled'])
                 if other_entry_was_enabled:
                     radio_frame.other_entry.state(['!disabled'])
+                self.cpusec_entryframe.enable()
+                self.dursec_entryframe.enable()
                 disabled=False
 
         return toggle
@@ -530,6 +546,7 @@ class AppView:
                 self.resultdiffcount_var.set("") # consider edge cases
 
         self.refreshFrame._toggle_refresh_controls()
+        self._stateRefreshing(False)
         if refresh:
             self._rewrite_to_console(fetch_new_dialog(3))
         else:
@@ -540,6 +557,7 @@ class AppView:
 
     def _update_cmd(self, *args):
         """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
+        self._stateRefreshing(True)
         self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
@@ -593,10 +611,13 @@ class AppView:
             " WHERE 'runtime'.name = 'vm' "
         """
 
-        if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
+        # debug.dlog(dir(self.cpusec_entryframe.w))
+        # debug.dlog(self.cpusec_entryframe.w.state(['!selected']))
+        # if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
+        if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
          
-        if self.dursec_entryframe.durationsec_entry.instate(['!disabled']) and self.durationsec_entry_var.get():
+        if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and self.durationsec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
         # here we build the order by statement
@@ -642,17 +663,23 @@ class AppView:
 
     def _refresh_cmd(self, *args):
         """create a new session and query model before handing off control to self.handle_incoming_result"""
+        self._stateRefreshing(True)
+
         # describe what's happening to client in console area
         self._rewrite_to_console(fetch_new_dialog(1))
+
         # disable controls
         self.refreshFrame._toggle_refresh_controls()
+
         # reset widgets to be refreshed
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
         self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
+
         # build sql statement
         ss = self._update_or_refresh_sql()
+
         # create new session id (current time)
         self.session_id=str(datetime.now().timestamp())
 

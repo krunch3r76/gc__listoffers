@@ -84,13 +84,21 @@ class CountFrame():
 
 
 class CPUSecFrame():
+    """
+        Groups the widgets for enabling and specifying max cpu/hr
+        master: parent object (Appview)
+        w:  widget (Frame)
+        cbMaxCpuVar:    state of checkbutton {maxcpu, nomaxcpu}
+        cb: checkbutton callback
+        cpusec_entry:   Entry widget next to checkbutton
+    """
     def __init__(self, master, *args, **kwargs):
         self.master=master
         self.w = ttk.Frame(*args, **kwargs)
         self.w['padding']=(0,0,50,0)
 
         self.cbMaxCpuVar = StringVar()
-        self.cb= ttk.Checkbutton(self.w, text="max cpu(/sec)", command=self.master._cb_cpusec_checkbutton, onvalue='maxcpu', offvalue='nomaxcpu', variable=self.cbMaxCpuVar, padding=(0,0,5,0))
+        self.cb= ttk.Checkbutton(self.w, text="max cpu(/hr)", command=self.master._cb_cpusec_checkbutton, onvalue='maxcpu', offvalue='nomaxcpu', variable=self.cbMaxCpuVar, padding=(0,0,5,0))
         
         self.cpusec_entry = ttk.Entry(self.w,textvariable=self.master.cpusec_entry_var,width=12)
         self.cpusec_entry.state(['disabled'])
@@ -100,6 +108,14 @@ class CPUSecFrame():
         self.cb.grid(           column=0,row=0, sticky="w")
         self.cpusec_entry.grid( column=1,row=0,stick="w")
 
+    def disable(self):
+        self.cb.state(['disabled'])
+        self.cpusec_entry.state(['disabled'])
+
+    def enable(self):
+        self.cb.state(['!disabled'])
+        self.cpusec_entry.state(['!disabled'])
+
 
 class DurSecFrame():
     def __init__(self, master, *args, **kwargs):
@@ -107,7 +123,7 @@ class DurSecFrame():
         self.w=ttk.Frame(*args, **kwargs)
 
         self.cbDurSecVar=StringVar()
-        self.cb=ttk.Checkbutton(self.w, text="max duration(/sec)", command=self.master._cb_durationsec_checkbutton, variable=self.cbDurSecVar, padding=(0,0,5,0))
+        self.cb=ttk.Checkbutton(self.w, text="max duration(/hr)", command=self.master._cb_durationsec_checkbutton, onvalue='maxdur', offvalue='nomaxdur', variable=self.cbDurSecVar, padding=(0,0,5,0))
         #     ...entry
         self.durationsec_entry = ttk.Entry(self.w,textvariable=self.master.durationsec_entry_var, width=12)
         self.durationsec_entry.state(['disabled'])
@@ -119,3 +135,10 @@ class DurSecFrame():
         self.cb.grid(column=0,row=0,sticky="w")
         self.durationsec_entry.grid(column=1,row=0,stick="w")
 
+    def disable(self):
+        self.cb.state(['disabled'])
+        self.durationsec_entry.state(['disabled'])
+
+    def enable(self):
+        self.cb.state(['!disabled'])
+        self.durationsec_entry.state(['!disabled'])
