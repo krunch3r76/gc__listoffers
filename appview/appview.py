@@ -80,7 +80,7 @@ class AppView:
         self.order_by_last="'node.id'.name" # current column to sort results on
         # root Tk window and styling
         self.root=Tk()
-        self.root.geometry('924x580+100+200')
+        self.root.geometry('1256x768+100+200')
         s = ttk.Style()
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')

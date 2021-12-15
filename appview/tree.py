@@ -1,5 +1,6 @@
 from tkinter import ttk
 from tkinter import *
+from tkinter import font
 from functools import singledispatchmethod
 
 import debug
@@ -33,7 +34,7 @@ class CustomTreeview(ttk.Treeview):
 
         @property
         def drag_start_column_number(self):
-            assert self.__swapping==True, "no column being dragged but queried for start"
+            # assert self.__swapping==True, "no column being dragged but queried for start"
             return self.__drag_start_column_number
         @drag_start_column_number.setter
         def set_drag_start_column_number(self, colstr : str):
@@ -61,8 +62,10 @@ class CustomTreeview(ttk.Treeview):
             )
     _order_by_other = False
 
-    def __init__update_cmd(self):
-        self._update_cmd_dict={
+    def __build__update_cmd(self):
+        """create a lookup table of callbacks and return"""
+        """post: self._update_cmd_dict"""
+        update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
             , "address": {"sort_on": "'offers'.address"}
             , "cpu (/hr)": {}
@@ -72,28 +75,49 @@ class CustomTreeview(ttk.Treeview):
             , "threads": {}
             , 'version': {}
                 }
-
+        return update_cmd_dict
 
     def __init__(self, ctx, *args, **kwargs):
-        self._state_d={
-            "swapping": False
-                }
-        self._ctx = ctx
-        self.__init__update_cmd()
+        """constructor for CustomTreeView"""
+        """post:
+            _ctx                :   AppView contextual parent
+            _update_cmd_dict    :   callback lookup table
+
+            buttons bound
+            column options set
+            
+        """
+
+        # initialize super with columns
         kwargs['columns']=self._kheadings_init
         super().__init__(*args, **kwargs)
+        self._ctx = ctx
+        self._update_cmd_dict = self.__build__update_cmd()
+        # set mouse button bindings
         self.bind("<Button-1>", self.on_drag_start)
         self.bind("<B1-Motion>", self.on_drag_motion)
         self.bind("<ButtonRelease-1>", self.on_drag_release)
 
+        self.bind("<<TreeviewSelect>>", self.on_select)
+
+        # hide node, offerRowID columns
         self.column('#0', width=0, stretch=NO)
         self.column('0', width=0, stretch=NO) # offerRowID
-        for index in range(1,len(self._kheadings_init)):
+        # setup visible columns
+        self.column(1, width=0, anchor='w')
+        self.column(2, width=0)
+        # self.column(2, width=font.nametofont('TkHeadingFont').actual()['size']*8, anchor='w')
+        #self.column(2, minwidth=font.nametofont('TkDefaultFont').actual()['size']*43)
+        debug.dlog(font.nametofont('TkHeadingFont').configure())
+        for index in range(3,len(self._kheadings_init)):
             self.column(index, width=0, anchor='w')
         # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
 
+    def on_select(self, *args):
+        debug.dlog(self.selection())
+        debug.dlog(args)
 
     def _model_sequence_from_headings(self):
         """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
@@ -125,19 +149,20 @@ class CustomTreeview(ttk.Treeview):
             self.heading(colno
                     , text=key
 #                    , command=build_lambda(key)
+                    , anchor='w'
                     )
 
 
 
     def on_drag_start(self, event):
-        w = event.widget
-        region = w.identify_region(event.x, event.y)
+        widget = event.widget
+        region = widget.identify_region(event.x, event.y)
         # debug.dlog(region, 2)
         if region == "heading":
-            w._drag_start_x=event.x
-            w._drag_start_y=event.y
-            self._stateHolder.transition_swapping(True, w.identify_column(event.x) )
-            self._drag_start_column_number=w.identify_column(event.x) # TODO move to state object
+            widget._drag_start_x=event.x
+            widget._drag_start_y=event.y
+            self._stateHolder.transition_swapping(True, widget.identify_column(event.x) )
+            self._drag_start_column_number=widget.identify_column(event.x) # TODO move to state object
         else:
             self._stateHolder.transition_swapping(False)
             self._drag_start_column_number=None
@@ -176,7 +201,8 @@ class CustomTreeview(ttk.Treeview):
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
             else:
                 self._ctx._update_cmd()
-        else:
+        elif self._stateHolder.whether_swapping():
+            self._stateHolder.transition_swapping(false)
             self._ctx._update_cmd()
 
 
@@ -212,15 +238,6 @@ class CustomTreeview(ttk.Treeview):
         self._heading_map[heading_value_1_offset] = heading_value_2
         self._heading_map[heading_value_2_offset] = heading_value_1
 
-        """
-        heading_idx_col = self._heading_map.index(numbered_col_internal)
-        heading_idx_col_other = self._heading_map.index(numbered_col_other_internal)
-
-        debug.dlog(f"heading_idx_col: {heading_idx_col}, heading_idx_col_others: {heading_idx_col_other}")
-        heading_map_copy=self._heading_map.copy()
-        self._heading_map[heading_idx_col_other]=heading_map_copy[heading_idx_col]
-        self._heading_map[heading_idx_col]=heading_map_copy[heading_idx_col_other]
-        """
 
         self.clear()
         self._update_headings()
@@ -236,7 +253,10 @@ class CustomTreeview(ttk.Treeview):
 
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
-        super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+        value_list=list(kwargs['values'])
+        value_list[2]=value_list[2][:8]
+        super().insert('', 'end', values=self._values_reordered(value_list))
+        #super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
     def clear(self):
         self.delete(*self.get_children())
