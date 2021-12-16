@@ -29,9 +29,9 @@ class CustomTreeview(ttk.Treeview):
                 self.__drag_start_column_number=''
             else:
                 assert drag_from != '', "expected a column number if swapping state being updated"
-                self.__swapping=truthy
                 self.__drag_start_column_number=drag_from
 
+            self.__swapping=truthy
         @property
         def drag_start_column_number(self):
             # assert self.__swapping==True, "no column being dragged but queried for start"
@@ -202,7 +202,7 @@ class CustomTreeview(ttk.Treeview):
             else:
                 self._ctx._update_cmd()
         elif self._stateHolder.whether_swapping():
-            self._stateHolder.transition_swapping(false)
+            self._stateHolder.transition_swapping(False)
             self._ctx._update_cmd()
 
 
