@@ -107,10 +107,7 @@ class AppView:
 
         root=self.root
         root.title("Provider View")
-        root.columnconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(1, weight=0)
-        root.rowconfigure(2, weight=0)
+
         # treeframe
         treeframe = ttk.Frame(root)
         treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
@@ -129,14 +126,6 @@ class AppView:
 
         # baseframe
         baseframe = ttk.Frame(root)
-        baseframe.grid(column=0, row=1, sticky="wes")
-        baseframe.columnconfigure(0, weight=1)
-        baseframe.columnconfigure(1, weight=1)
-        baseframe.columnconfigure(2, weight=1)
-        baseframe.columnconfigure(3, weight=1)
-        baseframe.rowconfigure(0, weight=1)
-
-        baseframe['padding']=(0,5,0,10)
 
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
         self.count_frame        = CountFrame(self, baseframe)
@@ -174,17 +163,45 @@ class AppView:
         self.console.grid(column=0, row=0, sticky='nwes')
 
 
+        baseframe.grid(column=0, row=1, sticky="wes")
+        baseframe.columnconfigure(0, weight=1)
+        baseframe.columnconfigure(1, weight=1)
+        baseframe.columnconfigure(2, weight=1)
+        baseframe.columnconfigure(3, weight=1)
+        baseframe.rowconfigure(0, weight=1)
+        baseframe['padding']=(0,5,0,10)
+
+
 
         # subbaseframe
         subbaseframe = ttk.Frame(root)
-        subbaseframe.grid(column=0, row=2)
-        self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
-        self.dursec_entryframe  = DurSecFrame(self, subbaseframe)
 
+        # frame_selectioncount=ttk.Frame(root)
+        self.count_selected = StringVar()
+        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.count_selected)
+        self.label_selectioncount.grid(column=0, row=0, sticky="w")
+
+        self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
+
+        self.dursec_entryframe  = DurSecFrame(self, subbaseframe)
         self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
 
-        # bind to method and inspect event widget TODO
+        stub = ttk.Label(subbaseframe)
+        stub.grid(column=3,row=0, sticky="e")
+
+        subbaseframe.grid(column=0, row=2, sticky="we")
+        subbaseframe.columnconfigure(0, weight=1)
+        subbaseframe.columnconfigure(1, weight=0)
+        subbaseframe.columnconfigure(2, weight=0)
+        subbaseframe.columnconfigure(3, weight=1)
+        subbaseframe.rowconfigure(0, weight=0)
+
+        root.columnconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(1, weight=0)
+        root.rowconfigure(2, weight=0)
+        # to do, catch when in contextual menu
         root.bind('<Escape>', lambda e: root.destroy())
 
         self._rewrite_to_console(fetch_new_dialog(0))
@@ -287,8 +304,7 @@ class AppView:
 
         results=None
         msg_in = None
-        # uh oh, another nested event loop. terminator assigned!
-        self.root.after(1, lambda: self.handle_incoming_result_extra())
+        self.root.after(10, lambda: self.handle_incoming_result_extra())
 
 
     def handle_incoming_result_extra(self):
@@ -296,7 +312,7 @@ class AppView:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
             msg_in = None
-            self.root.after(1, lambda: self.handle_incoming_result_extra())
+            self.root.after(10, lambda: self.handle_incoming_result_extra())
         else:
             # print(f"[AppView] got msg!")
             results = msg_in["msg"]
@@ -360,7 +376,10 @@ class AppView:
         else:
             self._rewrite_to_console(None)
 
-
+    def _send_message_to_model(self, msg):
+        """creates a message containing the session id and the input msg and places it into the queue out to the model"""
+        d = {"id": self.session_id, "msg": msg}
+        self.q_out.put_nowait(d)
 
 
     def _update_cmd(self, *args):
@@ -388,12 +407,14 @@ class AppView:
         ss = self._update_or_refresh_sql()
 
         # TODO remove subnet-tag, it is already associated with the id
-        self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
+        msg = { "subnet-tag": self.subnet_var.get(), "sql": ss} 
+        self._send_message_to_model(msg)
+        # self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         results=None
         msg_in = None
 
-        self.root.after(1, lambda: self.handle_incoming_result(refresh=False))
+        self.handle_incoming_result(refresh=False)
 
 
 

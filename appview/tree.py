@@ -2,8 +2,10 @@ from tkinter import ttk
 from tkinter import *
 from tkinter import font
 from functools import singledispatchmethod
+import enum
 
 import debug
+
 class CustomTreeview(ttk.Treeview):
     """notes:
         #2 refers to the first column, which is always name
@@ -11,6 +13,17 @@ class CustomTreeview(ttk.Treeview):
         the rest are variable
         summary: subtract 1 to get the corresponding index
     """
+
+    class Field(enum.IntEnum):
+        offerRowID=0
+        name=1
+        address=2
+        cpu_per_hr=3
+        dur_per_hr=4
+        fixed=5
+        cores=6
+        threads=7
+        version=8
 
     class StateHolder:
         __swapping = False
@@ -114,11 +127,32 @@ class CustomTreeview(ttk.Treeview):
         # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
+    def list_selection_addresses(self):
+        """extract the node address values from the selection and return as a list or empty list"""
+        thelist = []
+        for item_id in self.selection():
+            thelist.append(self.item(item_id)['values'][CustomTreeview.Field.address])
+            # print(self.item(item_id)['values'])
+        return thelist
 
-    def on_select(self, *args):
+    def on_select(self, e):
+        """TODO"""
+        count_selected = len(self.selection())
+        debug.dlog(f"count selected: {count_selected}")
+        debug.dlog(self.list_selection_addresses())
+        self._ctx.count_selected.set(count_selected)
+            # debug.dlog(self.item(item_id)['values'])
+        """
+        debug.dlog(selections)
         debug.dlog(self.selection())
-        debug.dlog(args)
 
+        debug.dlog(f"{self.focus()}")
+        debug.dlog(f"{dir(e)}")
+        debug.dlog(e)
+        debug.dlog(e.widget())
+        debug.dlog( self.item(self.focus() )  )
+        #debug.dlog(self.item(args[0]))
+        """
     def _model_sequence_from_headings(self):
         """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
         """analysis
