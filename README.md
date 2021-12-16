@@ -38,7 +38,7 @@ $ pip install yapapi -U
 $ yagna service run
 $ # golemsp run
 ```
-note: this is under heavy development and the gui may sometimes be unresponsive
+
 
 # usage
 first clone it:
@@ -71,13 +71,13 @@ $ . myvenv/bin/activate
 ## usage tips
 touch the radio button pertaining to the subnet of interest
 
-offer scanning can take up to a minute, please be patient
+offer scanning can take up to a minute, please be patient, maybe try your hand at a picasso replica
 
 check the boxes to set upper limits on cpu time and env time. go to https://stats.golem.network and use the median values for cpu and env time as a starting point
 
 it is not necessary to refresh when tweaking values!
 
-the total number of offers is listed in large digits near the bottom left
+the total number of offers is listed in large digits near the right
 
 see offer details via the contextual menu system!
 
