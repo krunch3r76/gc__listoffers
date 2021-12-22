@@ -11,8 +11,8 @@ class LocalConnection(): # later make subclass of abstract ControllerConnection
         self.signal_cb = signal_cb
 
     async def poll_loop(self):
-        """monitors and handles signals from q_in
-        places results of handle in q_out"""
+        """monitors and handles (model) signals from q_in (from view)
+        places results of handle (model) in q_out (to view)"""
         results_l=None
         while True:
             try:

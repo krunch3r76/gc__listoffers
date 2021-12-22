@@ -20,6 +20,9 @@ import yapapi
 import aiohttp
 from dataclasses import dataclass
 
+import multiprocessing
+import urllib.request
+
 examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
@@ -76,14 +79,22 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
             raise e
 
 
-
-
-
+def _list_offers_on_stats(p_pipe, subnet_tag: str, offers):
+    with urllib.request.urlopen('https://api.stats.golem.network/v1/network/online') as response:
+        r = response.read().decode('utf-8')
+    p_pipe.send(list(r))
 
 async def list_offers(subnet_tag: str):
     """scan yagna for offers then return results in a dictionary"""
     """called by OfferLookup"""
     offers = None
+    fallback = False
+    try:
+        p_pipe = multiprocessing.Pipe()
+        p = multiprocessing.Process(target=_list_offers_on_stats, args=(p_pipe, subnet_tag), daemon=True)
+        p.start()
+
+
     try:
         offers = await _list_offers(
                     Configuration()

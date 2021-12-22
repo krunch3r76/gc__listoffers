@@ -44,7 +44,7 @@ class RemoteConnection():
                 except ConnectionRefusedError as e:
                     results_d={ "id": signal["id"], "msg": ['error', "connection refused"] }
                 else:
-                    r1 = conn.getresponse()
+                    r1 = conn.getresponse() # TODO make non-blocking
                     content=r1.read()
                     results_d=json.loads(content.decode("utf-8")) # this is in the form { id, msg }
                 if results_d:
