@@ -7,7 +7,7 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 **PEACE OF MIND: THIS IS A COMPLETELY FREE SERVICE. it does not spend any glm. the app-key is necessary, however, to get information about providers**
 
-**NOTE: although this will work when golemsp instead of yagna is running, you will only be able to see other providers, not yourself!**
+**NOTE: you will see yourself listed among the results unless the probe for offers was made manually (non-default)**
 
 # video
 
