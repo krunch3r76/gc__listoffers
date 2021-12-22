@@ -33,6 +33,7 @@ if __name__ == "__main__":
             model.run_server()
     when running as a server, there is no gui so the server runs as a Model-Controller
     """
+    controller_process=None
     INVALID_CLA=False
     if len(sys.argv) == 1:
         # <script>
@@ -44,7 +45,7 @@ if __name__ == "__main__":
 
         # setup controller to use LocalConnection having a both a full duplex message queue to appView plus callback to OfferLookup functor
         localConnection = LocalConnection(appView.q_in, appView.q_out, offerLookup)
-        controller_process = Process(target=localConnection, daemon=True)
+        controller_process = Process(target=localConnection, daemon=False)
         controller_process.start()
 
         appView()
@@ -93,3 +94,5 @@ if __name__ == "__main__":
 
     if INVALID_CLA:
         print("usage: {} <client|serve> [<host=localhost>] [<port=8000>]".format(sys.argv[0]))
+
+    controller_process.terminate()

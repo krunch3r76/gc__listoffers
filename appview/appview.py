@@ -179,10 +179,9 @@ class AppView:
         # frame_selectioncount=ttk.Frame(root)
         self.__count_selected = StringVar()
         self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.__count_selected)
-        self.label_selectioncount['foreground']='#ffffff'
-        self.label_selectioncount['background']='#217346'
-        # self.label_selectioncount.grid(column=0, row=0, sticky="w")
-        # self.label_selectioncount.grid_remove()
+        # self.label_selectioncount['foreground']='#ffffff'
+        # self.label_selectioncount['background']='#217346'
+        self.label_selectioncount['foreground']='#217346'
         self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
 

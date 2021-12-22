@@ -31,6 +31,16 @@ dialog2={"script": "i am now collecting offers broadcast on the provider network
             , "refresh": ['press refresh']
         }
 }
+
+dialog2={"script": "i am now attempting to make an outbound connection to " \
+        "https://stats.golem.network to obtain the provider listing. "\
+        "failing this, i will fallback to probe for offers manually, "\
+        "in which case this might take a few minutes!"
+        , "substitutions": { "attempting": ['trying']
+            , "to make an outbound connection to": ['to connect with']
+            , "a few minutes": ['awhile']
+        }
+}
 dialogs.append(dialog2)
 
 dialog3={"script": "this sure is taking awhile. don't fret. i'll have some" \

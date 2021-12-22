@@ -265,7 +265,6 @@ def build_database(con, offers):
             insert_record(offer, lastrow, *args)
 
         props = offer['props']
-
         # activity.caps.transfer
         _insert_record('activity.caps.transfer', 'protocol', str(props['golem.activity.caps.transfer.protocol']))
 
