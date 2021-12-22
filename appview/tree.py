@@ -140,7 +140,8 @@ class CustomTreeview(ttk.Treeview):
         count_selected = len(self.selection())
         debug.dlog(f"count selected: {count_selected}")
         debug.dlog(self.list_selection_addresses())
-        self._ctx.count_selected.set(count_selected)
+        #self._ctx.count_selected.set(count_selected)
+        self._ctx.count_selected=count_selected
             # debug.dlog(self.item(item_id)['values'])
         """
         debug.dlog(selections)

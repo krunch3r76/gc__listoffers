@@ -177,10 +177,12 @@ class AppView:
         subbaseframe = ttk.Frame(root)
 
         # frame_selectioncount=ttk.Frame(root)
-        self.count_selected = StringVar()
-        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.count_selected)
-        self.label_selectioncount.grid(column=0, row=0, sticky="w")
-
+        self.__count_selected = StringVar()
+        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.__count_selected)
+        self.label_selectioncount['foreground']='#ffffff'
+        self.label_selectioncount['background']='#217346'
+        # self.label_selectioncount.grid(column=0, row=0, sticky="w")
+        # self.label_selectioncount.grid_remove()
         self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
         self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
 
@@ -207,6 +209,18 @@ class AppView:
         self._rewrite_to_console(fetch_new_dialog(0))
 
         self._states=dict()
+
+    @property
+    def count_selected(self):
+        return self.__count_selected.get()
+
+    @count_selected.setter
+    def count_selected(self, newcount):
+        self.__count_selected.set(newcount)
+        if newcount>1:
+            self.label_selectioncount.grid(column=0, row=0, sticky="w")
+        else:
+            self.label_selectioncount.grid_remove()
 
     def _stateRefreshing(self, b=None):
         if b == True:
