@@ -28,9 +28,18 @@ sys.path.append(str(examples_dir))
 
 
 
+
+
 @dataclass
 class MyPayload(yapapi.payload.Payload):
+    """custom payload for demand builder that filters for vm runtimes only"""
+    """
+    required by: _list_offers
+    """
     runtime: str = yapapi.props.base.constraint(yapapi.props.inf.INF_RUNTIME_NAME, default=yapapi.props.inf.RUNTIME_VM)
+
+
+
 
 
 async def _list_offers(subnet_tag: str):
@@ -84,11 +93,14 @@ async def _list_offers(subnet_tag: str):
             raise e
 
 
+
+
+
 def _list_offers_on_stats(send_end, subnet_tag: str):
     """send a GET request to the stats api to extract a listing of offers then return them
     pre: outbound https connections permitted
     in: multiprocessing pipe send end, subnet tag to filter results against
-    out: list of offer dictionary objects
+    out: list of offer dictionary objects or list of length one with 'error'
     post: none
     """
     offers = []
@@ -115,11 +127,20 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     send_end.send(offers)
 
 
+
+
+
+
 async def list_offers(subnet_tag: str):
     """query stats api otherwise scan yagna for offers then return results as a list of dictionary objects"""
     """
     called by: OfferLookup
-    pre:
+    pre: none
+    in: subnet to filter results against
+    out: list of offer dictionary objects, which may be empty
+    post: none
+    calls: _list_offers || _list_offers_on_stats
+    raises: MissingConfiguration || ApiException || ClientConnectorError
     """
     offers = None
     fallback = False
@@ -151,6 +172,5 @@ async def list_offers(subnet_tag: str):
             debug.dlog(e)
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
-
     return offers
 

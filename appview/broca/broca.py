@@ -53,7 +53,7 @@ dialog3={"script": "this sure is taking awhile. don't fret. i'll have some" \
 dialogs.append(dialog3)
 
 dialog4={"script": "okay, the offers i found are displayed in the table" \
-        " above. if the count seems too low, please refresh again."
+        " above."
         , "substitutions": { "okay": ['super', 'great', 'excellent', 'yipee']
             , "found": ['discovered']
             , "displayed": ['represented']
