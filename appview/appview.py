@@ -280,7 +280,7 @@ class AppView:
 
 
     def _on_other_entry_change(self, *args):
-        self.other_rb['value']= self.other_entry_var.get()
+        self.refreshFrame.radio_frame.other_rb['value']= self.other_entry_var.get()
         self.subnet_var.set( self.other_entry_var.get() )
 
 

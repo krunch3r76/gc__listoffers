@@ -33,10 +33,15 @@ class MyPayload(yapapi.payload.Payload):
     runtime: str = yapapi.props.base.constraint(yapapi.props.inf.INF_RUNTIME_NAME, default=yapapi.props.inf.RUNTIME_VM)
 
 
-async def _list_offers(conf: Configuration, subnet_tag: str):
-
+async def _list_offers(subnet_tag: str):
+    """interact with the yagna daemon to query for offers and return a list of dictionary objects describing them
+    pre: none
+    in: subnet to filter results against
+    out: list of offer dictionary objects
+    post: none
+    """
     # fp = open("debugmsg.txt", "w")
-
+    conf = Configuration() # this configures access to the yagna daemon using the environment appkey
     async with conf.market() as client:
         market_api = Market(client)
         dbuild = DemandBuilder()
@@ -80,20 +85,27 @@ async def _list_offers(conf: Configuration, subnet_tag: str):
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
+    """send a GET request to the stats api to extract a listing of offers then return them
+    pre: outbound https connections permitted
+    in: multiprocessing pipe send end, subnet tag to filter results against
+    out: list of offer dictionary objects
+    post: none
+    """
     offers = []
     try:
         with urllib.request.urlopen('https://api.stats.golem.network/v1/network/online') as response:
-            r = response.read().decode('utf-8')
-            r = json.loads(r)
+            result_list = json.loads(response.read().decode('utf-8'))
+            debug.dlog(f"first result: {result_list[0]}")
     except:
         debug.dlog("exception")
         offers = ['error']
     else:
         offer_d=dict()
-        for result in r:
+        for result in result_list:
             props = result['data']
+            # consider processing result['online'] which so far is invariably true
             if props['golem.runtime.name']=='vm' and props['golem.node.debug.subnet']==subnet_tag:
-                offer_d["timestamp"]=datetime.now()
+                offer_d["timestamp"]=datetime.fromisoformat(result['updated_at'])
                 offer_d["offer-id"]=0
                 offer_d["issuer-address"]=result['node_id']
                 offer_d["props"]=props
@@ -104,8 +116,11 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
 
 
 async def list_offers(subnet_tag: str):
-    """scan yagna for offers then return results in a dictionary"""
-    """called by OfferLookup"""
+    """query stats api otherwise scan yagna for offers then return results as a list of dictionary objects"""
+    """
+    called by: OfferLookup
+    pre:
+    """
     offers = None
     fallback = False
 
@@ -123,8 +138,7 @@ async def list_offers(subnet_tag: str):
         debug.dlog("fallback to offer probe")
         try:
             offers = await _list_offers(
-                        Configuration()
-                        , subnet_tag
+                        subnet_tag
                         )
         except yapapi.rest.configuration.MissingConfiguration as e:
             debug.dlog("raising yapapi.rest.configuration.MissingConfiguration")
