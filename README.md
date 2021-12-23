@@ -5,7 +5,7 @@ the desktop is back! what? you like the pretty js stuff? then go back to stats.g
 
 the problem gc__listoffers solves is 1) for providers to see at a cursory glance how competitive they are on mainnet given prices they have set for cpu and environment, 2) for requestors to tweak a market strategy on a run-per-run basis in an informed way
 
-**PEACE OF MIND: THIS IS A COMPLETELY FREE SERVICE. it does not spend any glm. the app-key is necessary, however, to get information about providers**
+**PEACE OF MIND: THIS IS A COMPLETELY FREE SERVICE. it does not spend any glm. the app-key may be necessary, however, to get information about providers**
 
 **NOTE: you will see yourself listed among the results unless the probe for offers was made manually (non-default)**
 
@@ -23,11 +23,10 @@ if name or address headings are clicked on, sorting is strictly on either of the
 
 
 # requirements
-**YAGNA_APPKEY must be in your environment for this to run successfuly**.
-
-either yagna or golemsp must be running
 
 yapapi must be installed
+
+for systems that do not allow https outbound connection, either yagna or golemsp must be running and the app-key should be in the environment (see section on app-key for details)
 
 _python should have been compiled with Tcl support_. this is the default on Windows. this is available as a package on ubuntu. see below. 
 
@@ -82,7 +81,7 @@ the total number of offers is listed in large digits near the right
 see offer details via the contextual menu system!
 
 ## what is an app key?
-an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers:
+an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers and looking up the pertinent name:
 ```bash
 $ yagna app-key list --json
 {
@@ -96,7 +95,7 @@ $ yagna app-key list --json
   "values": [
     [
       "golem-cli",
-      "591184ff4e7d495aa32ce16c0c72228a", # this is the app key
+      "591184ff4e7d495aa32ce16c0c72228a", # this is the app key when golemsp is running
       "0xe50dd37bbd930b1bb860010385056ee016b392c3",
       "manager",
       "2021-11-13T01:36:34.907106973"
