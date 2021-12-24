@@ -75,6 +75,9 @@ class CustomTreeview(ttk.Treeview):
             )
     _order_by_other = False
 
+
+
+
     def __build__update_cmd(self):
         """create a lookup table of callbacks and return"""
         """post: self._update_cmd_dict"""
@@ -89,6 +92,9 @@ class CustomTreeview(ttk.Treeview):
             , 'version': {}
                 }
         return update_cmd_dict
+
+
+
 
     def __init__(self, ctx, *args, **kwargs):
         """constructor for CustomTreeView"""
@@ -127,13 +133,26 @@ class CustomTreeview(ttk.Treeview):
         # debug.dlog(f"internal columns: {self['columns']}")
         self._update_headings()
 
+
+
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
         thelist = []
         for item_id in self.selection():
-            thelist.append(self.item(item_id)['values'][CustomTreeview.Field.address])
+            thelist.append(
+                (
+                    self.item(item_id)['values'][CustomTreeview.Field.offerRowID],
+                    self.item(item_id)['values'][CustomTreeview.Field.address]
+                )
+                    )
             # print(self.item(item_id)['values'])
         return thelist
+
+
+
+
+
+
 
     def on_select(self, e):
         """TODO"""

@@ -202,7 +202,7 @@ class AppView:
         root.rowconfigure(0, weight=1) # ratio for children to resize against
         root.rowconfigure(1, weight=0)
         root.rowconfigure(2, weight=0)
-        # to do, catch when in contextual menu
+        # to do, catch when in contextual self.menu
         root.bind('<Escape>', lambda e: root.destroy())
 
         self._rewrite_to_console(fetch_new_dialog(0))
@@ -457,10 +457,12 @@ class AppView:
         # debug.dlog(self.cpusec_entryframe.w.state(['!selected']))
         # if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
         if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0}"
          
         if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and self.durationsec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
 
         # here we build the order by statement
 
@@ -617,14 +619,14 @@ class AppView:
     def __call__(self):
 
         root = self.root
-        # popup menu
+        # popup self.menu
         root.option_add('*tearOff', FALSE)
-        menu = Menu(root)
-        menu.add_command(label='<name>')
-        menu.entryconfigure(0, state=DISABLED)
-        menu.add_separator()
-        menu.add_command(label='view raw', command=self._show_raw)
-        menu.add_command(label='exit menu')
+        self.menu = Menu(root)
+        self.menu.add_command(label='<name>')
+        self.menu.entryconfigure(0, state=DISABLED)
+        self.menu.add_separator()
+        self.menu.add_command(label='view raw', command=self._show_raw)
+        self.menu.add_command(label='exit menu')
 
         def do_popup(event):
             tree=self.tree
@@ -636,16 +638,19 @@ class AppView:
                     return
                 region = tree.identify_region(event.x, event.y)
                 if region != 'cell':
-                    menu.grab_release()
+                    self.menu.grab_release()
                     return
                 # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
-                menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
+                self.menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
+                idx_to_filterms = self.menu.index('view raw')
+                debug.dlog(type(idx_to_filterms))
                 self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
-                menu.post(event.x_root, event.y_root)
+                self.menu.post(event.x_root, event.y_root)
             except IndexError:
                 pass
             finally:
-                menu.grab_release()
+                self.menu.grab_release()
+
         # root.bind('<ButtonRelease-3>', do_popup )
         if (root.tk.call('tk', 'windowingsystem')=='aqua'):
             root.bind('<2>', do_popup)
