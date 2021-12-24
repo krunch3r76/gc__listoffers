@@ -97,7 +97,7 @@ class AppView:
         self.session_resultcount = 0 # stores the number of rows currently on the table
         self.lastresultcount = 0 # temporary to store the displayed result number count before refresh
         self.cursorOfferRowID = None # stores the RowID of a selected row
-        decimal.getcontext().prec=7 # sets the precision of displayed decimal numbers
+        decimal.getcontext().prec=5 # sets the precision of displayed decimal numbers
         self.rawwin = None # a window for displaying raw results
         self.ssp = None # current sound Process/Subprocess instance
 
@@ -203,11 +203,28 @@ class AppView:
         root.rowconfigure(1, weight=0)
         root.rowconfigure(2, weight=0)
         # to do, catch when in contextual self.menu
-        root.bind('<Escape>', lambda e: root.destroy())
+        root.bind('<Escape>', self.on_escape_event)
 
         self._rewrite_to_console(fetch_new_dialog(0))
 
         self._states=dict()
+        self.whetherUpdating=False
+
+    @property
+    def cursorOfferRowID(self):
+        return self.__cursorOfferRowID
+
+    @cursorOfferRowID.setter
+    def cursorOfferRowID(self, val):
+        debug.dlog(f"setter: setting cursorOfferRowID to {val}")
+        self.__cursorOfferRowID=val
+
+    def on_escape_event(self, e):
+        if self.menu.winfo_ismapped() == 1:
+            self.menu.grab_release()
+            self.menu.unpost()
+        else:
+            self.root.destroy()
 
     @property
     def count_selected(self):
@@ -234,6 +251,8 @@ class AppView:
     def _toggle_refresh_controls_closure(self):
         disabled = False
         other_entry_was_enabled = False
+        # maxcpu_was_enabled = False
+        # maxdur_was_enabled = False
 
         def toggle():
             nonlocal disabled
@@ -248,8 +267,10 @@ class AppView:
                     other_entry_was_enabled = True
                 radio_frame.other_rb.state(['disabled'])
                 radio_frame.other_entry.state(['disabled'])
+
                 self.cpusec_entryframe.disable()
                 self.dursec_entryframe.disable()
+
                 disabled=True
             else:
                 refreshFrame.refreshButton.state(['!disabled'])
@@ -258,8 +279,10 @@ class AppView:
                 radio_frame.other_rb.state(['!disabled'])
                 if other_entry_was_enabled:
                     radio_frame.other_entry.state(['!disabled'])
+
                 self.cpusec_entryframe.enable()
                 self.dursec_entryframe.enable()
+
                 disabled=False
 
         return toggle
@@ -384,10 +407,22 @@ class AppView:
 
         self.refreshFrame._toggle_refresh_controls()
         self._stateRefreshing(False)
+        self.whetherUpdating=False
+
         if refresh:
             self._rewrite_to_console(fetch_new_dialog(3))
         else:
             self._rewrite_to_console(None)
+
+        if self.cursorOfferRowID != None:
+            selected_rowitem=None
+            for rowitem in self.tree.get_children(''):
+                if self.tree.item(rowitem)['values'][0]==self.cursorOfferRowID:
+                    selected_rowitem=rowitem
+            if selected_rowitem:
+                self.tree.selection_set(selected_rowitem)
+                self.tree.see(selected_rowitem)
+
 
     def _send_message_to_model(self, msg):
         """creates a message containing the session id and the input msg and places it into the queue out to the model"""
@@ -397,7 +432,17 @@ class AppView:
 
     def _update_cmd(self, *args):
         """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
+
+        if not self.session_id:
+            return
+
+        self.whetherUpdating=True
+
+        if self.cursorOfferRowID == None:
+            self.cursorOfferRowID=self.tree.get_selected_rowid()
+
         self._stateRefreshing(True)
+
         self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
@@ -408,9 +453,10 @@ class AppView:
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
 
-        self.tree.delete(*self.tree.get_children())
-        if not self.session_id:
-            return
+        children=self.tree.get_children()
+        if len(children) > 0:
+            self.tree.delete(*children)
+
 
         if len(args) > 0 and 'sort_on' in args[0]:
             self.order_by_last = args[0]['sort_on']
@@ -426,7 +472,6 @@ class AppView:
 
         results=None
         msg_in = None
-
         self.handle_incoming_result(refresh=False)
 
 
@@ -443,26 +488,14 @@ class AppView:
             " INNER JOIN 'inf.cpu' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm' "
 
-        """
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
-            " FROM 'offers'" \
-            " NATURAL JOIN 'node.id'" \
-            " NATURAL JOIN 'com.pricing.model.linear.coeffs'" \
-            " NATURAL JOIN 'runtime'" \
-            " NATURAL JOIN 'inf.cpu'" \
-            " WHERE 'runtime'.name = 'vm' "
-        """
 
-        # debug.dlog(dir(self.cpusec_entryframe.w))
-        # debug.dlog(self.cpusec_entryframe.w.state(['!selected']))
-        # if self.cpusec_entryframe.cpusec_entry.instate(['!disabled']) and self.cpusec_entry_var.get():
         if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')}"
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')+Decimal(0.0000001)}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0}"
          
         if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and self.durationsec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600}"
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)+Decimal(0.0000001)}"
 
         # here we build the order by statement
 
@@ -508,7 +541,9 @@ class AppView:
     def _refresh_cmd(self, *args):
         """create a new session and query model before handing off control to self.handle_incoming_result"""
         self._stateRefreshing(True)
-
+        debug.dlog(f"set cursorOfferRowID to none")
+        self.cursorOfferRowID=None
+    
         # describe what's happening to client in console area
         self._rewrite_to_console(fetch_new_dialog(1))
 
@@ -532,7 +567,7 @@ class AppView:
         self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         # wait on reply
-        self.root.after(1, self.handle_incoming_result)
+        self.root.after(10, self.handle_incoming_result)
 
 
 
@@ -593,23 +628,21 @@ class AppView:
 
 
 
-    def _cb_cpusec_checkbutton(self, *args):
-        if self.cpusec_entryframe.cpusec_entry.instate(['disabled']):
+    def _cb_cpusec_checkbutton(self):
+        if self.cpusec_entryframe.cbMaxCpuVar.get()=='maxcpu':
             self.cpusec_entryframe.cpusec_entry.state(['!disabled'])
         else:
             self.cpusec_entryframe.cpusec_entry.state(['disabled'])
-        if self.cpusec_entryframe.cpusec_entry.get():
             self._update_cmd()
 
 
 
 
     def _cb_durationsec_checkbutton(self, *args):
-        if self.dursec_entryframe.durationsec_entry.instate(['disabled']):
+        if self.dursec_entryframe.cbDurSecVar.get()=='maxdur':
             self.dursec_entryframe.durationsec_entry.state(['!disabled'])
         else:
             self.dursec_entryframe.durationsec_entry.state(['disabled'])
-        if self.dursec_entryframe.durationsec_entry.get():
             self._update_cmd()
 
 
@@ -626,7 +659,8 @@ class AppView:
         self.menu.entryconfigure(0, state=DISABLED)
         self.menu.add_separator()
         self.menu.add_command(label='view raw', command=self._show_raw)
-        self.menu.add_command(label='exit menu')
+        self.menu.add_separator()
+        self.menu.add_command(label='exit menu', command=self.menu.grab_release)
 
         def do_popup(event):
             tree=self.tree
@@ -642,11 +676,26 @@ class AppView:
                     return
                 # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
                 self.menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
-                idx_to_filterms = self.menu.index('view raw')
-                debug.dlog(type(idx_to_filterms))
+                if len(self.tree.list_selection_addresses()) > 0:
+                    try:
+                        idx_to_filterms = self.menu.index('gc__filterms')
+                    except TclError:
+                        # add gc__filterms item
+                        self.menu.insert_separator(3)
+                        self.menu.insert_command(4, label='gc__filterms')
+                else:
+                    try:
+                        idx_to_filterms = self.menu.index('gc__filterms')
+                    except TclError:
+                        pass
+                    else:
+                        pass
+                        self.menu.delete(idx_to_filterms-1)
+                        self.menu.delete(idx_to_filterms-1)
                 self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
                 self.menu.post(event.x_root, event.y_root)
             except IndexError:
+                debug.dlog("index error")
                 pass
             finally:
                 self.menu.grab_release()

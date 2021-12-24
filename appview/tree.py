@@ -20,7 +20,7 @@ class CustomTreeview(ttk.Treeview):
         address=2
         cpu_per_hr=3
         dur_per_hr=4
-        fixed=5
+        start=5
         cores=6
         threads=7
         version=8
@@ -60,7 +60,7 @@ class CustomTreeview(ttk.Treeview):
     _stateHolder = StateHolder()
 
     _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
-    _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'fixed', 'cores', 'threads', 'version')
+    _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'start', 'cores', 'threads', 'version')
     _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7', '8' )
     _kheadings_sql_paths = (
         None
@@ -86,7 +86,7 @@ class CustomTreeview(ttk.Treeview):
             , "address": {"sort_on": "'offers'.address"}
             , "cpu (/hr)": {}
             , "duration (/hr)": {}
-            , "fixed": {}
+            , "start": {}
             , "cores": {}
             , "threads": {}
             , 'version': {}
@@ -149,30 +149,31 @@ class CustomTreeview(ttk.Treeview):
         return thelist
 
 
-
-
-
+    def get_selected_rowid(self):
+        """return the rowid for a singly selected row or None"""
+        rowid=None
+        sel = self.selection()
+        if len(sel) == 1:
+            rowid=self.item(sel)['values'][CustomTreeview.Field.offerRowID]
+        return rowid
 
 
     def on_select(self, e):
-        """TODO"""
-        count_selected = len(self.selection())
-        debug.dlog(f"count selected: {count_selected}")
-        debug.dlog(self.list_selection_addresses())
-        #self._ctx.count_selected.set(count_selected)
-        self._ctx.count_selected=count_selected
-            # debug.dlog(self.item(item_id)['values'])
-        """
-        debug.dlog(selections)
-        debug.dlog(self.selection())
+        if not self._stateHolder.whether_swapping() and not self._ctx.whetherUpdating:
+            count_selected = len(self.selection())
+            if count_selected == 1:
+                self._ctx.cursorOfferRowID = self.get_selected_rowid()
+                debug.dlog(f"set cursorOfferRowID to {self._ctx.cursorOfferRowID}")
+            else:
+                debug.dlog(f"count_selected = {count_selected} so set cursorOfferRowID to None")
+                self._ctx.cursorOfferRowID = None
+            debug.dlog(f"count selected: {count_selected}")
+            debug.dlog(self.list_selection_addresses())
+            self._ctx.count_selected=count_selected
 
-        debug.dlog(f"{self.focus()}")
-        debug.dlog(f"{dir(e)}")
-        debug.dlog(e)
-        debug.dlog(e.widget())
-        debug.dlog( self.item(self.focus() )  )
-        #debug.dlog(self.item(args[0]))
-        """
+
+
+
     def _model_sequence_from_headings(self):
         """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
         """analysis

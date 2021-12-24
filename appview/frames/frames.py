@@ -108,13 +108,21 @@ class CPUSecFrame():
         self.cb.grid(           column=0,row=0, sticky="w")
         self.cpusec_entry.grid( column=1,row=0,stick="w")
 
+    def refresh_entry_state(self):
+        if self.cbMaxCpuVar.get()=='maxcpu':
+            self.cpusec_entry.state(['!disabled'])
+        else:
+            self.cpusec_entry.state(['disabled'])
+
     def disable(self):
         self.cb.state(['disabled'])
+        # self.refresh_entry_state()
         self.cpusec_entry.state(['disabled'])
 
     def enable(self):
         self.cb.state(['!disabled'])
-        self.cpusec_entry.state(['!disabled'])
+        self.refresh_entry_state()
+        # self.cpusec_entry.state(['!disabled'])
 
 
 class DurSecFrame():
@@ -135,10 +143,17 @@ class DurSecFrame():
         self.cb.grid(column=0,row=0,sticky="w")
         self.durationsec_entry.grid(column=1,row=0,stick="w")
 
+    def _refresh_entry_state(self):
+        if self.cbDurSecVar.get()=='maxdur':
+            self.durationsec_entry.state(['!disabled'])
+        else:
+            self.durationsec_entry.state(['disabled'])
+
     def disable(self):
         self.cb.state(['disabled'])
         self.durationsec_entry.state(['disabled'])
 
     def enable(self):
         self.cb.state(['!disabled'])
-        self.durationsec_entry.state(['!disabled'])
+        self._refresh_entry_state()
+        # self.durationsec_entry.state(['!disabled'])
