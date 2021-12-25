@@ -127,12 +127,13 @@ class CustomTreeview(ttk.Treeview):
         self.column(2, width=0)
         # self.column(2, width=font.nametofont('TkHeadingFont').actual()['size']*8, anchor='w')
         #self.column(2, minwidth=font.nametofont('TkDefaultFont').actual()['size']*43)
-        debug.dlog(font.nametofont('TkHeadingFont').configure())
+        # debug.dlog(font.nametofont('TkHeadingFont').configure())
         for index in range(3,len(self._kheadings_init)):
             self.column(index, width=0, anchor='w')
         # debug.dlog(f"internal columns: {self['columns']}")
-        self._update_headings()
+        self.last_cleared_selection = list()
 
+        self._update_headings()
 
 
     def list_selection_addresses(self):
@@ -155,6 +156,7 @@ class CustomTreeview(ttk.Treeview):
         sel = self.selection()
         if len(sel) == 1:
             rowid=self.item(sel)['values'][CustomTreeview.Field.offerRowID]
+            # rowid=self.item(sel)['values'][CustomTreeview.Field.offerRowID]
         return rowid
 
 
@@ -163,12 +165,10 @@ class CustomTreeview(ttk.Treeview):
             count_selected = len(self.selection())
             if count_selected == 1:
                 self._ctx.cursorOfferRowID = self.get_selected_rowid()
-                debug.dlog(f"set cursorOfferRowID to {self._ctx.cursorOfferRowID}")
             else:
-                debug.dlog(f"count_selected = {count_selected} so set cursorOfferRowID to None")
                 self._ctx.cursorOfferRowID = None
             debug.dlog(f"count selected: {count_selected}")
-            debug.dlog(self.list_selection_addresses())
+            # debug.dlog(self.list_selection_addresses())
             self._ctx.count_selected=count_selected
 
 
@@ -210,6 +210,9 @@ class CustomTreeview(ttk.Treeview):
 
 
     def on_drag_start(self, event):
+        # update the retained list on pre-emptively kludge
+        self.last_cleared_selection = self.list_selection_addresses()
+
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
         # debug.dlog(region, 2)
@@ -240,6 +243,7 @@ class CustomTreeview(ttk.Treeview):
 
     def on_drag_release(self, event):
         """update display when a column has been moved (assumed non-movable columns not moved)"""
+        debug.dlog(f"selected address: {self.list_selection_addresses()}")
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
         if region == "heading":
@@ -261,6 +265,18 @@ class CustomTreeview(ttk.Treeview):
             self._ctx._update_cmd()
 
 
+    def clearit(self, retain_selection=False):
+        if retain_selection:
+            if len(self.last_cleared_selection) == 0:
+                self.last_cleared_selection = self.list_selection_addresses()
+        else:
+            self.last_cleared_selection.clear()
+
+        children=self.get_children()
+        if len(children) > 0:
+            self.delete(*children)
+
+
 
     def _values_reordered(self, values):
         """convert the standard values sequence into the internal sequence and return"""
@@ -277,7 +293,7 @@ class CustomTreeview(ttk.Treeview):
         """reorder _heading_map based on inputs that came from .identify_column on drag event
         note: does not change contents of underlying rows, if any
         """
-        debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
+        # debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
         # convert to heading offset
         numbered_col_internal = int(numbered_col[1])-1
         numbered_col_other_internal = int(numbered_col_other[1])-1
@@ -293,17 +309,18 @@ class CustomTreeview(ttk.Treeview):
         self._heading_map[heading_value_1_offset] = heading_value_2
         self._heading_map[heading_value_2_offset] = heading_value_1
 
-
-        self.clear()
+        self.clearit(retain_selection=True) # seems repetitive
         self._update_headings()
 
-        debug.dlog(f"now dragging {numbered_col_other}", 2)
+        # debug.dlog(f"now dragging {numbered_col_other}", 2)
 
         self._stateHolder.transition_swapping(True, numbered_col_other)
         # self._drag_start_column_number=numbered_col_other
 
 
-        debug.dlog(f"{self._heading_map}")
+        # debug.dlog(f"{self._heading_map}")
+
+
 
 
     def insert(self, *args, **kwargs):
@@ -312,6 +329,9 @@ class CustomTreeview(ttk.Treeview):
         value_list[2]=value_list[2][:8]
         super().insert('', 'end', values=self._values_reordered(value_list))
         #super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+
+
+
 
     def clear(self):
         self.delete(*self.get_children())

@@ -6,10 +6,8 @@ import random
 random.seed()
 
 dialogs = []
-dialog1={"script": "greetings. please press refresh to see the providers on the default" 
+dialog1={"script": "greetings. please press refresh to see the providers on the default" \
         " subnet, public-beta.\n\n" \
-        "Note, if you are running golemsp on the same system, you won't" \
-        " see yourself listed here!"
         , "substitutions": { "greetings": ['howdy', 'hello', 'hey']
             , "press": ['click']
             , "Note": ['Be advised', 'Heads up']

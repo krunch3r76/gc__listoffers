@@ -216,7 +216,7 @@ class AppView:
 
     @cursorOfferRowID.setter
     def cursorOfferRowID(self, val):
-        debug.dlog(f"setter: setting cursorOfferRowID to {val}")
+        # debug.dlog(f"setter: setting cursorOfferRowID to {val}")
         self.__cursorOfferRowID=val
 
     def on_escape_event(self, e):
@@ -404,8 +404,8 @@ class AppView:
                 # self.resultcount_var.set(str(new_resultcount))
             else:
                 self.resultdiffcount_var.set("") # consider edge cases
-
-        self.refreshFrame._toggle_refresh_controls()
+        if refresh:
+            self.refreshFrame._toggle_refresh_controls()
         self._stateRefreshing(False)
         self.whetherUpdating=False
 
@@ -414,6 +414,18 @@ class AppView:
         else:
             self._rewrite_to_console(None)
 
+        selected_addresses = self.tree.last_cleared_selection
+        rowitem_list = []
+        if not refresh and len(selected_addresses) > 0:
+            selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
+            for rowitem in self.tree.get_children(''):
+                cursor_rowid = self.tree.item(rowitem)['values'][0]
+                if cursor_rowid in selected_rowids:
+                    rowitem_list.append(rowitem)
+        if len(rowitem_list) > 0:
+            self.tree.selection_set(*rowitem_list)
+
+        """
         if self.cursorOfferRowID != None:
             selected_rowitem=None
             for rowitem in self.tree.get_children(''):
@@ -422,7 +434,7 @@ class AppView:
             if selected_rowitem:
                 self.tree.selection_set(selected_rowitem)
                 self.tree.see(selected_rowitem)
-
+        """
 
     def _send_message_to_model(self, msg):
         """creates a message containing the session id and the input msg and places it into the queue out to the model"""
@@ -430,9 +442,9 @@ class AppView:
         self.q_out.put_nowait(d)
 
 
-    def _update_cmd(self, *args):
+    def _update_cmd(self, more_d=None):
         """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
-
+        """more_d is an optional dictionary with additonal instructions tied to specific keys, so far 'sort_on'"""
         if not self.session_id:
             return
 
@@ -443,7 +455,7 @@ class AppView:
 
         self._stateRefreshing(True)
 
-        self.refreshFrame._toggle_refresh_controls()
+        # self.refreshFrame._toggle_refresh_controls()
 
         if self.resultcount_var.get() != "":
             self.lastresultcount=int(self.resultcount_var.get())
@@ -453,13 +465,16 @@ class AppView:
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
 
+        self.tree.clearit(retain_selection=True)
+        """
         children=self.tree.get_children()
         if len(children) > 0:
             self.tree.delete(*children)
+        """
 
-
-        if len(args) > 0 and 'sort_on' in args[0]:
-            self.order_by_last = args[0]['sort_on']
+        # if len(args) > 0 and 'sort_on' in args[0]:
+        if more_d and 'sort_on' in more_d:
+            self.order_by_last = more_d['sort_on'] # extract header name to sort_on stored in value of key
         else:
             self.order_by_last=None
 
@@ -541,7 +556,6 @@ class AppView:
     def _refresh_cmd(self, *args):
         """create a new session and query model before handing off control to self.handle_incoming_result"""
         self._stateRefreshing(True)
-        debug.dlog(f"set cursorOfferRowID to none")
         self.cursorOfferRowID=None
     
         # describe what's happening to client in console area
@@ -553,7 +567,8 @@ class AppView:
         # reset widgets to be refreshed
         self.resultcount_var.set("")
         self.resultdiffcount_var.set("")
-        self.tree.delete(*self.tree.get_children())
+        self.tree.clearit()
+        # self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
 
         # build sql statement
@@ -618,9 +633,10 @@ class AppView:
                         self._rewrite_to_console(fetch_new_dialog(8))
                     else:
                         self._rewrite_to_console(fetch_new_dialog(5))
-                    self.refreshFrame._toggle_refresh_controls()
+                    if refresh:
+                        self.refreshFrame._toggle_refresh_controls()
                 else:
-                    self._update(results, refresh)
+                    self._update(results, refresh) # toggle_refresh_controls down the line
 
 
 
