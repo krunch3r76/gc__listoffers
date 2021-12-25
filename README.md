@@ -16,11 +16,24 @@ https://user-images.githubusercontent.com/46289600/145339421-674182ae-457d-4111-
 
 
 
+# usage
+## ensure python3-tk is installed
+```bash
+(ubuntu) $ sudo apt-get install python3-tk
+```
+## clone, setup python environment, and run
+```bash
+$ git clone https://github.com/krunch3r76/gc__listoffers.git
+$ cd gc__listoffers
+$ git checkout v0.1.13
+$ python3 -m venv myvenv
+$ . myvenv/bin/activate
+(myvenv) $ pip install yapapi
+(myvenv) $ python3 application.py
+```
 
 # how to interpet the interface
 if name or address headings are clicked on, sorting is strictly on either of these. however, if you click any of the other columns, sorting occurs from left to right, first sorting on the far left, then next level on the right, and so on.
-
-
 
 # requirements
 
@@ -30,42 +43,8 @@ for systems that do not allow https outbound connection, either yagna or golemsp
 
 _python should have been compiled with Tcl support_. this is the default on Windows. this is available as a package on ubuntu. see below. 
 
-```bash
-(ubuntu) $ sudo apt-get install python3-tk
-$ pip install yapapi -U
-# start yagna or golemsp
-$ yagna service run
-$ # golemsp run
-```
+**if https connections are not allowed on your machine, it is necessary to be running yagna or golemsp, see the advanced section for this**
 
-
-# usage
-first clone it:
-```bash
-$ git clone https://github.com/krunch3r76/gc__listoffers.git
-$ cd gc__listoffers
-$ git checkout v0.1.13
-$ python3 -m venv myvenv
-$ . myvenv/bin/activate
-(myvenv) $ pip install yapapi
-
-```
-
-## starting
-### starting locally
-```bash
-# export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
-(myvenv) $ python3 application.py
-```
-
-### starting for remote interaction
-```bash
-# on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
-(server) ./gc__listoffers (myvenv) $ python3 application.py serve localhost 8000
-
-# on the remote machine (Windows okay)
-(client) ./gc__listoffers $ python3 application.py client <ip-address-of-server> 8000
-```
 
 ## usage tips
 touch the radio button pertaining to the subnet of interest
@@ -79,6 +58,19 @@ it is not necessary to refresh when tweaking values!
 the total number of offers is listed in large digits near the right
 
 see offer details via the contextual menu system!
+
+
+
+# advanced
+### starting for remote interaction (for systems without internet connectivity besides golem)
+```bash
+# on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
+$ export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
+(server) ./gc__listoffers (myvenv) $ python3 application.py serve localhost 8000
+
+# on the remote machine (Windows okay)
+(client) ./gc__listoffers $ python3 application.py client <ip-address-of-server> 8000
+```
 
 ## what is an app key?
 an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers and looking up the pertinent name:
