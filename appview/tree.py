@@ -290,7 +290,9 @@ class CustomTreeview(ttk.Treeview):
             debug.dlog("CLEARING SELECTION")
             self.last_cleared_selection.clear()
         else:
-            self.last_cleared_selection = self.list_selection_addresses()
+            if len(self.list_selection_addresses()) > 0: # assume update needed
+                debug.dlog(f"replacing last_cleared_selection {self.last_cleared_selection} with {self.list_selection_addresses()}")
+                self.last_cleared_selection = self.list_selection_addresses()
 
         children=self.get_children()
         if len(children) > 0:
