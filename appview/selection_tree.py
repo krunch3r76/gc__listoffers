@@ -29,6 +29,7 @@ class SelectionTreeview(ttk.Treeview):
             self.column(i, width=80, anchor='w', stretch=YES)
             self.heading(i, text=self._kHeadings[i], anchor='w')
 
+        self['show']='tree'
     # def grid_config(self, *args, **kwargs):
     #     self.grid_configure(*args, **kwargs)
     #     self._gridinfo = self.grid_info()
