@@ -51,8 +51,9 @@ class CustomTreeview(ttk.Treeview):
             return self.__drag_start_column_number
 
         @drag_start_column_number.setter
-        def set_drag_start_column_number(self, colstr : str):
-            assert istype(colstr)==str, "colstr input as non-string"
+        def drag_start_column_number(self, colstr : str):
+            assert isinstance(colstr, str), "colstr input as non-string"
+            debug.dlog(colstr)
             self.__drag_start_column_number=colstr
         
 
@@ -135,7 +136,6 @@ class CustomTreeview(ttk.Treeview):
         self.last_cleared_selection = list()
 
         self._update_headings()
-
 
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
@@ -224,50 +224,52 @@ class CustomTreeview(ttk.Treeview):
         if region == "heading":
             widget._drag_start_x=event.x
             widget._drag_start_y=event.y
-            self._stateHolder.transition_swapping(True, widget.identify_column(event.x) )
-            self._drag_start_column_number=widget.identify_column(event.x) # TODO move to state object
+            # self._stateHolder.transition_swapping(True, widget.identify_column(event.x) )
+            self._stateHolder.drag_start_column_number=widget.identify_column(event.x)
         else:
-            self._stateHolder.transition_swapping(False)
-            self._drag_start_column_number=None
+            self._stateHolder.transition_swapping(False) # review
+            self._stateHolder.drag_start_column_number=None
 
 
     def on_drag_motion(self, event):
         """swap columns when moved into a new column (except where restricted)"""
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
-        # debug.dlog(region, 3)
+        hover_col = widget.identify_column(event.x)
+
+
         if region == "heading":
-        # x = widget.winfo_x() - widget._drag_start_x + event.x
-        # y = widget.winfo_y() - widget._drag_start_y + event.y
-            if self._stateHolder.whether_swapping():
-                drag_motion_column_number = widget.identify_column(event.x)
-                if drag_motion_column_number not in ("#2", "#3") and self._stateHolder.drag_start_column_number not in ("#2", "#3"):
-                    if self._stateHolder.drag_start_column_number != drag_motion_column_number:
-                        self._swap_numbered_columns(self._stateHolder.drag_start_column_number, drag_motion_column_number)
+            if not self._stateHolder.whether_swapping():
+                if hover_col not in ("#2", "#3") and hover_col != self._stateHolder.drag_start_column_number:
+                    self._stateHolder.transition_swapping(True, self._stateHolder.drag_start_column_number) 
+            elif self._stateHolder.whether_swapping():
+                if hover_col not in ("#2", "#3") and self._stateHolder.drag_start_column_number not in ("#2", "#3"):
+                    # debug.dlog(f"start: {self._stateHolder.drag_start_column_number}; hover_col: {hover_col}")
+                    if self._stateHolder.drag_start_column_number != hover_col:
+                        self._swap_numbered_columns(self._stateHolder.drag_start_column_number, hover_col)
 
 
     def on_drag_release(self, event):
         """update display when a column has been moved (assumed non-movable columns not moved)"""
-        debug.dlog(f"selected address: {self.list_selection_addresses()}")
+        # debug.dlog(f"selected address: {self.list_selection_addresses()}")
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
         if region == "heading":
-        # x = widget.winfo_x() - widget._drag_start_x + event.x
-        # y = widget.winfo_y() - widget._drag_start_y + event.y
-
             curcol=widget.identify_column(event.x)
-            if self._stateHolder.drag_start_column_number not in ("#2", "#3") and curcol not in ("#2", "#3"): # kludgey
-                self._ctx._update_cmd()
-            elif self._stateHolder.drag_start_column_number == curcol:
+            # debug.dlog(f"curcol: {curcol}; drag_start: {self._stateHolder.drag_start_column_number}")
+            if self._stateHolder.whether_swapping():
+                if curcol not in ("#2", "#3"):
+                    # self._stateHolder.transition_swapping(False)
+                    self._ctx._update_cmd()
+            elif curcol == self._stateHolder.drag_start_column_number:
                 if curcol=="#2":
                     self._ctx._update_cmd(self._update_cmd_dict['name'])
-                else:
+                elif curcol=="#3":
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
-            else:
-                self._ctx._update_cmd()
-        elif self._stateHolder.whether_swapping():
-            self._stateHolder.transition_swapping(False)
-            self._ctx._update_cmd()
+                else:
+                    cmd={"sort_on": self._kheadings_sql_paths[self._heading_map[3]]}
+                    self._ctx._update_cmd(cmd)
+        self._stateHolder.transition_swapping(False)
 
 
     def clearit(self, retain_selection=False):
@@ -316,13 +318,10 @@ class CustomTreeview(ttk.Treeview):
         self.clearit(retain_selection=True) # seems repetitive
         self._update_headings()
 
-        # debug.dlog(f"now dragging {numbered_col_other}", 2)
 
         self._stateHolder.transition_swapping(True, numbered_col_other)
-        # self._drag_start_column_number=numbered_col_other
 
 
-        # debug.dlog(f"{self._heading_map}")
 
 
 
@@ -335,7 +334,10 @@ class CustomTreeview(ttk.Treeview):
         #super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
 
-
+    def get_heading(self, index):
+        """return the heading name currently at the specified index"""
+        # for now just using self.heading(index)['text']
+        return self.heading(index)['text']
 
     def clear(self):
         self.delete(*self.get_children())

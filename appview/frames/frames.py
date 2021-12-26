@@ -102,9 +102,9 @@ class CPUSecFrame():
         
         self.cpusec_entry = ttk.Entry(self.w,textvariable=self.master.cpusec_entry_var,width=12)
         self.cpusec_entry.state(['disabled'])
-        # self.cpusec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
-        # self.cpusec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
-        self.cpusec_entry.bind('<Return>', lambda e: self.master._update_cmd())
+        self.cpusec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
+        self.cpusec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
+        # self.cpusec_entry.bind('<Return>', lambda e: self.master._update_cmd())
 
         self.cb.grid(           column=0,row=0, sticky="w")
         self.cpusec_entry.grid( column=1,row=0,stick="w")
@@ -136,9 +136,9 @@ class DurSecFrame():
         #     ...entry
         self.durationsec_entry = ttk.Entry(self.w,textvariable=self.master.durationsec_entry_var, width=12)
         self.durationsec_entry.state(['disabled'])
-        # self.durationsec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
-        # self.durationsec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
-        self.durationsec_entry.bind('<Return>', lambda e: self.master._update_cmd())
+        self.durationsec_entry.bind('<FocusOut>', lambda e: self.master._update_cmd())
+        self.durationsec_entry.bind('<Return>', lambda e: self.master.root.focus_set())
+        # self.durationsec_entry.bind('<Return>', lambda e: self.master._update_cmd())
 
 
         self.cb.grid(column=0,row=0,sticky="w")
