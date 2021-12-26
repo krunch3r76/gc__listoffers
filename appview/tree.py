@@ -273,6 +273,9 @@ class CustomTreeview(ttk.Treeview):
                     cmd={"sort_on": "all"} # kludge
                     # self._ctx._update_cmd(cmd)
                     self._ctx._update_cmd(cmd)
+        elif self._stateHolder.whether_swapping():
+            self._ctx._update_cmd()
+
         self._stateHolder.transition_swapping(False)
 
 
