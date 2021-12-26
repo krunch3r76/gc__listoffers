@@ -228,7 +228,7 @@ class CustomTreeview(ttk.Treeview):
             self._stateHolder.drag_start_column_number=widget.identify_column(event.x)
         else:
             self._stateHolder.transition_swapping(False) # review
-            self._stateHolder.drag_start_column_number=None
+            # self._stateHolder.drag_start_column_number=None
 
 
     def on_drag_motion(self, event):
