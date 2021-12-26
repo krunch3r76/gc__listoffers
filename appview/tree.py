@@ -267,7 +267,11 @@ class CustomTreeview(ttk.Treeview):
                 elif curcol=="#3":
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
                 else:
-                    cmd={"sort_on": self._kheadings_sql_paths[self._heading_map[3]]}
+                    debug.dlog("ELSE")
+                    # cmd={"sort_on": self._kheadings_sql_paths[self._heading_map[3]]}
+                    # cmd={"sort_on": self._ctx.order_by_last} # kludge
+                    cmd={"sort_on": "all"} # kludge
+                    # self._ctx._update_cmd(cmd)
                     self._ctx._update_cmd(cmd)
         self._stateHolder.transition_swapping(False)
 

@@ -424,7 +424,7 @@ class AppView:
             self._rewrite_to_console(None)
 
         selected_addresses = self.tree.last_cleared_selection
-        debug.dlog(selected_addresses)
+        # debug.dlog(selected_addresses)
         rowitem_list = []
         if not refresh and len(selected_addresses) > 0:
             selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
@@ -435,16 +435,6 @@ class AppView:
         if len(rowitem_list) > 0:
             self.tree.selection_set(*rowitem_list)
 
-        """
-        if self.cursorOfferRowID != None:
-            selected_rowitem=None
-            for rowitem in self.tree.get_children(''):
-                if self.tree.item(rowitem)['values'][0]==self.cursorOfferRowID:
-                    selected_rowitem=rowitem
-            if selected_rowitem:
-                self.tree.selection_set(selected_rowitem)
-                self.tree.see(selected_rowitem)
-        """
 
     def on_select(self):
         """update selectionList tree with the current selection
@@ -491,7 +481,11 @@ class AppView:
 
         # if len(args) > 0 and 'sort_on' in args[0]:
         if more_d and 'sort_on' in more_d:
-            self.order_by_last = more_d['sort_on'] # extract header name to sort_on stored in value of key
+            if more_d['sort_on']!='all':
+                self.order_by_last = more_d['sort_on'] # extract header name to sort_on stored in value of key
+            else:
+                debug.dlog(more_d)
+                self.order_by_last=None
         # else:
         #     self.order_by_last=None
 
