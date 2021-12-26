@@ -1,7 +1,6 @@
 from tkinter import ttk
 from tkinter import *
 from tkinter import font
-from functools import singledispatchmethod
 import enum
 
 import debug
@@ -45,10 +44,12 @@ class CustomTreeview(ttk.Treeview):
                 self.__drag_start_column_number=drag_from
 
             self.__swapping=truthy
+
         @property
         def drag_start_column_number(self):
             # assert self.__swapping==True, "no column being dragged but queried for start"
             return self.__drag_start_column_number
+
         @drag_start_column_number.setter
         def set_drag_start_column_number(self, colstr : str):
             assert istype(colstr)==str, "colstr input as non-string"
@@ -143,7 +144,8 @@ class CustomTreeview(ttk.Treeview):
             thelist.append(
                 (
                     self.item(item_id)['values'][CustomTreeview.Field.offerRowID],
-                    self.item(item_id)['values'][CustomTreeview.Field.address]
+                    self.item(item_id)['values'][CustomTreeview.Field.address],
+                    self.item(item_id)['values'][CustomTreeview.Field.name]
                 )
                     )
             # print(self.item(item_id)['values'])
@@ -161,6 +163,7 @@ class CustomTreeview(ttk.Treeview):
 
 
     def on_select(self, e):
+        """update the count selected linked variable unless tree is swapping or updating"""
         if not self._stateHolder.whether_swapping() and not self._ctx.whetherUpdating:
             count_selected = len(self.selection())
             if count_selected == 1:
@@ -169,9 +172,11 @@ class CustomTreeview(ttk.Treeview):
                 self._ctx.cursorOfferRowID = None
             debug.dlog(f"count selected: {count_selected}")
             # debug.dlog(self.list_selection_addresses())
-            self._ctx.count_selected=count_selected
-
-
+            if count_selected != 0:
+                self._ctx.count_selected=count_selected
+                self._ctx.on_select()
+            else:
+                self._ctx.on_none_selected()
 
 
     def _model_sequence_from_headings(self):
@@ -266,9 +271,8 @@ class CustomTreeview(ttk.Treeview):
 
 
     def clearit(self, retain_selection=False):
-        if retain_selection:
-            if len(self.last_cleared_selection) == 0:
-                self.last_cleared_selection = self.list_selection_addresses()
+        if len(self.list_selection_addresses()) != 0:
+            self.last_cleared_selection = self.list_selection_addresses()
         else:
             self.last_cleared_selection.clear()
 

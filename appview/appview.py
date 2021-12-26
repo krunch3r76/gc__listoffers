@@ -27,6 +27,7 @@ import platform
 
 from . broca import fetch_new_dialog
 from . tree import CustomTreeview
+from . selection_tree import SelectionTreeview
 
 if platform.system()=='Windows':
     import winsound
@@ -110,12 +111,20 @@ class AppView:
 
         # treeframe
         treeframe = ttk.Frame(root)
-        treeframe.columnconfigure(0, weight=1) # resize by same factor as root width
+        treeframe.columnconfigure(0, weight=11) # resize by same factor as root width
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
+        treeframe.columnconfigure(1, weight=0)
+
         treeframe['padding']=(0,0,0,5)
         self.tree = CustomTreeview(self, treeframe)
-        treeframe.grid(column=0, row=0, sticky="news")
+
+        ## selection_tree
+        self.selection_tree = SelectionTreeview(self, treeframe)
+
+
+        self.selection_tree.pseudogrid(column=1, row=0, sticky="nwes")
         self.tree.grid(column=0, row=0, sticky="news")
+        treeframe.grid(column=0, row=0, sticky="news")
 
 #        self.tree.columnconfigure(0, weight=1)
 #        self.tree.rowconfigure(0, weight=1)
@@ -415,6 +424,7 @@ class AppView:
             self._rewrite_to_console(None)
 
         selected_addresses = self.tree.last_cleared_selection
+        debug.dlog(selected_addresses)
         rowitem_list = []
         if not refresh and len(selected_addresses) > 0:
             selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
@@ -435,6 +445,18 @@ class AppView:
                 self.tree.selection_set(selected_rowitem)
                 self.tree.see(selected_rowitem)
         """
+
+    def on_select(self):
+        """update selectionList tree with the current selection
+        called by tree.on_select"""
+        self.selection_tree.update(self.tree.list_selection_addresses())
+        self.selection_tree.regrid()
+
+    def on_none_selected(self):
+        """remove the selected list from the view
+        called by tree.on_selection
+        """
+        self.selection_tree.degrid()
 
     def _send_message_to_model(self, msg):
         """creates a message containing the session id and the input msg and places it into the queue out to the model"""
@@ -466,17 +488,12 @@ class AppView:
         self.resultdiffcount_var.set("")
 
         self.tree.clearit(retain_selection=True)
-        """
-        children=self.tree.get_children()
-        if len(children) > 0:
-            self.tree.delete(*children)
-        """
 
         # if len(args) > 0 and 'sort_on' in args[0]:
         if more_d and 'sort_on' in more_d:
             self.order_by_last = more_d['sort_on'] # extract header name to sort_on stored in value of key
-        else:
-            self.order_by_last=None
+        # else:
+        #     self.order_by_last=None
 
         ss = self._update_or_refresh_sql()
 
@@ -675,7 +692,6 @@ class AppView:
         self.menu.entryconfigure(0, state=DISABLED)
         self.menu.add_separator()
         self.menu.add_command(label='view raw', command=self._show_raw)
-        self.menu.add_separator()
         self.menu.add_command(label='exit menu', command=self.menu.grab_release)
 
         def do_popup(event):
@@ -692,6 +708,7 @@ class AppView:
                     return
                 # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
                 self.menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
+                """
                 if len(self.tree.list_selection_addresses()) > 0:
                     try:
                         idx_to_filterms = self.menu.index('gc__filterms')
@@ -708,6 +725,7 @@ class AppView:
                         pass
                         self.menu.delete(idx_to_filterms-1)
                         self.menu.delete(idx_to_filterms-1)
+                """
                 self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
                 self.menu.post(event.x_root, event.y_root)
             except IndexError:
