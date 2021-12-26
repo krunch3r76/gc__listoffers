@@ -413,8 +413,10 @@ class AppView:
                 # self.resultcount_var.set(str(new_resultcount))
             else:
                 self.resultdiffcount_var.set("") # consider edge cases
+                
         if refresh:
             self.refreshFrame._toggle_refresh_controls()
+
         self._stateRefreshing(False)
         self.whetherUpdating=False
 
@@ -424,16 +426,24 @@ class AppView:
             self._rewrite_to_console(None)
 
         selected_addresses = self.tree.last_cleared_selection
-        # debug.dlog(selected_addresses)
-        rowitem_list = []
+        debug.dlog(f"last cleared selection: {selected_addresses}")
+        matched_prev_selections = []
         if not refresh and len(selected_addresses) > 0:
             selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
             for rowitem in self.tree.get_children(''):
                 cursor_rowid = self.tree.item(rowitem)['values'][0]
                 if cursor_rowid in selected_rowids:
-                    rowitem_list.append(rowitem)
-        if len(rowitem_list) > 0:
-            self.tree.selection_set(*rowitem_list)
+                    matched_prev_selections.append(rowitem)
+
+        if len(matched_prev_selections) > 0:
+            self.tree.selection_set(*matched_prev_selections)
+        else:
+            self.tree.last_cleared_selection.clear()
+            debug.dlog(f"cleared? {self.tree.last_cleared_selection}")
+            debug.dlog(f"listed? {self.tree.list_selection_addresses()}")
+            self.tree.on_select()
+            # self.on_none_selected()
+
 
 
     def on_select(self):
@@ -442,10 +452,13 @@ class AppView:
         self.selection_tree.update(self.tree.list_selection_addresses())
         self.selection_tree.regrid()
 
+
+
     def on_none_selected(self):
         """remove the selected list from the view
-        called by tree.on_selection
+        called by tree.on_select
         """
+        self.selection_tree.clearit()
         self.selection_tree.degrid()
 
     def _send_message_to_model(self, msg):
@@ -632,8 +645,7 @@ class AppView:
 
         else:
             results = msg_in["msg"]
-            if len(results) > 1:
-                if results[0] == 'error':
+            if len(results) > 1 and results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))
                     elif results[1]=='invalid api key server side':
@@ -646,8 +658,9 @@ class AppView:
                         self._rewrite_to_console(fetch_new_dialog(5))
                     if refresh:
                         self.refreshFrame._toggle_refresh_controls()
-                else:
-                    self._update(results, refresh) # toggle_refresh_controls down the line
+                    # may need to call _update with 0 results...
+            else:
+                self._update(results, refresh) # toggle_refresh_controls down the line
 
 
 
@@ -702,24 +715,6 @@ class AppView:
                     return
                 # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
                 self.menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
-                """
-                if len(self.tree.list_selection_addresses()) > 0:
-                    try:
-                        idx_to_filterms = self.menu.index('gc__filterms')
-                    except TclError:
-                        # add gc__filterms item
-                        self.menu.insert_separator(3)
-                        self.menu.insert_command(4, label='gc__filterms')
-                else:
-                    try:
-                        idx_to_filterms = self.menu.index('gc__filterms')
-                    except TclError:
-                        pass
-                    else:
-                        pass
-                        self.menu.delete(idx_to_filterms-1)
-                        self.menu.delete(idx_to_filterms-1)
-                """
                 self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
                 self.menu.post(event.x_root, event.y_root)
             except IndexError:

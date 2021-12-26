@@ -162,7 +162,7 @@ class CustomTreeview(ttk.Treeview):
         return rowid
 
 
-    def on_select(self, e):
+    def on_select(self, e=None):
         """update the count selected linked variable unless tree is swapping or updating"""
         if not self._stateHolder.whether_swapping() and not self._ctx.whetherUpdating:
             count_selected = len(self.selection())
@@ -170,10 +170,11 @@ class CustomTreeview(ttk.Treeview):
                 self._ctx.cursorOfferRowID = self.get_selected_rowid()
             else:
                 self._ctx.cursorOfferRowID = None
+
             debug.dlog(f"count selected: {count_selected}")
             # debug.dlog(self.list_selection_addresses())
+            self._ctx.count_selected=count_selected
             if count_selected != 0:
-                self._ctx.count_selected=count_selected
                 self._ctx.on_select()
             else:
                 self._ctx.on_none_selected()
@@ -215,7 +216,10 @@ class CustomTreeview(ttk.Treeview):
 
 
     def on_drag_start(self, event):
-        # update the retained list on pre-emptively kludge
+        # update the retained list on pre-emptively kludge TODO review
+        # if len(self.list_selection_addresses()) > 0:
+        #     debug.dlog(f"replacing {self.last_cleared_selection} with {self.list_selection_addresses()}")
+        #     self.last_cleared_selection = self.list_selection_addresses()
         self.last_cleared_selection = self.list_selection_addresses()
 
         widget = event.widget
@@ -280,10 +284,13 @@ class CustomTreeview(ttk.Treeview):
 
 
     def clearit(self, retain_selection=False):
-        if len(self.list_selection_addresses()) != 0:
-            self.last_cleared_selection = self.list_selection_addresses()
-        else:
+        if not retain_selection:
+            # debug.dlog(f"replacing {self.last_cleared_selection} with {self.list_selection_addresses()}")
+            # self.last_cleared_selection = self.list_selection_addresses()
+            debug.dlog("CLEARING SELECTION")
             self.last_cleared_selection.clear()
+        else:
+            self.last_cleared_selection = self.list_selection_addresses()
 
         children=self.get_children()
         if len(children) > 0:

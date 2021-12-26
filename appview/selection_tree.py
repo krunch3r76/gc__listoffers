@@ -37,7 +37,7 @@ class SelectionTreeview(ttk.Treeview):
 
     def degrid(self):
         """remove itself from grid but retains grid infomation to regrid()"""
-        self._gridinfo = self.grid_info()
+        # self._gridinfo = self.grid_info()
         self.grid_forget()
         # debug.dlog(self.grid_info())
 
@@ -46,7 +46,7 @@ class SelectionTreeview(ttk.Treeview):
 
     def clearit(self):
         """delete all children of root node"""
-        self.delete(*self.get_children(''))
+        self.delete(*self.get_children())
 
     def update(self, val_list):
         """replace the list with input values"""
