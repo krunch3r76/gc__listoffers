@@ -40,7 +40,51 @@ from .frames import *
 DIC411="#003366"
 DIC544="#4D4D4D"
 
+class TreeMenu(Menu):
+    def __init__(self, ctx, view_raw_cb, *args, **kwargs):
+        """set up menu skeleton"""
+        super().__init__(*args, **kwargs)
+        self._ctx = ctx
+        _ctx= self._ctx
 
+        self.add_command(label='<name>')
+        self.entryconfigure(0, state=DISABLED)
+        self.add_separator()
+        self.add_command(label='view raw', command=view_raw_cb)
+        self.add_command(label='exit menu', command=self.grab_release)
+
+    def popup(self, name, x, y, x_root, y_root):
+        """configure and post menu to display
+        in: name, event structure, *coordinates from event
+        post: _ctx.cursorOfferRowID
+        """
+        _ctx = self._ctx
+        self.entryconfigure(0, label=name)
+        self.post(x_root, y_root)
+
+
+
+
+class SelTreeMenu(Menu):
+    def _add_addr_items(self, addr_text):
+        """add a label to indicate which specific address is corresponding"""
+        pass
+
+    def __init__(self, ctx, filterms_dialog_cb=None, *args, **kwargs):
+        """set up menu skeleton"""
+        super().__init__(*args, **kwargs)
+        self._ctx = ctx
+        _ctx= self._ctx
+
+        self.add_command(label='filterms', command=filterms_dialog_cb)
+        self.add_command(label='exit menu', command=self.grab_release)
+
+    def popup(self, x, y, x_root, y_root, name=None):
+        """configure and post menu to screen
+        in: *coordinates from event, name label to add if any
+        """
+        _ctx=self._ctx
+        self.post(x_root, y_root)
 
 class AppView:
 
@@ -229,9 +273,11 @@ class AppView:
         self.__cursorOfferRowID=val
 
     def on_escape_event(self, e):
-        if self.menu.winfo_ismapped() == 1:
-            self.menu.grab_release()
-            self.menu.unpost()
+        mapped = list(filter(lambda menu: menu.winfo_ismapped() == 1, [ self.menu, self.seltree_menu ]))
+        if len(mapped) > 0:
+            for menu in mapped:
+                menu.grab_release()
+                menu.unpost()
         else:
             self.root.destroy()
 
@@ -519,6 +565,7 @@ class AppView:
 
 
     def _update_or_refresh_sql(self):
+        """build a sql select statement when either update or refreshing and return text"""
         ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
@@ -529,12 +576,12 @@ class AppView:
 
 
         if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')+Decimal(0.0000001)}"
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')+Decimal(0.0000001)}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0+0.0000001}"
          
         if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and self.durationsec_entry_var.get():
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600}"
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)+Decimal(0.0000001)}"
+            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)+Decimal(0.0000001)}"
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600+0.0000001}"
 
         # here we build the order by statement
 
@@ -559,6 +606,7 @@ class AppView:
 
 
     def _rewrite_to_console(self, msg):
+        """clear the console label and write a new message"""
         self.console.grid_remove()
 
 
@@ -687,48 +735,58 @@ class AppView:
 
 
 
+    def do_popup(self, event):
+        tree=self.tree
+        try:
+            # identify the coordinates of tree
+            # print(tree.state())
+            if tree.instate(['!hover']) and self.selection_tree.instate(['!hover']):
+                return
 
+            if tree.instate(['hover']) and tree.identify_region(event.x, event.y) == 'cell':
+                self.menu.popup(self.tree.item( tree.identify_row(event.y) )['values'][1]
+                        , event.x, event.y, event.x_root, event.y_root)
+
+                # update context of what row corresponded to the context menu click
+                self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
+
+            elif self.selection_tree.instate(['hover']):
+                self.seltree_menu.popup(event.x, event.y, event.x_root, event.y_root)
+
+
+        except IndexError:
+            debug.dlog("index error")
+            pass
+        finally:
+            self.menu.grab_release()
+
+
+
+    def _build_menus(self):
+        """build (popup) menu skeletons and store in self context
+        post: self.menu, self.seltree_menu
+        called by: __call__()
+        """
+        root = self.root
+        root.option_add('*tearOff', FALSE)
+
+        # popup menu for main tree row item
+        self.menu = TreeMenu(root, self._show_raw)
+
+        # popup menu for selection tree (any area)
+        self.seltree_menu = SelTreeMenu(root)
 
     def __call__(self):
-
         root = self.root
-        # popup self.menu
-        root.option_add('*tearOff', FALSE)
-        self.menu = Menu(root)
-        self.menu.add_command(label='<name>')
-        self.menu.entryconfigure(0, state=DISABLED)
-        self.menu.add_separator()
-        self.menu.add_command(label='view raw', command=self._show_raw)
-        self.menu.add_command(label='exit menu', command=self.menu.grab_release)
 
-        def do_popup(event):
-            tree=self.tree
-            try:
-                # identify the coordinates of tree
-                # print(tree.state())
-                if 'hover' not in tree.state():
-                # if tree.state()[0] != 'hover':
-                    return
-                region = tree.identify_region(event.x, event.y)
-                if region != 'cell':
-                    self.menu.grab_release()
-                    return
-                # print(f"{tree.item( tree.identify_row(event.y) )['values']}")
-                self.menu.entryconfigure(0, label=tree.item( tree.identify_row(event.y) )['values'][1])
-                self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
-                self.menu.post(event.x_root, event.y_root)
-            except IndexError:
-                debug.dlog("index error")
-                pass
-            finally:
-                self.menu.grab_release()
+        self._build_menus()
 
         # root.bind('<ButtonRelease-3>', do_popup )
         if (root.tk.call('tk', 'windowingsystem')=='aqua'):
-            root.bind('<2>', do_popup)
-            root.bind('<Control-1>', do_popup)
+            root.bind('<2>', self.do_popup)
+            root.bind('<Control-1>', self.do_popup)
         else:
-            root.bind('<3>', do_popup )
+            root.bind('<3>', self.do_popup )
 
 
 
