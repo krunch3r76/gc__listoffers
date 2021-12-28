@@ -53,3 +53,11 @@ class SelectionTreeview(ttk.Treeview):
         self.clearit()
         for values in val_list:
             self.insert('', 'end', values=values)
+
+    def get_rows(self):
+        """return a list of rows as tuples where the first element is guaranteed to be the node address"""
+        rv = list()
+        children=self.get_children('')
+        for childitem in children:
+            rv.append(tuple(self.item(childitem)['values'][1:]))
+        return rv

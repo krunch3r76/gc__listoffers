@@ -769,6 +769,8 @@ class AppView:
             self.filtermswin = FiltermsWindow()
         # else make the focus
 
+        if self.filtermswin:
+            self.filtermswin.set_content(self.selection_tree.get_rows())
 
     def _build_menus(self):
         """build (popup) menu skeletons and store in self context
