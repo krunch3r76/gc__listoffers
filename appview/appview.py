@@ -28,6 +28,7 @@ import platform
 from . broca import fetch_new_dialog
 from . tree import CustomTreeview
 from . selection_tree import SelectionTreeview
+from . filterms_window import FiltermsWindow
 
 if platform.system()=='Windows':
     import winsound
@@ -260,6 +261,7 @@ class AppView:
 
         self._rewrite_to_console(fetch_new_dialog(0))
 
+        self.filtermswin = None
         self._states=dict()
         self.whetherUpdating=False
 
@@ -670,13 +672,15 @@ class AppView:
             # msg_in = None
             if refresh:
                 if self.ssp == None:
-                    if platform.system()=='Windows':
-                        self.ssp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
-                        self.ssp.start()
-                    elif platform.system()=='Linux':
-                        self.ssp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    elif platform.system()=='Darwin':
-                        self.ssp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    pass
+                    # TODO add sound when probing for offers locally
+                    # if platform.system()=='Windows':
+                    #     self.ssp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
+                    #     self.ssp.start()
+                    # elif platform.system()=='Linux':
+                    #     self.ssp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    # elif platform.system()=='Darwin':
+                    #     self.ssp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 else:
                     if isinstance(self.ssp, subprocess.Popen):
                         try:
@@ -760,6 +764,10 @@ class AppView:
         finally:
             self.menu.grab_release()
 
+    def _start_filterms_dialog(self):
+        if not self.filtermswin:
+            self.filtermswin = FiltermsWindow()
+        # else make the focus
 
 
     def _build_menus(self):
@@ -774,7 +782,7 @@ class AppView:
         self.menu = TreeMenu(root, self._show_raw)
 
         # popup menu for selection tree (any area)
-        self.seltree_menu = SelTreeMenu(root)
+        self.seltree_menu = SelTreeMenu(root, self._start_filterms_dialog)
 
     def __call__(self):
         root = self.root
@@ -791,6 +799,8 @@ class AppView:
 
 
         # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
+        debug.dlog(root.geometry())
+        debug.dlog(root.config())
         root.mainloop()
 
 
