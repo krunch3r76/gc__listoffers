@@ -762,15 +762,21 @@ class AppView:
             debug.dlog("index error")
             pass
         finally:
+            # todo, ensure grab_set called
             self.menu.grab_release()
 
     def _start_filterms_dialog(self):
-        if not self.filtermswin:
-            self.filtermswin = FiltermsWindow()
-        # else make the focus
+        """
+        pre: selection_tree has at least 1 row, grab_set must be called on the dialog window
+        """
+        self.filtermswin = FiltermsWindow() # pre: grab_set is called on filtermswindow on init
+        # if not self.filtermswin:
+        #     self.filtermswin = FiltermsWindow()
 
         if self.filtermswin:
+            pass
             self.filtermswin.set_content(self.selection_tree.get_rows())
+        self.filtermswin.grab_release()
 
     def _build_menus(self):
         """build (popup) menu skeletons and store in self context
