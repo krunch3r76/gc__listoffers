@@ -23,6 +23,7 @@ class SelectionTreeview(ttk.Treeview):
         self._ctx = ctx
 
         self['columns']=self._kHeadings
+        self['selectmode']='none'
         self.column('#0', width=0, stretch=NO)
         self.column(0, width=0, stretch=NO)
         for i in range(1, len(self._kHeadings)):

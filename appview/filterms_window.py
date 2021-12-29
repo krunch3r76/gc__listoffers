@@ -13,25 +13,34 @@ class _SettingsChecker():
         """query if whitelisting requested
         comments: false implies blacklisting
         """
-        pass
+        return self._parent._listTypeVar.get() == 'wl'
 
     @property
     def blacklist(self):
         """query if blacklisting requested"""
-        pass
+        return self._parent._listTypeVar.get() == 'bl'
 
     @property
     def valonly(self):
         """query if display is requested to be just the filterms array value"""
-        pass
-
+        return self._parent._arrayOnlyON.get()
 
 
 def _buildtext(filterwin, checker):
     """build the text to display according to current settings and return"""
     content = filterwin._get_content()
-    pass
+    if not checker.valonly:
+        if checker.whitelist:
+            text="export GNPROVIDER=["
+        else:
+            text="export GNPROVIDER_BL=["
+    else:
+        text="["
 
+    for addr in content:
+        text+=f"'{addr}',"
+    text=text[:-1]+']'
+    return text
 
 class DisplayWidgetWrapper(Frame):
     """Text widget implementation of Display"""
@@ -68,9 +77,11 @@ class DisplayWidget(Text):
     def replace_content(self, content):
         """write input content to the display"""
         # clear
+        self['state']='normal'
         self.delete('1.0', 'end')
         # insert
-        self.insert('end', content)
+        self.insert('1.0', content)
+        self['state']='disabled'
 
 
 
@@ -113,12 +124,12 @@ class FiltermsWindow(Toplevel):
         # list kind radiobuttons
         self._listTypeVar=StringVar()
         self._listTypeVar.set('wl')
-        self._rbWhitelist = ttk.Radiobutton(_mainframe, text='whitelist', variable=self._listTypeVar, value='wl')
-        self._rbBlacklist = ttk.Radiobutton(_mainframe, text='blacklist', variable=self._listTypeVar, value='bl')
+        self._rbWhitelist = ttk.Radiobutton(_mainframe, text='whitelist', variable=self._listTypeVar, value='wl', command=self._refresh)
+        self._rbBlacklist = ttk.Radiobutton(_mainframe, text='blacklist', variable=self._listTypeVar, value='bl', command=self._refresh)
 
         # array only checkbutton
         self._arrayOnlyON=IntVar()
-        self._cbArrayOnly = ttk.Checkbutton(_mainframe, text='show value only', variable=self._arrayOnlyON)
+        self._cbArrayOnly = ttk.Checkbutton(_mainframe, text='show value only', variable=self._arrayOnlyON, command=self._refresh)
 
         # display
         self._wTextDisplay = DisplayWidget(_mainframe)
@@ -132,22 +143,17 @@ class FiltermsWindow(Toplevel):
         self._rbBlacklist.grid( column=1,   row=0,  sticky="n")
         self._cbArrayOnly.grid( column=2,   row=0,  sticky="ne")
         self._wTextDisplay.grid(column=0,   row=2,  sticky="news",  columnspan=3,   pady=10, padx=10 )
-        self._bToFile.grid(     column=0,   row=3,  sticky="ws", padx=10)
-        self._bToClip.grid(     column=2,   row=3,  sticky="es", padx=10)
+        self._bToFile.grid(     column=0,   row=3,  sticky="ws", padx=10, pady=10)
+        self._bToClip.grid(     column=2,   row=3,  sticky="es", padx=10, pady=10)
 
         _mainframe.grid(   column=0,   row=0,  sticky="wnes")
 
     def set_content(self, newcontent):
-        """replace displayed output with newcontent before refreshing
+        """store raw content then refresh display
         in: a sequence having a first element being a node address
         """
-        self.content=str(newcontent)
-        debug.dlog(self.content)
-
-
-        text=_buildtext(self, self._settingsChecker)
-        # \/\/ to be continued
-
+        self._content = [ addr[0] for addr in newcontent ]
+        self._refresh()
 
     def _get_content(self):
         """return the content
@@ -168,9 +174,9 @@ class FiltermsWindow(Toplevel):
         pass
 
     def _refresh(self):
-        """update display according to current settings
-        
+        """update display given internal content according to current settings
         """
-        pass
-
+        text=_buildtext(self, self._settingsChecker)
+        self._wTextDisplay.replace_content(text)
+        
 

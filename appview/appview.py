@@ -202,7 +202,7 @@ class AppView:
         self.fe_image_ico=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48.png')
 
         self.label_logo['image']=self.fe_image
-        self.label_logo.grid(column=0, row=0, sticky='wnes')
+        # self.label_logo.grid(column=0, row=0, sticky='wnes')
 
         self.root.iconphoto(True, self.fe_image_ico)
         # emptyframe_right['borderwidth']=2
@@ -801,8 +801,7 @@ class AppView:
 
 
         # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
-        debug.dlog(root.geometry())
-        debug.dlog(root.config())
+        # debug.dlog(root.geometry())
         root.mainloop()
 
 
