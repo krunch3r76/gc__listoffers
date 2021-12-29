@@ -72,7 +72,7 @@ class DisplayWidget(Text):
 
     def get_content(self):
         """get all the text and return"""
-        return self.get('1.0', 'end')
+        return self.get('1.0', 'end-1c')
 
     def replace_content(self, content):
         """write input content to the display"""
