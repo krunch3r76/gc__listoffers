@@ -143,7 +143,7 @@ class FiltermsWindow(Toplevel):
         self._rbBlacklist.grid( column=1,   row=0,  sticky="n")
         self._cbArrayOnly.grid( column=2,   row=0,  sticky="ne")
         self._wTextDisplay.grid(column=0,   row=2,  sticky="news",  columnspan=3,   pady=10, padx=10 )
-        self._bToFile.grid(     column=0,   row=3,  sticky="ws", padx=10, pady=10)
+        # self._bToFile.grid(     column=0,   row=3,  sticky="ws", padx=10, pady=10)
         self._bToClip.grid(     column=2,   row=3,  sticky="es", padx=10, pady=10)
 
         _mainframe.grid(   column=0,   row=0,  sticky="wnes")
@@ -167,11 +167,12 @@ class FiltermsWindow(Toplevel):
         """
         pass
 
-    def _onToClip(self, event):
+    def _onToClip(self):
         """
         cb to _bToClip
         """
-        pass
+        self.clipboard_clear()
+        self.clipboard_append("appended")
 
     def _refresh(self):
         """update display given internal content according to current settings
