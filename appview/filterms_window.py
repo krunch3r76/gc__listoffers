@@ -175,7 +175,7 @@ class FiltermsWindow(Toplevel):
         cb to _bToClip
         """
         self.clipboard_clear()
-        self.clipboard_append("appended")
+        self.clipboard_append(self._wTextDisplay.get_content())
         # ttk.Style().configure('Color.TButton', foreground='black')
 
     def _refresh(self):
