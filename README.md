@@ -100,6 +100,6 @@ $ python3 ./application.py
 
 # TODO
 this is a very long list but i will start it with:
-- provide features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
+- provide more features to interop with gc__filterms (https://github.com/krunch3r76/gc__filterms)
 - provide view/column customization
 - add more graphics and sound! hey this is python not python GS (obscure reference to Steve Woz)
