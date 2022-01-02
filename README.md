@@ -12,7 +12,7 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 # video
 
 
-https://user-images.githubusercontent.com/46289600/145339421-674182ae-457d-4111-83b7-2a636b7b1d91.mp4
+https://user-images.githubusercontent.com/46289600/147871611-b68a0b3a-8fe9-48a2-8fc2-d3b67d7ba048.mp4
 
 
 
