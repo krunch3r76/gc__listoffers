@@ -113,6 +113,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
         offers = ['error']
     else:
         offer_d=dict()
+        debug.dlog(result_list[0]['data'])
         for result in result_list:
             props = result['data']
             # consider processing result['online'] which so far is invariably true
