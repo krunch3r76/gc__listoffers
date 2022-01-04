@@ -567,13 +567,13 @@ class AppView:
         self.selection_tree.regrid()
 
 
-
     def on_none_selected(self):
         """remove the selected list from the view
         called by tree.on_select
         """
         self.selection_tree.clearit()
         self.selection_tree.degrid()
+        self.tree.last_cleared_selection.clear()
 
     def _send_message_to_model(self, msg):
         """creates a message containing the session id and the input msg and places it into the queue out to the model"""
