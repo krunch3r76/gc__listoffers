@@ -93,12 +93,9 @@ class CustomTreeview(ttk.Treeview):
 
     def change_visibility(self, colnum, whetherVisible):
         colnum=int(colnum)
-        debug.dlog(f"{self._headings_invisible}")
         if not whetherVisible:
-            debug.dlog(f"add {colnum}")
             self._headings_invisible.add(colnum)
         else:
-            debug.dlog(f"discard {colnum}")
             self._headings_invisible.discard(colnum)
 
 

@@ -608,7 +608,6 @@ class AppView:
         else:
             self.tree.change_visibility(CustomTreeview.Field.version, False)
         self.tree._update_headings()
-        debug.dlog(self.tree._headings_invisible)
         # if len(args) > 0 and 'sort_on' in args[0]:
         if more_d and 'sort_on' in more_d:
             if more_d['sort_on']!='all':
