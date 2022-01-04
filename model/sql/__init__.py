@@ -328,7 +328,5 @@ def build_database(con, offers):
                     return str(o)
                 return super(datetime, self).default(o) # or return super().default(o)
 
-
-
         _insert_record('extra', 'json', json.dumps(offer,cls=DatetimeEncoder))
 

@@ -491,7 +491,8 @@ class AppView:
             # print(msg_in["id"])
 
             results_json = json.loads(results[0][0])
-            props=results_json["props"]
+            # props=results_json["props"]
+            props=results_json # full results including props
             props_s = json.dumps(props, indent=5)
             # create/replace a new window
             self.rawwin = Toplevel(self.root)        
