@@ -100,7 +100,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     """send a GET request to the stats api to extract a listing of offers then return them
     pre: outbound https connections permitted
     in: multiprocessing pipe send end, subnet tag to filter results against
-    out: list of offer dictionary objects or list of length one with 'error'
+    out: list of offer dictionary objects or list of length one with 'error' sent over pipe
     post: none
     """
     offers = []
@@ -113,7 +113,8 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
         offers = ['error']
     else:
         offer_d=dict()
-        debug.dlog(result_list[0]['data'])
+        import pprint
+        debug.dlog(pprint.pformat(result_list[0]))
         for result in result_list:
             props = result['data']
             # consider processing result['online'] which so far is invariably true
@@ -122,6 +123,8 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
                 offer_d["offer-id"]=0
                 offer_d["issuer-address"]=result['node_id']
                 offer_d["props"]=props
+                offer_d["earnings_total"]=result['earnings_total']
+                offer_d["last_benchmark"]=result['last_benchmark']
                 offers.append(offer_d.copy())
                 offer_d.clear()
 
