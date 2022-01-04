@@ -107,14 +107,12 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     try:
         with urllib.request.urlopen('https://api.stats.golem.network/v1/network/online') as response:
             result_list = json.loads(response.read().decode('utf-8'))
-            debug.dlog(f"first result: {result_list[0]}")
     except:
         debug.dlog("exception")
         offers = ['error']
     else:
         offer_d=dict()
         import pprint
-        debug.dlog(pprint.pformat(result_list[0]))
         for result in result_list:
             props = result['data']
             # consider processing result['online'] which so far is invariably true

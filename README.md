@@ -25,7 +25,7 @@ https://user-images.githubusercontent.com/46289600/147871611-b68a0b3a-8fe9-48a2-
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.3.1
+$ git checkout v0.4.0
 $ python3 -m venv myvenv
 $ . myvenv/bin/activate
 (myvenv) $ pip install yapapi

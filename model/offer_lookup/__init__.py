@@ -37,7 +37,7 @@ class OfferLookup():
             else:
                 if offers != None: # kludge
                     if len(offers)>0:
-                        debug.dlog(f"outputting first offer returned by list_offers routine: {offers[0]}")
+                        debug.dlog(f"outputting first offer returned by list_offers routine: {offers[0]}",2)
                     if self._con:
                         self._con.close()
 
