@@ -88,31 +88,32 @@ class SelTreeMenu(Menu):
         self.post(x_root, y_root)
 
 class AppView:
+    cancel_current_displayed_message = False # review
+    message_being_displayed = False # review
 
-    def add_text_over_time_to_label(self, label, text, end, current=0, time=25, newmsg=True):
-        if end == 0:
-            label['text']=''
+
+    def add_text_over_time(self, text, txt, length, current=0, time=25, newmsg=True):
+        """add text character by character to console"""
+        text['state']='normal'
+        if txt == '':
+            text.delete('1.0', 'end')
             return
 
         if newmsg:
-            label['text']=''
+            text.delete('1.0', 'end')
             newmsg=False
-            
-        label['text']+=text[current]
+        text.insert('end', txt[current])
         current+=1
         add_time=0
-        if current != end:
-            if text[current-1] == '.':
+        if current != length:
+            if txt[current-1] == '.':
                 add_time=time*15
-            elif text[current-1] == ',':
+            elif txt[current-1] == ',':
                 add_time=time*10
-            self.root.after(time+add_time, lambda: self.add_text_over_time_to_label(label, text, end, current, time, newmsg) )
+            text['state']='disabled'
+            self.root.after(time+add_time, lambda: self.add_text_over_time(text, txt, length, current, time, newmsg))
 
-    cancel_current_displayed_message = False
-    message_being_displayed = False
-
-
-
+        text['state']='disabled'
     #############################################################################
     #               the mother of all class methods                             #
     #############################################################################
@@ -198,9 +199,9 @@ class AppView:
         optionframe = ttk.Frame(root)
         optionframe.columnconfigure(0, weight=1)
         self.cbv_lastversion = BooleanVar()
-        self.cbv_lastversion.set(False)
+        self.cbv_lastversion.set(True)
         self.version_cb = ttk.Checkbutton(optionframe, text='latest version only', padding=(0,0,10,0), variable=self.cbv_lastversion, command=self._update_cmd )
-        self.version_cb.grid(row=0, column=0, sticky="e")
+        self.version_cb.grid(row=0, column=0, sticky="")
         optionframe.grid(row=1, column=0, sticky="nwes")
         
 
@@ -220,7 +221,7 @@ class AppView:
         self.l_baseframe=ttk.Frame(baseframe)
         # self.l_baseframe.columnconfigure(0, weight=1)
         # self.l_baseframe.rowconfigure(0, weight=1)
-        self.l_baseframe.grid(          column=0, row=0, sticky='wnes')
+        self.l_baseframe.grid(          column=0, row=0, sticky='wns')
         self.l_baseframe['borderwidth']=2
         # self.l_baseframe['relief']='solid'
 
@@ -235,8 +236,8 @@ class AppView:
         # baseframe--count_frame
         self.count_frame        = CountFrame(self, baseframe)
         self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
-        self.count_frame.w['borderwidth']=2
-        self.count_frame.w['relief']='solid'
+        # self.count_frame.w['borderwidth']=2
+        # self.count_frame.w['relief']='solid'
 
         # baseframe--empty_frame
         # emptyframe_right=ttk.Frame(baseframe)
@@ -249,13 +250,20 @@ class AppView:
 
 
         # l_baseframe++console
-        # setup console with at least 40 characters of width       
-        self.console_character_width=40
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
-        self.width_in_font_pixels=self.console_character_width * (font.nametofont('TkDefaultFont').actual()['size']*0.80)
-        self.console['wraplength']=self.console_character_width
-        self.console.grid(column=0, row=0, sticky='nwes')
+        self.console = Text(self.l_baseframe, height=7, width=40)
+        self.console['state']='disabled'
+        self.console['wrap']='word'
+        self.console['borderwidth']=0
 
+        # self.l_baseframe['borderwidth']=2
+        # self.l_baseframe['relief']='solid'
+
+        self.console.grid(row=0, column=0, sticky="nwes")
+
+        # self.l_baseframe.update()
+        # framewidth= self.l_baseframe.winfo_width()
+        # actual_font_size=font.nametofont('TkDefaultFont').actual()['size']*1.5
+#        self.console['width']=int(framewidth//actual_font_size)
 
         baseframe.grid(column=0, row=2, sticky="nwes")
         # /baseframe
@@ -382,7 +390,7 @@ class AppView:
 
                 self.cpusec_entryframe.disable()
                 self.dursec_entryframe.disable()
-
+                self.version_cb.state(['disabled'])
                 disabled=True
             else:
                 refreshFrame.refreshButton.state(['!disabled'])
@@ -394,6 +402,7 @@ class AppView:
 
                 self.cpusec_entryframe.enable()
                 self.dursec_entryframe.enable()
+                self.version_cb.state(['!disabled'])
 
                 disabled=False
 
@@ -667,23 +676,26 @@ class AppView:
 
     def _rewrite_to_console(self, msg):
         """clear the console label and write a new message"""
-        self.console.grid_forget()
+        """plan/analysis:
+        
+        """
+        # get the width of the frame
+        # self.root.update_idletasks()
+        # framewidth= self.l_baseframe.winfo_width()
+        # actual_font_size=font.nametofont('TkDefaultFont').actual()['size']*1.5
+        # self.console['width']=int(framewidth//actual_font_size)
 
-        self.console = ttk.Label(self.l_baseframe, anchor='nw')
-        # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
-        self.console.grid()
-        # self.console.grid(column=0, row=0, sticky='nwes')
-        self.root.update()
-        self.console_character_width=self.l_baseframe.winfo_width() // font.nametofont('TkDefaultFont').actual()['size']
-        # use the width of the widget instead and wrap about that?
-        self.console['width']=self.console_character_width
-        self.console['wraplength']=self.l_baseframe.winfo_width()*0.80
-        #self.root.update()
+        self.console.grid_remove()
+        self.console = Text(self.l_baseframe, height=7, width=40)
+        self.console['state']='disabled'
+        self.console['wrap']='word'
+        self.console['borderwidth']=0
+        self.console.grid(row=0, column=0, sticky="nwes")
 
         if msg:
-            self.add_text_over_time_to_label(self.console, msg, len(msg))
+            self.add_text_over_time(self.console, msg, len(msg))
         else:
-            self.add_text_over_time_to_label(self.console, "", 0)
+            self.add_text_over_time(self.console, "", 0)
 
 
 
