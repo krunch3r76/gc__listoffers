@@ -144,7 +144,6 @@ class CustomTreeview(ttk.Treeview):
 
 
 
-
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
         thelist = []
@@ -209,7 +208,6 @@ class CustomTreeview(ttk.Treeview):
         _heading_map                        map heading fr _kheadings
                                        
         """
-        # for offset, heading_index in enumerate(self._heading_map[1:], 1):
         self.grid_remove()
         self._ctx.treeframe.grid_remove()
         for offset, heading_index in enumerate(self._heading_map):
@@ -353,8 +351,9 @@ class CustomTreeview(ttk.Treeview):
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
         value_list=list(kwargs['values'])
-        value_list[2]=value_list[2][:8]
-        super().insert('', 'end', values=self._values_reordered(value_list))
+        node_address=value_list[CustomTreeview.Field.address]
+        value_list[CustomTreeview.Field.address]=value_list[2][:8]
+        super().insert('', 'end', values=self._values_reordered(value_list), iid=node_address)
         #super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
 

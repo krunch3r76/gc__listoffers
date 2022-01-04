@@ -21,10 +21,11 @@ from datetime import datetime
 import decimal
 from decimal import Decimal
 import json
-import debug
 import subprocess
 import platform
+import webbrowser
 
+import debug
 from . broca import fetch_new_dialog
 from . tree import CustomTreeview
 from . selection_tree import SelectionTreeview
@@ -42,7 +43,7 @@ DIC411="#003366"
 DIC544="#4D4D4D"
 
 class TreeMenu(Menu):
-    def __init__(self, ctx, view_raw_cb, *args, **kwargs):
+    def __init__(self, ctx, callbacks, *args, **kwargs):
         """set up menu skeleton"""
         super().__init__(*args, **kwargs)
         self._ctx = ctx
@@ -51,7 +52,8 @@ class TreeMenu(Menu):
         self.add_command(label='<name>')
         self.entryconfigure(0, state=DISABLED)
         self.add_separator()
-        self.add_command(label='view raw', command=view_raw_cb)
+        self.add_command(label='view raw', command=callbacks['show-raw'])
+        self.add_command(label='browse to stats', command=lambda : callbacks['browse-stats'](self.id_))
         self.add_command(label='exit menu', command=self.grab_release)
 
     def popup(self, name, x, y, x_root, y_root):
@@ -63,6 +65,7 @@ class TreeMenu(Menu):
         self.entryconfigure(0, label=name)
         self.post(x_root, y_root)
 
+        self.id_ = _ctx.tree.identify_row(y)
 
 
 
@@ -360,6 +363,16 @@ class AppView:
         else:
             self.label_selectioncount.grid_remove()
 
+
+    def open_stats_page_under_cursor(self, node_address):
+        """
+        pre:
+        """
+        debug.dlog(node_address)
+        # https://stats.golem.network/node/0x8b9b05a578c06c5c3745be61a3fdcfe0cda30224
+        url=f"https://stats.golem.network/node/{node_address}"
+        webbrowser.open_new(url)
+        
     def _stateRefreshing(self, b=None):
         if b == True:
             self._states['refreshing'] = True
@@ -824,6 +837,8 @@ class AppView:
                 return
 
             if tree.instate(['hover']) and tree.identify_region(event.x, event.y) == 'cell':
+                id_ = tree.identify_row(event.y)
+#                debug.dlog(f"{id_}\n{type(id_)}")
                 self.menu.popup(self.tree.item( tree.identify_row(event.y) )['values'][1]
                         , event.x, event.y, event.x_root, event.y_root)
 
@@ -863,7 +878,8 @@ class AppView:
         root.option_add('*tearOff', FALSE)
 
         # popup menu for main tree row item
-        self.menu = TreeMenu(root, self._show_raw)
+        callbacks = { "show-raw": self._show_raw, "browse-stats": self.open_stats_page_under_cursor }
+        self.menu = TreeMenu(self, callbacks )
 
         # popup menu for selection tree (any area)
         self.seltree_menu = SelTreeMenu(root, self._start_filterms_dialog)
