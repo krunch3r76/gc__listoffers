@@ -58,12 +58,8 @@ class CustomTreeview(ttk.Treeview):
         
 
 
-    # note, the first offset is the rownum
     _stateHolder = StateHolder()
-
-    _heading_map = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ]
     _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'start', 'cores', 'threads', 'version')
-    _kheadings_init = ( '0', '1', '2', '3', '4', '5', '6', '7', '8' )
     _kheadings_sql_paths = (
         None
         , "'node.id'.name"
@@ -75,15 +71,12 @@ class CustomTreeview(ttk.Treeview):
         , "'inf.cpu'.threads"
         , "'runtime'.version"
             )
-    _order_by_other = False
 
-
-
-
-    def __build__update_cmd(self):
-        """create a lookup table of callbacks and return"""
-        """post: self._update_cmd_dict"""
-        update_cmd_dict={
+    _heading_map = [ num for num in range(len(_kheadings)) ] # e.g. (0, 1, 2, ...)
+    _kheadings_init = tuple( [ str(num) for num in range(len(_kheadings)) ] ) # e.g. ('0', '1', '2', ...)
+    _headings_invisible = {0, 8}
+#    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}, {"sort_on": "'offers'.address"}, {}, {}
+    _update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
             , "address": {"sort_on": "'offers'.address"}
             , "cpu (/hr)": {}
@@ -92,8 +85,21 @@ class CustomTreeview(ttk.Treeview):
             , "cores": {}
             , "threads": {}
             , 'version': {}
-                }
-        return update_cmd_dict
+            }
+
+
+
+
+
+    def change_visibility(self, colnum, whetherVisible):
+        colnum=int(colnum)
+        debug.dlog(f"{self._headings_invisible}")
+        if not whetherVisible:
+            debug.dlog(f"add {colnum}")
+            self._headings_invisible.add(colnum)
+        else:
+            debug.dlog(f"discard {colnum}")
+            self._headings_invisible.discard(colnum)
 
 
 
@@ -113,7 +119,7 @@ class CustomTreeview(ttk.Treeview):
         kwargs['columns']=self._kheadings_init
         super().__init__(*args, **kwargs)
         self._ctx = ctx
-        self._update_cmd_dict = self.__build__update_cmd()
+        # self._update_cmd_dict = self.__build__update_cmd()
         # set mouse button bindings
         self.bind("<Button-1>", self.on_drag_start)
         self.bind("<B1-Motion>", self.on_drag_motion)
@@ -127,9 +133,6 @@ class CustomTreeview(ttk.Treeview):
         # setup visible columns
         self.column(1, width=0, anchor='w')
         self.column(2, width=0)
-        # self.column(2, width=font.nametofont('TkHeadingFont').actual()['size']*8, anchor='w')
-        #self.column(2, minwidth=font.nametofont('TkDefaultFont').actual()['size']*43)
-        # debug.dlog(font.nametofont('TkHeadingFont').configure())
         for index in range(3,len(self._kheadings_init)):
             self.column(index, width=0, anchor='w')
         # debug.dlog(f"internal columns: {self['columns']}")
@@ -140,6 +143,10 @@ class CustomTreeview(ttk.Treeview):
         self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
         self.s.grid(row=0, column=1, sticky="ns")
         self['yscrollcommand']=self.s.set
+
+
+
+
 
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
@@ -199,26 +206,27 @@ class CustomTreeview(ttk.Treeview):
 
 
 
-
     def _update_headings(self):
-        """update headings with built in commands, called after a change to the heading order"""
-        # debug.dlog(f"updating headings using heading map {self._heading_map}")
-        def build_lambda(key):
-            # return lambda *args: self._ctx._update_cmd(self._update_cmd_dict[key])
-            return lambda : self._ctx._update_cmd(self._update_cmd_dict[key])
-
-        for i, key in enumerate(self._update_cmd_dict.keys()):
-            colno=i+1
-            offset=self._kheadings.index(key)
-            colno=self._heading_map.index(offset)
-            self.heading(colno
-                    , text=key
-#                    , command=build_lambda(key)
-                    , anchor='w'
-                    )
-
-
-
+        """
+        inputs                          process                             output
+        _kheadings                      each _heading_map offset+1          heading texts updated
+        _heading_map                        map heading fr _kheadings
+                                       
+        """
+        # for offset, heading_index in enumerate(self._heading_map[1:], 1):
+        self.grid_remove()
+        self._ctx.treeframe.grid_remove()
+        for offset, heading_index in enumerate(self._heading_map):
+            heading_text=self._kheadings[heading_index]
+            stretch = YES if offset not in self._headings_invisible else NO
+            if not stretch:
+                self.column(offset, stretch=stretch, width=0)
+            else:
+                self.column(offset, stretch=stretch, width=0)
+            self.heading(offset, text=self._kheadings[heading_index], anchor='w')
+        self._ctx.treeframe.grid()
+        self.grid()
+        
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
         # if len(self.list_selection_addresses()) > 0:
