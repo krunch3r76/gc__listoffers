@@ -77,7 +77,7 @@ class CountFrame():
         self.count_label = ttk.Label(self.w, textvariable=self.master.resultcount_var, foreground=DIC544, font='TkDefaultFont 20')
         self.count_diff_label = ttk.Label(self.w, textvariable=self.master.resultdiffcount_var, foreground=DIC544, font='TkDefaultFont 20')
 
-        self.count_label.grid(column=0,row=0)
+        self.count_label.grid(column=0,row=0, sticky="s")
         self.count_diff_label.grid(column=1,row=0)
 
 

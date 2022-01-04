@@ -117,6 +117,8 @@ class AppView:
     #               the mother of all class methods                             #
     #############################################################################
     def __init__(self):
+        # icon
+
         self.refreshFrame = None
         # message queues used by controller to interface with this
         self.q_out=Queue()
@@ -130,6 +132,15 @@ class AppView:
         s = ttk.Style()
         self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
         s.theme_use('forest-light')
+        root=self.root
+        root.columnconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(0, weight=1) # ratio for children to resize against
+        root.rowconfigure(1, weight=0)
+        root.rowconfigure(2, weight=0)
+        root.rowconfigure(3, weight=0)
+
+        self.fe_image_ico=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48.png')
+        self.root.iconphoto(True, self.fe_image_ico)
 
         # setup widgets and their linked variables
         self.cpusec_entry_var = StringVar(value='0.1')
@@ -151,25 +162,27 @@ class AppView:
         style=ttk.Style()
         style.configure("Treeview.Heading", foreground=DIC411)
 
-        root=self.root
         root.title("Provider View")
 
-        # treeframe
+        #################################################
+        # treeframe                                     #
+        #################################################
         treeframe = ttk.Frame(root)
-        treeframe.columnconfigure(0, weight=11) # resize by same factor as root width
+        treeframe.columnconfigure(0, weight=1)
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
         treeframe.columnconfigure(1, weight=0)
-
         treeframe['padding']=(0,0,0,5)
+
+        # treeframe--tree
         self.tree = CustomTreeview(self, treeframe)
 
-        ## selection_tree
+        # treeframe--selection_tree
         self.selection_tree = SelectionTreeview(self, treeframe)
 
-
-        self.selection_tree.pseudogrid(column=1, row=0, sticky="nwes")
         self.tree.grid(column=0, row=0, sticky="news")
+        self.selection_tree.pseudogrid(column=1, row=0, sticky="nwes")
         treeframe.grid(column=0, row=0, sticky="news")
+        # /treeframe
 
 #        self.tree.columnconfigure(0, weight=1)
 #        self.tree.rowconfigure(0, weight=1)
@@ -178,37 +191,64 @@ class AppView:
         self.other_entry_var.set('devnet-beta.2')
         self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
-        # baseframe
+
+        #################################################
+        # optionframe                                   #
+        #################################################
+        optionframe = ttk.Frame(root)
+        optionframe.columnconfigure(0, weight=1)
+        self.cbv_lastversion = BooleanVar()
+        self.cbv_lastversion.set(False)
+        self.version_cb = ttk.Checkbutton(optionframe, text='latest version only', padding=(0,0,10,0), variable=self.cbv_lastversion, command=self._update_cmd )
+        self.version_cb.grid(row=0, column=0, sticky="e")
+        optionframe.grid(row=1, column=0, sticky="nwes")
+        
+
+
+        #################################################
+        # baseframe                                     #
+        #################################################
         baseframe = ttk.Frame(root)
+        baseframe.columnconfigure(0, weight=1)
+        baseframe.columnconfigure(1, weight=1)
+        baseframe.columnconfigure(2, weight=1)
+#        baseframe.columnconfigure(3, weight=1)
+        baseframe.rowconfigure(0, weight=1)
+        baseframe['padding']=(0,5,0,10)
 
+        # baseframe--l_baseframe
+        self.l_baseframe=ttk.Frame(baseframe)
+        # self.l_baseframe.columnconfigure(0, weight=1)
+        # self.l_baseframe.rowconfigure(0, weight=1)
+        self.l_baseframe.grid(          column=0, row=0, sticky='wnes')
+        self.l_baseframe['borderwidth']=2
+        # self.l_baseframe['relief']='solid'
+
+        # baseframe--refreshframe
         self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
-        self.count_frame        = CountFrame(self, baseframe)
-        self.count_frame.w.grid(        column=2, row=0, )
-
         self.refreshFrame.w['padding']=(0,0,0,0)
         self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
-
-        emptyframe_right=ttk.Frame(baseframe)
-        emptyframe_right.grid(          column=3, row=0)
-
-        self.l_baseframe=ttk.Frame(baseframe)
-        self.l_baseframe.columnconfigure(0, weight=1)
-        self.l_baseframe.rowconfigure(0, weight=1)
-        self.l_baseframe.grid(          column=0, row=0, sticky='nwes')
+        self.refreshFrame.w['borderwidth']=2
+        # self.refreshFrame.w['relief']='solid'
 
 
-        self.label_logo = ttk.Label(emptyframe_right, anchor='center')
-        self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
-        self.fe_image_ico=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48.png')
+        # baseframe--count_frame
+        self.count_frame        = CountFrame(self, baseframe)
+        self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
+        self.count_frame.w['borderwidth']=2
+        self.count_frame.w['relief']='solid'
 
-        self.label_logo['image']=self.fe_image
+        # baseframe--empty_frame
+        # emptyframe_right=ttk.Frame(baseframe)
+        # emptyframe_right.grid(          column=3, row=0)
+
+        # self.label_logo = ttk.Label(emptyframe_right, anchor='center')
+        # self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
+        # self.label_logo['image']=self.fe_image
         # self.label_logo.grid(column=0, row=0, sticky='wnes')
 
-        self.root.iconphoto(True, self.fe_image_ico)
-        # emptyframe_right['borderwidth']=2
-        # emptyframe_right['relief']='sunken'
 
-
+        # l_baseframe++console
         # setup console with at least 40 characters of width       
         self.console_character_width=40
         self.console = ttk.Label(self.l_baseframe, anchor='nw', width=self.console_character_width)
@@ -217,46 +257,61 @@ class AppView:
         self.console.grid(column=0, row=0, sticky='nwes')
 
 
-        baseframe.grid(column=0, row=1, sticky="wes")
-        baseframe.columnconfigure(0, weight=1)
-        baseframe.columnconfigure(1, weight=1)
-        baseframe.columnconfigure(2, weight=1)
-        baseframe.columnconfigure(3, weight=1)
-        baseframe.rowconfigure(0, weight=1)
-        baseframe['padding']=(0,5,0,10)
+        baseframe.grid(column=0, row=2, sticky="nwes")
+        # /baseframe
 
-
-
-        # subbaseframe
+        
+        #################################################
+        # subbaseframe                                  #
+        #################################################
         subbaseframe = ttk.Frame(root)
-
-        # frame_selectioncount=ttk.Frame(root)
-        self.__count_selected = StringVar()
-        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.__count_selected)
-        # self.label_selectioncount['foreground']='#ffffff'
-        # self.label_selectioncount['background']='#217346'
-        self.label_selectioncount['foreground']='#217346'
-        self.cpusec_entryframe  = CPUSecFrame(self, subbaseframe)
-        self.cpusec_entryframe.w.grid(  column=1,row=0, sticky="w")
-
-        self.dursec_entryframe  = DurSecFrame(self, subbaseframe)
-        self.dursec_entryframe.w.grid(  column=2,row=0, sticky="w")
-
-        stub = ttk.Label(subbaseframe)
-        stub.grid(column=3,row=0, sticky="e")
-
-        subbaseframe.grid(column=0, row=2, sticky="we")
-        subbaseframe.columnconfigure(0, weight=1)
-        subbaseframe.columnconfigure(1, weight=0)
-        subbaseframe.columnconfigure(2, weight=0)
-        subbaseframe.columnconfigure(3, weight=1)
         subbaseframe.rowconfigure(0, weight=0)
+        subbaseframe.columnconfigure(0, weight=1)
+        subbaseframe.columnconfigure(1, weight=1)
+        subbaseframe.columnconfigure(2, weight=1)
+        # subbaseframe.columnconfigure(3, weight=1)
 
-        root.columnconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(1, weight=0)
-        root.rowconfigure(2, weight=0)
-        # to do, catch when in contextual self.menu
+
+        self.__count_selected = StringVar()
+        # subbaseframe++label_selectioncount
+        select_count_frame=ttk.Frame(subbaseframe)
+
+        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.__count_selected)
+        self.label_selectioncount['foreground']='#217346'
+        self.label_selectioncount.grid(row=0,column=0,sticky="wnes")
+        # self.label_selectioncount.grid_forget()
+        select_count_frame['borderwidth']=2
+        # select_count_frame['relief']='ridge'
+        # select_count_frame.grid(row=0, column=0, sticky="wnes")
+
+        filterframe = ttk.Frame(subbaseframe)
+        filterframe.columnconfigure(0, weight=1)
+        filterframe.columnconfigure(1, weight=1)
+        # subbaseframe++cpusec_entryframe
+        self.cpusec_entryframe  = CPUSecFrame(self, filterframe)
+        self.cpusec_entryframe.w.grid(  column=0,row=0, sticky="e")
+        # subbaseframe++dursec_entryframe
+        self.dursec_entryframe  = DurSecFrame(self, filterframe)
+        self.dursec_entryframe.w.grid(  column=1,row=0, sticky="w")
+
+        filterframe['borderwidth']=2
+        # filterframe['relief']='ridge'
+        filterframe.grid(row=0, column=1, sticky="wnes")
+        # //filterframe
+
+        # subbaseframe++stub
+        stubframe=ttk.Frame(subbaseframe)
+        stub = ttk.Label(stubframe)
+        stub.grid(row=0, column=2, sticky="wnes")
+        # stubframe.grid(row=0,column=2, sticky="wnes")
+        stubframe['borderwidth']=2
+        # stubframe['relief']='ridge'
+
+        subbaseframe['borderwidth']=2
+        # subbaseframe['relief']='ridge'
+        subbaseframe.grid(row=3, column=0, sticky="we")
+        # /subbaseframe
+
         root.bind('<Escape>', self.on_escape_event)
 
         self._rewrite_to_console(fetch_new_dialog(0))
@@ -568,13 +623,16 @@ class AppView:
 
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing and return text"""
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts)" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts), (select 'runtime'.version FROM 'runtime' ORDER BY 'runtime'.version DESC LIMIT 1) as mv" \
             " FROM 'node.id'" \
             " INNER JOIN 'offers' USING (offerRowID)" \
             " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
             " INNER JOIN 'runtime'  USING (offerRowID)" \
             " INNER JOIN 'inf.cpu' USING (offerRowID)" \
-            " WHERE 'runtime'.name = 'vm' "
+            " WHERE 'runtime'.name = 'vm'"
+
+        if self.cbv_lastversion.get():
+            ss+=" AND 'runtime'.version = mv"
 
 
         if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
@@ -609,13 +667,15 @@ class AppView:
 
     def _rewrite_to_console(self, msg):
         """clear the console label and write a new message"""
-        self.console.grid_remove()
+        self.console.grid_forget()
 
-
-        self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
-        self.console.grid(column=0, row=0, sticky='nwes')
+        self.console = ttk.Label(self.l_baseframe, anchor='nw')
+        # self.console = ttk.Label(self.l_baseframe, anchor='nw', width=40)
+        self.console.grid()
+        # self.console.grid(column=0, row=0, sticky='nwes')
         self.root.update()
         self.console_character_width=self.l_baseframe.winfo_width() // font.nametofont('TkDefaultFont').actual()['size']
+        # use the width of the widget instead and wrap about that?
         self.console['width']=self.console_character_width
         self.console['wraplength']=self.l_baseframe.winfo_width()*0.80
         #self.root.update()
