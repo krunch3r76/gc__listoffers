@@ -182,7 +182,6 @@ class CustomTreeview(ttk.Treeview):
             else:
                 self._ctx.cursorOfferRowID = None
 
-            debug.dlog(f"count selected: {count_selected}")
             # debug.dlog(self.list_selection_addresses())
             self._ctx.count_selected=count_selected
             if count_selected != 0:

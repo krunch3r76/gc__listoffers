@@ -540,7 +540,6 @@ class AppView:
             self._rewrite_to_console(None)
 
         selected_addresses = self.tree.last_cleared_selection
-        debug.dlog(f"last cleared selection: {selected_addresses}")
         matched_prev_selections = []
         if not refresh and len(selected_addresses) > 0:
             selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
@@ -553,8 +552,6 @@ class AppView:
             self.tree.selection_set(*matched_prev_selections)
         else:
             self.tree.last_cleared_selection.clear()
-            debug.dlog(f"cleared? {self.tree.last_cleared_selection}")
-            debug.dlog(f"listed? {self.tree.list_selection_addresses()}")
             self.tree.on_select()
             # self.on_none_selected()
 
