@@ -168,10 +168,12 @@ class AppView:
         #################################################
         # treeframe                                     #
         #################################################
-        treeframe = ttk.Frame(root)
+        self.treeframe = ttk.Frame(root)
+        treeframe=self.treeframe
         treeframe.columnconfigure(0, weight=1)
+        treeframe.columnconfigure(1,weight=0)
         treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
-        treeframe.columnconfigure(1, weight=0)
+        treeframe.columnconfigure(2, weight=0)
         treeframe['padding']=(0,0,0,5)
 
         # treeframe--tree
@@ -181,7 +183,7 @@ class AppView:
         self.selection_tree = SelectionTreeview(self, treeframe)
 
         self.tree.grid(column=0, row=0, sticky="news")
-        self.selection_tree.pseudogrid(column=1, row=0, sticky="nwes")
+        self.selection_tree.pseudogrid(column=2, row=0, sticky="nwes")
         treeframe.grid(column=0, row=0, sticky="news")
         # /treeframe
 

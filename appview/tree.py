@@ -137,6 +137,10 @@ class CustomTreeview(ttk.Treeview):
 
         self._update_headings()
 
+        self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
+        self.s.grid(row=0, column=1, sticky="ns")
+        self['yscrollcommand']=self.s.set
+
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
         thelist = []
