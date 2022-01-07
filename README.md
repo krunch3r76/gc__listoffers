@@ -11,10 +11,9 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 # video
 
-
-
 https://user-images.githubusercontent.com/46289600/148477831-0c024de3-757d-420d-b3f1-4b00336f2a3d.mp4
 
+this video demonstrates how gc__listoffers is intended to be used by requestors to have better control. it illustrates functionality utilizing two other projects of mine: gc__filterms and entropythief. please see my pinned repositories for details.
 
 # usage
 ## ensure python3-tk is installed
