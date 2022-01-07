@@ -12,8 +12,8 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 # video
 
 
-https://user-images.githubusercontent.com/46289600/147871611-b68a0b3a-8fe9-48a2-8fc2-d3b67d7ba048.mp4
 
+https://user-images.githubusercontent.com/46289600/148477831-0c024de3-757d-420d-b3f1-4b00336f2a3d.mp4
 
 
 # usage
