@@ -78,7 +78,7 @@ $ yagna app-key list --json
 {
   "headers": [
     "name",
-    "key",
+    "key", # this tells you that the key comes at the 2nd position in valeues <see below>
     "id",
     "role",
     "created"
