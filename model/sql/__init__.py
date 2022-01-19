@@ -285,7 +285,7 @@ def build_database(con, offers):
 
         # com.scheme.payu
         scheme_name, scheme_field_name = find_scheme(offer['props'])
-        _insert_record('com.scheme', 'name', scheme_name, 'interval_sec', offer['props'][scheme_field_name])
+        _insert_record('com.scheme', 'name', scheme_name, 'interval_sec', offer['props'].get(scheme_field_name, ''))
 
         # inf.cpu
         _insert_record('inf.cpu', 'architecture', props['golem.inf.cpu.architecture'], 'cores', props['golem.inf.cpu.cores'], 'threads', props['golem.inf.cpu.threads'])
