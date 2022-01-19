@@ -370,7 +370,8 @@ class AppView:
         """
         debug.dlog(node_address)
         # https://stats.golem.network/node/0x8b9b05a578c06c5c3745be61a3fdcfe0cda30224
-        url=f"https://stats.golem.network/node/{node_address}"
+        url=f"https://stats.golem.network/network/provider/{node_address}"
+        # https://stats.golem.network/network/provider/0x2dd9960aaefd36a87bab8f97d71077dcc602c068
         webbrowser.open_new(url)
         
     def _stateRefreshing(self, b=None):

@@ -24,7 +24,7 @@ this video demonstrates how gc__listoffers is intended to be used by requestors 
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.4.1
+$ git checkout v0.4.2
 $ python3 -m venv myvenv
 $ . myvenv/bin/activate
 (myvenv) $ pip install yapapi
