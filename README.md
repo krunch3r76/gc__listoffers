@@ -24,11 +24,18 @@ this video demonstrates how gc__listoffers is intended to be used by requestors 
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-$ git checkout v0.4.2
-$ python3 -m venv myvenv
-$ . myvenv/bin/activate
-(myvenv) $ pip install yapapi
-(myvenv) $ python3 application.py
+./gc__listoffers$ git checkout v0.4.2
+./gc__listoffers$ python3 -m venv myvenv
+./gc__listoffers$ . myvenv/bin/activate
+(myvenv) ./gc__listoffers$ pip install yapapi
+(myvenv) ./gc__listoffers$ python3 application.py
+```
+On Windows:
+```cmd
+.\gc__listoffers> python.exe -m venv myvenv
+.\gc__listroffers> \myvenv\Scripts\activate
+(myvenv) .\gc__listoffers> pip install yapapi
+(myvenv) .\gc__listoffers> python application.py
 ```
 
 # how to interpet the interface
