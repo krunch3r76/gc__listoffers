@@ -33,7 +33,7 @@ $ cd gc__listoffers
 On Windows:
 ```cmd
 .\gc__listoffers> python.exe -m venv myvenv
-.\gc__listroffers> \myvenv\Scripts\activate
+.\gc__listroffers> .\myvenv\Scripts\activate
 (myvenv) .\gc__listoffers> pip install yapapi
 (myvenv) .\gc__listoffers> python application.py
 ```
