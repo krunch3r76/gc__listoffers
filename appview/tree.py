@@ -142,7 +142,6 @@ class CustomTreeview(ttk.Treeview):
 
 
 
-
     def list_selection_addresses(self):
         """extract the node address values from the selection and return as a list or empty list"""
         thelist = []
@@ -219,7 +218,7 @@ class CustomTreeview(ttk.Treeview):
             self.heading(offset, text=self._kheadings[heading_index], anchor='w')
         self._ctx.treeframe.grid()
         self.grid()
-        
+
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
         # if len(self.list_selection_addresses()) > 0:
