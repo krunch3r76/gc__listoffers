@@ -525,7 +525,7 @@ class AppView:
         for result in results:
             result=list(result)
             currency_unit = result[-1].split('-')[-1] # one of { 'tglm', 'glm' }
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]))
+            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]), currency_unit=currency_unit)
 
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
@@ -790,7 +790,6 @@ class AppView:
 
         else:
             results = msg_in["msg"]
-            debug.dlog(results)
             if len(results) > 1 and results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))

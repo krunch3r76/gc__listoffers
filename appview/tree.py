@@ -98,7 +98,9 @@ class CustomTreeview(ttk.Treeview):
 
 
 
-
+    #################################################################################
+    #                           CustomTreeView __init__                             #   
+    #################################################################################
     def __init__(self, ctx, *args, **kwargs):
         """constructor for CustomTreeView"""
         """post:
@@ -139,7 +141,7 @@ class CustomTreeview(ttk.Treeview):
         self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
         self.s.grid(row=0, column=1, sticky="ns")
         self['yscrollcommand']=self.s.set
-
+        self.tag_configure('tglm', foreground='red')
 
 
     def list_selection_addresses(self):
@@ -370,7 +372,12 @@ class CustomTreeview(ttk.Treeview):
         value_list=list(kwargs['values'])
         node_address=value_list[CustomTreeview.Field.address]
         value_list[CustomTreeview.Field.address]=value_list[2][:8]
-        super().insert('', 'end', values=self._values_reordered(value_list), iid=node_address)
+        # currency_unit=value_list[-1]
+        currency_unit=kwargs['currency_unit']
+        if currency_unit == 'glm':
+            super().insert('', 'end', values=self._values_reordered(value_list), iid=node_address)
+        else:
+            super().insert('', 'end', values=self._values_reordered(value_list), iid=node_address, tags=('tglm'))
         #super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
 
