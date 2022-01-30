@@ -120,7 +120,7 @@ class CustomTreeview(ttk.Treeview):
         self.bind("<Button-1>", self.on_drag_start)
         self.bind("<B1-Motion>", self.on_drag_motion)
         self.bind("<ButtonRelease-1>", self.on_drag_release)
-
+        self.bind("<Motion>", self.on_motion)
         self.bind("<<TreeviewSelect>>", self.on_select)
 
         # hide node, offerRowID columns
@@ -242,6 +242,12 @@ class CustomTreeview(ttk.Treeview):
             self._stateHolder.transition_swapping(False) # review
             # self._stateHolder.drag_start_column_number=None
 
+    def on_motion(self, event):
+        widget = event.widget
+        region = widget.identify_region(event.x, event.y)
+        hover_col = widget.identify_column(event.x)
+        if region == "separator":
+            return "break"
 
     def on_drag_motion(self, event):
         """swap columns when moved into a new column (except where restricted)"""
