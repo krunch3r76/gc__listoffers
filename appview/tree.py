@@ -109,7 +109,7 @@ class CustomTreeview(ttk.Treeview):
             column options set
             
         """
-
+        self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
         # initialize super with columns
         kwargs['columns']=self._kheadings_init
@@ -235,6 +235,9 @@ class CustomTreeview(ttk.Treeview):
             widget._drag_start_y=event.y
             # self._stateHolder.transition_swapping(True, widget.identify_column(event.x) )
             self._stateHolder.drag_start_column_number=widget.identify_column(event.x)
+        elif region == "separator":
+            self._separatorDragging=True
+            return "break"
         else:
             self._stateHolder.transition_swapping(False) # review
             # self._stateHolder.drag_start_column_number=None
@@ -242,6 +245,10 @@ class CustomTreeview(ttk.Treeview):
 
     def on_drag_motion(self, event):
         """swap columns when moved into a new column (except where restricted)"""
+
+        if self._separatorDragging==True:
+            return
+
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
         hover_col = widget.identify_column(event.x)
@@ -257,9 +264,12 @@ class CustomTreeview(ttk.Treeview):
                     if self._stateHolder.drag_start_column_number != hover_col:
                         self._swap_numbered_columns(self._stateHolder.drag_start_column_number, hover_col)
 
-
     def on_drag_release(self, event):
         """update display when a column has been moved (assumed non-movable columns not moved)"""
+        if self._separatorDragging==True:
+            self._separatorDragging=False
+            return
+
         # debug.dlog(f"selected address: {self.list_selection_addresses()}")
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
@@ -283,11 +293,13 @@ class CustomTreeview(ttk.Treeview):
                 else:
                     cmd={"sort_on": "all"} 
                     self._ctx._update_cmd(cmd)
+        elif region == "separator":
+            return "break"
         elif self._stateHolder.whether_swapping():
             self._ctx._update_cmd()
 
         self._stateHolder.transition_swapping(False)
-
+        # self._separatorDragging = False
 
     def clearit(self, retain_selection=False):
         if not retain_selection:
