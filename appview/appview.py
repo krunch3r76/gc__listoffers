@@ -118,7 +118,7 @@ class AppView:
 
         text['state']='disabled'
     #############################################################################
-    #               the mother of all class methods                             #
+    #                       AppView __init__                                    #
     #############################################################################
     def __init__(self):
         # icon
@@ -524,6 +524,7 @@ class AppView:
 
         for result in results:
             result=list(result)
+            currency_unit = result[-1].split('-')[-1] # one of { 'tglm', 'glm' }
             self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]))
 
         current_resultcount=len(results)
@@ -648,15 +649,19 @@ class AppView:
 
 
 
-
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing and return text"""
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec, 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores, 'inf.cpu'.threads, 'runtime'.version, max('offers'.ts), (select 'runtime'.version FROM 'runtime' ORDER BY 'runtime'.version DESC LIMIT 1) as mv" \
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec" \
+            ", 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores" \
+            ", 'inf.cpu'.threads, 'runtime'.version" \
+            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime' ORDER BY 'runtime'.version DESC LIMIT 1) AS mv" \
+            ", 'com.payment.platform'.kind" \
             " FROM 'node.id'" \
-            " INNER JOIN 'offers' USING (offerRowID)" \
-            " INNER JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
-            " INNER JOIN 'runtime'  USING (offerRowID)" \
-            " INNER JOIN 'inf.cpu' USING (offerRowID)" \
+            " JOIN 'offers' USING (offerRowID)" \
+            " JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)" \
+            " JOIN 'runtime'  USING (offerRowID)" \
+            " JOIN 'inf.cpu' USING (offerRowID)" \
+            " JOIN 'com.payment.platform' USING (offerRowID)" \
             " WHERE 'runtime'.name = 'vm'"
 
         if self.cbv_lastversion.get():
@@ -671,9 +676,6 @@ class AppView:
             # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)+Decimal(0.0000001)}"
             ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600+0.0000001}"
 
-        # here we build the order by statement
-
-        
         if self.order_by_last:
             ss+=" GROUP BY 'offers'.address"
             ss+=f" ORDER BY {self.order_by_last}"
@@ -788,6 +790,7 @@ class AppView:
 
         else:
             results = msg_in["msg"]
+            debug.dlog(results)
             if len(results) > 1 and results[0] == 'error':
                     if results[1]=='invalid api key':
                         self._rewrite_to_console(fetch_new_dialog(4))

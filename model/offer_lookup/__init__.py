@@ -49,8 +49,6 @@ class OfferLookup():
             cur = self._con.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
             r = cur.fetchone()
-
             rows = cur.execute(sql).fetchall()
-
         # rows = self._con.execute(sql).fetchall()
         return rows

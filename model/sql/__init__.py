@@ -274,7 +274,9 @@ def build_database(con, offers):
         # com.payment.platform
         platform_info = find_platform_keys(offer['props'])
         for t in platform_info:
+            # debug.dlog(t)
             _insert_record('com.payment.platform', 'kind', t[0], 'address', t[1])
+            break # for now assume all are equivalent
 
         # com.pricing
         _insert_record('com.pricing', 'model', offer['props']['golem.com.pricing.model'])
