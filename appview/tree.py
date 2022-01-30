@@ -28,8 +28,8 @@ class CustomTreeview(ttk.Treeview):
         __swapping = False
         __drag_start_column_number = ''
 
-        def __init__(self):
-            pass
+        def __init__(self, owner):
+            self._owner=owner
 
         def whether_swapping(self):
             """indicates if a column has been dragged out of its last place"""
@@ -42,7 +42,6 @@ class CustomTreeview(ttk.Treeview):
             else:
                 assert drag_from != '', "expected a column number if swapping state being updated"
                 self.__drag_start_column_number=drag_from
-
             self.__swapping=truthy
 
         @property
@@ -58,7 +57,6 @@ class CustomTreeview(ttk.Treeview):
         
 
 
-    _stateHolder = StateHolder()
     _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'start', 'cores', 'threads', 'version')
     _kheadings_sql_paths = (
         None
@@ -112,6 +110,7 @@ class CustomTreeview(ttk.Treeview):
             
         """
 
+        self._stateHolder = self.StateHolder(self)
         # initialize super with columns
         kwargs['columns']=self._kheadings_init
         super().__init__(*args, **kwargs)
@@ -268,20 +267,21 @@ class CustomTreeview(ttk.Treeview):
             curcol=widget.identify_column(event.x)
             # debug.dlog(f"curcol: {curcol}; drag_start: {self._stateHolder.drag_start_column_number}")
             if self._stateHolder.whether_swapping():
-                if curcol not in ("#2", "#3"):
-                    # self._stateHolder.transition_swapping(False)
-                    self._ctx._update_cmd()
+                # [ column was being dragged ]
+                self._ctx._update_cmd()
+                # if curcol not in ("#2", "#3"):
+                    # self._ctx._update_cmd()
             elif curcol == self._stateHolder.drag_start_column_number:
+                # [mouse click began and end on same column]
+                # [ on non movable #2 ]
                 if curcol=="#2":
                     self._ctx._update_cmd(self._update_cmd_dict['name'])
+                # [ on non movable #3 ]
                 elif curcol=="#3":
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
+                # [ on a column that could have been moved ]
                 else:
-                    debug.dlog("ELSE")
-                    # cmd={"sort_on": self._kheadings_sql_paths[self._heading_map[3]]}
-                    # cmd={"sort_on": self._ctx.order_by_last} # kludge
-                    cmd={"sort_on": "all"} # kludge
-                    # self._ctx._update_cmd(cmd)
+                    cmd={"sort_on": "all"} 
                     self._ctx._update_cmd(cmd)
         elif self._stateHolder.whether_swapping():
             self._ctx._update_cmd()
