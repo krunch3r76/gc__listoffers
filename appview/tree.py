@@ -216,7 +216,7 @@ class CustomTreeview(ttk.Treeview):
             if not stretch:
                 self.column(offset, stretch=stretch, width=0)
             else:
-                self.column(offset, stretch=stretch, width=0)
+                self.column(offset, stretch=stretch) # superfluous
             self.heading(offset, text=self._kheadings[heading_index], anchor='w')
         self._ctx.treeframe.grid()
         self.grid()
