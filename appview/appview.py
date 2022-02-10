@@ -134,7 +134,7 @@ class AppView:
         self.root=Tk()
         self.root.geometry('1256x768+100+200')
         s = ttk.Style()
-        DARKMODE = True if datetime.now().hour > 19 else False
+        DARKMODE = True if (datetime.now().hour > 19 or datetime.now().hour < 6) else False
         if not DARKMODE:
             self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
             s.theme_use('forest-light')
