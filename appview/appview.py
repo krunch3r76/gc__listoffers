@@ -134,8 +134,14 @@ class AppView:
         self.root=Tk()
         self.root.geometry('1256x768+100+200')
         s = ttk.Style()
-        self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
-        s.theme_use('forest-light')
+        DARKMODE = True if datetime.now().hour > 19 else False
+        if not DARKMODE:
+            self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
+            s.theme_use('forest-light')
+        else:
+            self.root.tk.call('source', './forest-ttk-theme/forest-dark.tcl')
+            s.theme_use('forest-dark')
+        current_datetime = datetime.now()
         root=self.root
         root.columnconfigure(0, weight=1) # ratio for children to resize against
         root.rowconfigure(0, weight=1) # ratio for children to resize against
@@ -164,7 +170,8 @@ class AppView:
 
         # configure layout
         style=ttk.Style()
-        style.configure("Treeview.Heading", foreground=DIC411)
+        if DARKMODE == False:
+            style.configure("Treeview.Heading", foreground=DIC411)
 
         root.title("Provider View")
 
