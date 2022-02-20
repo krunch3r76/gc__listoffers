@@ -7,8 +7,10 @@ if not yapapi_loader:
     print("\033[1m", end="")
     print("omigosh!")
     print("\033[0;32m", end="")
-    print("you aren't running python with the \033[4myapapi\033[24m" + " module installed.")
-    print("please see the readme about how to set up a virtual environment and install yapapi then run again")
+    print("you aren't running python with the \033[4myapapi\033[24m" 
+            + " module installed.")
+    print("please see the readme about how to set up a virtual environment"
+        "and install yapapi then run again")
     print("\033[0m")
     sys.exit(2)
 
@@ -22,16 +24,22 @@ import sys
 import debug
 
 if __name__ == "__main__":
-    """launch application to run independently or on network, in which case one instance shall be a client and the other server
-    when running independent or as a client, the controller connects the gui to the model (MVC)
+    """launch application to run independently or on network, in which case
+    one instance shall be a client and the other server
+    when running independent or as a client, the controller connects the
+    gui to the model (MVC)
         case: independent
-            AppView ----via queues directly on LocalConnection----> Controller ----> LocalConnection
-            notes: OfferLookup, which implements the model, may better be encapsulated in the LocalConnection object as in run_server
+            AppView ----via queues directly on LocalConnection
+            ----> Controller ----> LocalConnection
+            notes: OfferLookup, which implements the model, may better be
+            encapsulated in the LocalConnection object as in run_server
         case: client
-            AppView ---via queues directly on RemoteConnection ---> Controller ---> RemoteConnection
+            AppView ---via queues directly on RemoteConnection
+            ---> Controller ---> RemoteConnection
         case: server
             model.run_server()
-    when running as a server, there is no gui so the server runs as a Model-Controller
+    when running as a server, there is no gui so the server runs as a
+    Model-Controller
     """
     controller_process=None
     INVALID_CLA=False
@@ -43,8 +51,10 @@ if __name__ == "__main__":
         offerLookup=OfferLookup() # implements model
         appView=AppView()
 
-        # setup controller to use LocalConnection having a both a full duplex message queue to appView plus callback to OfferLookup functor
-        localConnection = LocalConnection(appView.q_in, appView.q_out, offerLookup)
+        # setup controller to use LocalConnection having a both a full
+        #duplex message queue to appView plus callback to OfferLookup functor
+        localConnection = LocalConnection(appView.q_in, appView.q_out
+                , offerLookup)
         controller_process = Process(target=localConnection, daemon=False)
         controller_process.start()
 
@@ -56,7 +66,8 @@ if __name__ == "__main__":
             if len(sys.argv) >=3:
                 ip=sys.argv[2]
                 if ip.isdigit():
-                    # assume user accidently skipped hostname and assign as localhost
+                    # assume user accidently skipped hostname and assign
+                    #as localhost
                     ip="localhost"
             else:
                 ip="localhost"
@@ -78,12 +89,17 @@ if __name__ == "__main__":
             elif sys.argv[1]=="client":
                 # connect to model remotely
                 from controller.local_connection import LocalConnection
-                print(f"\033[1mlaunching client to connect with {ip}:{port}\033[0m")
+                print(f"\033[1mlaunching client to connect with "
+                    f"{ip}:{port}\033[0m")
                 # configure for controller to use remote connection
                 appView=AppView()
-                # setup controller to use remoteConnection having both a full duplex message queue to appView and addressing info to client
-                remoteConnection = RemoteConnection(appView.q_in, appView.q_out, ip, port)
-                controller_process = Process(target=remoteConnection, daemon=True)
+                # setup controller to use remoteConnection having both a
+                #full duplex message queue to appView and addressing info
+                #to client
+                remoteConnection = RemoteConnection(appView.q_in
+                        , appView.q_out, ip, port)
+                controller_process = Process(target=remoteConnection
+                        , daemon=True)
                 # freeze_support()
                 controller_process.start()
                 appView()
@@ -93,6 +109,7 @@ if __name__ == "__main__":
         INVALID_CLA=True
 
     if INVALID_CLA:
-        print("usage: {} <client|serve> [<host=localhost>] [<port=8000>]".format(sys.argv[0]))
+        print("usage: {} <client|serve> [<host=localhost>] [<port=8000>]"
+                .format(sys.argv[0]))
 
     controller_process.terminate()

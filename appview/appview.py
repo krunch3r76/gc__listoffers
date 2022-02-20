@@ -97,7 +97,12 @@ class AppView:
     cancel_current_displayed_message = False # review
     message_being_displayed = False # review
 
+    @property
+    def haveSpyu(self):
+        ss = "SELECT FROM sqlite_master WHERE type='table' AND " \
+        + "name='provider'"
 
+        
     def add_text_over_time(self, text, txt, length, current=0, time=25
             , newmsg=True):
         """add text character by character to console"""
@@ -669,7 +674,8 @@ class AppView:
 
 
 
-
+    ########################################
+    # called from  _update_cmd, _refresh_cmd
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
         and return text"""
@@ -678,7 +684,9 @@ class AppView:
             ", 'com.pricing.model.linear.coeffs'.duration_sec" \
             ", 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores" \
             ", 'inf.cpu'.threads, 'runtime'.version" \
-            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime'" \
+            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime'"
+
+        ss = ss + \
             " ORDER BY 'runtime'.version DESC LIMIT 1) AS mv" \
             ", 'com.payment.platform'.kind" \
             " FROM 'node.id'" \
