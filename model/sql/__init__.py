@@ -8,19 +8,6 @@ from decimal import Decimal
 import json
 import debug
 
-"""
-def _create_table_statement_1(tablename, cols_and_types):
-    def substatement():
-        # created a comma delimited list of each tuple (colname, native_type)
-        s=""
-        for col_and_type_tuple in cols_and_types:
-            s+=f"{col_and_type_tuple[0]} {col_and_type_tuple[1]}, "
-        s=s[:-2]
-        return s
-
-    statement=f"create table '{tablename}' ( ROWID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, offerRowID INTEGER, {substatement()}, extra TEXT DEFAULT '')"
-    return statement
-"""
     
 def _create_table_statement(tablename, cols_and_types):
     def substatement():
@@ -31,7 +18,9 @@ def _create_table_statement(tablename, cols_and_types):
         s=s[:-2]
         return s
 
-    statement=f"create table '{tablename}' ( offerRowID INTEGER NOT NULL REFERENCES offers(offerRowID), {substatement()}, extra TEXT DEFAULT '' )"
+    statement=f"create table '{tablename}' ( offerRowID INTEGER NOT NULL" \
+            f" REFERENCES offers(offerRowID), {substatement()}, extra TEXT" \
+            " DEFAULT '' )"
 
     return statement
 
@@ -52,127 +41,48 @@ def create_database():
     decimal.getcontext().prec=24
 
     """return a new in-memory connection"""
-    con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES, isolation_level=None)
+    con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None)
 
     con.execute("create table offers ( offerRowID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, hash TEXT, address TEXT, ts timestamp, extra TEXT DEFAULT '')")
 
     def execute_create(tablename, cols_and_types):
         con.execute( _create_table_statement(tablename, cols_and_types) )
 
-    execute_create('activity.caps.transfer',      [ 'protocol TEXT' ] )
-    execute_create('com.payment.debit-notes',   [ 'accept_timeout INTEGER' ] )
-    execute_create('com.payment.platform',      [ 'kind TEXT', 'address TEXT' ] )
-    execute_create('com.pricing',               [ 'model TEXT' ] )
-    execute_create('com.pricing.model.linear.coeffs',   [ "duration_sec DECIMAL", "cpu_sec DECIMAL", "fixed FLOAT" ])
-    execute_create('com.scheme',                [ 'name TEXT', 'interval_sec INTEGER' ] )
-    execute_create('inf.cpu',                   [ 'architecture TEXT', 'capabilities TEXT DEFAULT "[]"', 'cores INTEGER', 'model TEXT DEFAULT ""', 'threads INTEGER', 'vendor TEXT DEFAULT ""' ] )
-    execute_create('inf.mem',                   [ 'gib FLOAT' ] )
-    execute_create('inf.storage',               [ 'gib FLOAT' ] )
-    execute_create('node.debug',                [ 'subnet TEXT' ] )
-    execute_create('node.id',                   [ 'name TEXT'] )
-    execute_create('runtime',                   [ 'name TEXT', 'version TEXT', 'capabilities DEFAULT "[]"'] )
-    execute_create('srv.caps',                  [ 'multi_activity TEXT' ] )
-    con.execute("create table extra ( offerRowID INTEGER NOT NULL REFERENCES offers(offerRowID), json TEXT DEFAULT '{}', extra TEXT DEFAULT '')")
+    execute_create('activity.caps.transfer',  [ 'protocol TEXT' ] )
+    execute_create('com.payment.debit-notes', [ 'accept_timeout INTEGER' ] )
+    execute_create('com.payment.platform',    [ 'kind TEXT', 'address TEXT' ] )
+    execute_create('com.pricing',             [ 'model TEXT' ] )
+    execute_create('com.pricing.model.linear.coeffs'
+            ,   [ "duration_sec DECIMAL", "cpu_sec DECIMAL", "fixed FLOAT" ])
+    execute_create('com.scheme'
+            ,              [ 'name TEXT', 'interval_sec INTEGER' ] )
+    execute_create('inf.cpu'
+            ,[ 'architecture TEXT', 'capabilities TEXT DEFAULT "[]"'
+                , 'cores INTEGER', 'model TEXT DEFAULT ""', 'threads INTEGER'
+                , 'vendor TEXT DEFAULT ""' ] )
+    execute_create('inf.mem',                 [ 'gib FLOAT' ] )
+    execute_create('inf.storage',             [ 'gib FLOAT' ] )
+    execute_create('node.debug',              [ 'subnet TEXT' ] )
+    execute_create('node.id',                 [ 'name TEXT'] )
+    execute_create('runtime',                 [ 'name TEXT'
+        , 'version TEXT', 'capabilities DEFAULT "[]"'] )
+    execute_create('srv.caps',                [ 'multi_activity TEXT' ] )
+    con.execute("create table extra ( offerRowID INTEGER NOT NULL"
+        " REFERENCES offers(offerRowID), json TEXT DEFAULT '{}'"
+        ", extra TEXT DEFAULT '')")
     return con
 
 
 
 
 
-"""notes
-the offer element props looks like:
-{
-     "golem.activity.caps.transfer.protocol": [
-          "https", "http", "gftp"
-     ],
-     "golem.com.payment.debit-notes.accept-timeout?": 240,
-     "golem.com.payment.platform.erc20-rinkeby-tglm.address": "0xe4012f5065d334f7f622051140048c9dc379ad30",
-     "golem.com.payment.platform.zksync-rinkeby-tglm.address": "0xe4012f5065d334f7f622051140048c9dc379ad30",
-     "golem.com.pricing.model": "linear",
-     "golem.com.pricing.model.linear.coeffs": [
-          5e-05,
-          0.0001,
-          0.0
-     ],
-     "golem.com.scheme": "payu",
-     "golem.com.scheme.payu.interval_sec": 120.0,
-     "golem.com.usage.vector": [
-          "golem.usage.duration_sec", "golem.usage.cpu_sec"
-     ],
-     "golem.inf.cpu.architecture": "x86_64",
-     "golem.inf.cpu.cores": 4,
-     "golem.inf.cpu.threads": 1,
-     "golem.inf.mem.gib": 4.0,
-     "golem.inf.storage.gib": 20.0,
-     "golem.node.debug.subnet": "devnet-beta",
-     "golem.node.id.name": "mbenke",
-     "golem.runtime.name": "wasmtime",
-     "golem.runtime.version": "0.2.1",
-     "golem.srv.caps.multi-activity": true,
---------------------------------------------------------------
- [ golem.runtime.name == 'vm' ]
- ----------------------------------------------------------------
-     "golem.inf.cpu.capabilities": [
-        "sse3", "pclmulqdq", "dtes64", "monitor", "dscpl", "vmx", "smx", "eist", "tm2", "ssse3", "fma", "cmpxchg16b", "pdcm", "pcid", "sse41", "sse42", "x2apic", "movbe", "popcnt", "tsc_deadline", "aesni", "xsave", "osxsave", "avx", "f16c", "rdrand", "fpu", "vme", "de", "pse", "tsc", "msr", "pae", "mce", "cx8", "apic", "sep", "mtrr", "pge", "mca", "cmov", "pat", "pse36", "clfsh", "ds", "acpi", "mmx", "fxsr", "sse", "sse2", "ss", "htt", "tm", "pbe", "fsgsbase", "adjust_msr", "smep", "rep_movsb_stosb", "invpcid", "deprecate_fpu_cs_ds", "mpx", "rdseed", "rdseed", "adx", "smap", "clflushopt", "processor_trace", "sgx" ],
-  
-    "golem.inf.cpu.model": "Stepping 3 Family 6 Model 94",
-    "golem.inf.cpu.vendor": "GenuineIntel",
-    "golem.runtime.capabilities": [
-        "vpn"
-    ],
-}
-
->0.9.0
-{
-     "golem.activity.caps.transfer.protocol": [
-          "http",
-          "gftp",
-          "https"
-     ],
-     "golem.com.payment.debit-notes.accept-timeout?": 240,
-     "golem.com.payment.platform.erc20-mainnet-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
-     "golem.com.payment.platform.erc20-polygon-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
-     "golem.com.payment.platform.zksync-mainnet-glm.address": "0x6d93c29b6e654f7b55f6ea39cd0dc06615a0a672",
-     "golem.com.pricing.model": "linear",
-     "golem.com.pricing.model.linear.coeffs": [
-          1.388888888888889e-06,
-          0.0,
-          0.0
-     ],
-     "golem.com.scheme": "payu",
-     "golem.com.scheme.payu.interval_sec": 120.0,
-     "golem.com.usage.vector": [
-          "golem.usage.cpu_sec",
-          "golem.usage.duration_sec"
-     ],
-     "golem.inf.cpu.architecture": "x86_64",
-     "golem.inf.cpu.capabilities": [
-          "sse3", "pclmulqdq", "dtes64", "monitor", "dscpl", "vmx", "smx", "eist", "tm2", "ssse3", "fma", "cmpxchg16b", "pdcm", "pcid", "sse41", "sse42", "x2apic", "movbe", "popcnt", "tsc_deadline", "aesni", "xsave", "osxsave", "avx", "f16c", "rdrand", "fpu", "vme", "de", "pse", "tsc", "msr", "pae", "mce", "cx8", "apic", "sep", "mtrr", "pge", "mca", "cmov", "pat", "pse36", "clfsh", "ds", "acpi", "mmx", "fxsr", "sse", "sse2", "ss", "htt", "tm", "pbe", "fsgsbase", "adjust_msr", "smep", "rep_movsb_stosb", "invpcid", "deprecate_fpu_cs_ds", "mpx", "rdseed", "rdseed", "adx", "smap", "clflushopt", "processor_trace", "sgx"
-     ],
-     "golem.inf.cpu.cores": 4,
-     "golem.inf.cpu.model": "Stepping 9 Family 6 Model 158",
-     "golem.inf.cpu.threads": 8,
-     "golem.inf.cpu.vendor": "GenuineIntel",
-     "golem.inf.mem.gib": 10.531209409236908,
-     "golem.inf.storage.gib": 8.978179931640625,
-     "golem.node.debug.subnet": "public-beta",
-     "golem.node.id.name": "saturn5",
-     "golem.runtime.capabilities": [
-          "vpn"
-     ],
-     "golem.runtime.name": "vm",
-     "golem.runtime.version": "0.2.10",
-     "golem.srv.caps.multi-activity": true
-}
-
-
-"""
 
 
 def build_database(con, offers):
     """add each offer's details to the database
-    { 'timestamp': FLOAT/STR, 'offer-id': <hash:str>, 'issuer-address': <0xhash:str>,
-        'props': { ... }
+    { 'timestamp': FLOAT/STR, 'offer-id': <hash:str>, 
+            'issuer-address': <0xhash:str>,
+            'props': { ... }
     }
     required by OfferLookup
     """
@@ -201,7 +111,8 @@ def build_database(con, offers):
                 placeholder_str+="?, "
             return placeholder_str[:-2]
 
-        insert_statement=f"INSERT INTO '{tablename}' ('offerRowID', {to_csv()}) VALUES ({to_placeholders()})"
+        insert_statement=f"INSERT INTO '{tablename}' ('offerRowID',"\
+            f" {to_csv()}) VALUES ({to_placeholders()})"
         astuple=(offerRowID, *colvals)
         con.execute(insert_statement, astuple )
 
@@ -211,8 +122,10 @@ def build_database(con, offers):
 
 
     def find_platform_keys(props):
-        """lists keynames pertaining to platforms tupling with the specific platform name
-        so [ ('golem.com.payment.platform.erc20-rinkeby-tglm.address', 'erc20-rinkeby-tglm'), ('...')
+        """lists keynames pertaining to platforms tupling with the specific
+        platform name so [ 
+        ('golem.com.payment.platform.erc20-rinkeby-tglm.address'
+        , 'erc20-rinkeby-tglm'), ('...')
         """
         ss='golem.com.payment.platform'
         platform_keys=[]
@@ -225,13 +138,16 @@ def build_database(con, offers):
 
 
     def find_scheme(props):
-        """looks up a the scheme value then builds the expected derived golem.com.scheme.<name>.interval_sec returning the name and key as a tuple"""
+        """looks up a the scheme value then builds the expected
+        derived golem.com.scheme.<name>.interval_sec returning the name and
+        key as a tuple"""
         scheme_name=props['golem.com.scheme']
         expected_field="golem.com.scheme." + scheme_name + ".interval_sec"
         return scheme_name, expected_field
 
     def dictionary_of_linear_coeffs(usage_vector,  coeffs):
-        """populate a dictionary of { "duration_sec", "cpu_sec", "fixed" } and return"""
+        """populate a dictionary of { "duration_sec", "cpu_sec", "fixed" }
+        and return"""
         d = dict()
         if usage_vector[0] == "golem.usage.duration_sec":
             d["duration_sec"] = coeffs[0]
@@ -258,7 +174,10 @@ def build_database(con, offers):
     # offers table
     for offer in offers:
         # offers
-        cur.execute("INSERT INTO offers ('hash', 'address', 'ts') VALUES (?, ?, ?)", (offer['offer-id'], offer['issuer-address'], offer['timestamp']) )
+        cur.execute("INSERT INTO offers ('hash', 'address', 'ts') VALUES "
+            "(?, ?, ?)", (offer['offer-id'], offer['issuer-address']
+            , offer['timestamp']) )
+
         lastrow=cur.lastrowid
 
         def _insert_record(*args):
@@ -266,61 +185,85 @@ def build_database(con, offers):
 
         props = offer['props']
         # activity.caps.transfer
-        _insert_record('activity.caps.transfer', 'protocol', str(props['golem.activity.caps.transfer.protocol']))
+        _insert_record('activity.caps.transfer', 'protocol',
+                str(props['golem.activity.caps.transfer.protocol']))
 
         # com.payment.debit-notes
-        _insert_record('com.payment.debit-notes', 'accept_timeout', offer['props']['golem.com.payment.debit-notes.accept-timeout?'])
+        _insert_record('com.payment.debit-notes', 'accept_timeout'
+                , offer
+                ['props']['golem.com.payment.debit-notes.accept-timeout?'])
 
         # com.payment.platform
         platform_info = find_platform_keys(offer['props'])
         for t in platform_info:
             # debug.dlog(t)
-            _insert_record('com.payment.platform', 'kind', t[0], 'address', t[1])
+            _insert_record('com.payment.platform', 'kind', t[0], 'address'
+                    , t[1])
             break # for now assume all are equivalent
 
         # com.pricing
-        _insert_record('com.pricing', 'model', offer['props']['golem.com.pricing.model'])
+        _insert_record('com.pricing', 'model',
+                offer['props']['golem.com.pricing.model'])
         if offer['props']['golem.com.pricing.model'] == "linear":
             # get linears coeffs given usage vector
-            dict_of_linear_coeffs = dictionary_of_linear_coeffs(offer['props']['golem.com.usage.vector'], offer['props']['golem.com.pricing.model.linear.coeffs'])
-            _insert_record('com.pricing.model.linear.coeffs', 'duration_sec', Decimal(dict_of_linear_coeffs['duration_sec']), 'cpu_sec', Decimal(dict_of_linear_coeffs['cpu_sec']), 'fixed', Decimal(dict_of_linear_coeffs['fixed']))
+            dict_of_linear_coeffs = dictionary_of_linear_coeffs(
+                    offer['props']['golem.com.usage.vector'],
+                    offer['props']['golem.com.pricing.model.linear.coeffs'])
+            _insert_record('com.pricing.model.linear.coeffs', 'duration_sec'
+                    , Decimal(dict_of_linear_coeffs['duration_sec'])
+                    , 'cpu_sec', Decimal(dict_of_linear_coeffs['cpu_sec'])
+                    , 'fixed', Decimal(dict_of_linear_coeffs['fixed']))
 
         # com.scheme.payu
         scheme_name, scheme_field_name = find_scheme(offer['props'])
-        _insert_record('com.scheme', 'name', scheme_name, 'interval_sec', offer['props'].get(scheme_field_name, ''))
+        _insert_record('com.scheme', 'name', scheme_name, 'interval_sec'
+                , offer['props'].get(scheme_field_name, ''))
 
         # inf.cpu
-        _insert_record('inf.cpu', 'architecture', props['golem.inf.cpu.architecture'], 'cores', props['golem.inf.cpu.cores'], 'threads', props['golem.inf.cpu.threads'])
+        _insert_record('inf.cpu', 'architecture'
+                , props['golem.inf.cpu.architecture']
+                , 'cores', props['golem.inf.cpu.cores'], 'threads'
+                , props['golem.inf.cpu.threads'])
+
         if props['golem.runtime.name']=="vm":
             try:
                 con.execute(
-                        "UPDATE 'inf.cpu' SET ( 'capabilities', 'model', 'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?"
-                        , (str(props['golem.inf.cpu.capabilities']), props['golem.inf.cpu.model'], props['golem.inf.cpu.vendor'], lastrow)
+                        "UPDATE 'inf.cpu' SET ( 'capabilities', 'model',"
+                        "'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?"
+                        , (str(props['golem.inf.cpu.capabilities'])
+                            , props['golem.inf.cpu.model']
+                            , props['golem.inf.cpu.vendor'], lastrow)
                             )
             except KeyError:
                 # some vm's don't provide capabilities
                 pass
 
         # node.debug
-        _insert_record('node.debug', 'subnet', props['golem.node.debug.subnet'])
+        _insert_record('node.debug', 'subnet'
+                , props['golem.node.debug.subnet'])
 
         # node.id
         _insert_record('node.id', 'name', props['golem.node.id.name'])
 
         # runtime
-        _insert_record('runtime', 'name', props['golem.runtime.name'], 'version', props['golem.runtime.version'])
+        _insert_record('runtime', 'name', props['golem.runtime.name']
+                , 'version', props['golem.runtime.version'])
+
         if props['golem.runtime.name']=="vm":
             try:
                 con.execute(
-                        "UPDATE 'runtime' SET ( 'capabilities' ) = ( ? ) WHERE offerRowID = ?"
-                        , ( str(props['golem.runtime.capabilities']), lastrow )
+                        "UPDATE 'runtime' SET ( 'capabilities' ) = ( ? )"
+                        " WHERE offerRowID = ?"
+                        , ( str(props['golem.runtime.capabilities'])
+                            , lastrow )
                         )
             except KeyError:
                 # some vm's do not have a vpn
                 pass
 
         # srv.caps
-        _insert_record('srv.caps', 'multi_activity', str(props['golem.srv.caps.multi-activity']))
+        _insert_record('srv.caps', 'multi_activity'
+                , str(props['golem.srv.caps.multi-activity']))
 
         # extra
 
@@ -328,7 +271,9 @@ def build_database(con, offers):
            def default(self, o):
                 if isinstance(o, datetime.datetime):
                     return str(o)
-                return super(datetime, self).default(o) # or return super().default(o)
+                return super(datetime, self).default(o)
+            # or return super().default(o)
 
-        _insert_record('extra', 'json', json.dumps(offer,cls=DatetimeEncoder))
+        _insert_record('extra', 'json'
+                , json.dumps(offer,cls=DatetimeEncoder))
 
