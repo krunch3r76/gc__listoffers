@@ -41,9 +41,12 @@ def create_database():
     decimal.getcontext().prec=24
 
     """return a new in-memory connection"""
-    con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None)
+    con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES
+            , isolation_level=None)
 
-    con.execute("create table offers ( offerRowID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, hash TEXT, address TEXT, ts timestamp, extra TEXT DEFAULT '')")
+    con.execute("create table offers ( offerRowID INTEGER PRIMARY KEY"
+        " AUTOINCREMENT NOT NULL, hash TEXT, address TEXT, ts timestamp"
+        ", extra TEXT DEFAULT '')")
 
     def execute_create(tablename, cols_and_types):
         con.execute( _create_table_statement(tablename, cols_and_types) )
@@ -145,6 +148,7 @@ def build_database(con, offers):
         expected_field="golem.com.scheme." + scheme_name + ".interval_sec"
         return scheme_name, expected_field
 
+
     def dictionary_of_linear_coeffs(usage_vector,  coeffs):
         """populate a dictionary of { "duration_sec", "cpu_sec", "fixed" }
         and return"""
@@ -159,17 +163,20 @@ def build_database(con, offers):
 
         return d
 
+
     def debug_select(ss):
         print(ss)
         cur.execute(ss)
         for row in cur:
             print(row)
 
+
     def debug_print_table(tablename, rowid=None):
         ss=f"select * from '{tablename}'"
         if rowid:
             ss+=f" WHERE ROWID={rowid}"
         debug_select(ss)
+
 
     # offers table
     for offer in offers:

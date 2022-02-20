@@ -10,7 +10,9 @@ try:
     from tkinter import *
 except ModuleNotFoundError:
     import sys
-    print("omigosh your python isn't linked with tcl.\nyou should install python that is. on ubuntu you could do this with its package manager by running the following command:")
+    print("omigosh your python isn't linked with tcl.\nyou should install"
+    " python that is. on ubuntu you could do this with its package manager"
+    " by running the following command:")
     print("$ \033[1msudo apt install python3-tk\033[0m")
     print("plese do this and run again!")
     sys.exit(1)
@@ -53,7 +55,8 @@ class TreeMenu(Menu):
         self.entryconfigure(0, state=DISABLED)
         self.add_separator()
         self.add_command(label='view raw', command=callbacks['show-raw'])
-        self.add_command(label='browse to stats', command=lambda : callbacks['browse-stats'](self.id_))
+        self.add_command(label='browse to stats'
+                , command=lambda : callbacks['browse-stats'](self.id_))
         self.add_command(label='exit menu', command=self.grab_release)
 
     def popup(self, name, x, y, x_root, y_root):
@@ -95,7 +98,8 @@ class AppView:
     message_being_displayed = False # review
 
 
-    def add_text_over_time(self, text, txt, length, current=0, time=25, newmsg=True):
+    def add_text_over_time(self, text, txt, length, current=0, time=25
+            , newmsg=True):
         """add text character by character to console"""
         text['state']='normal'
         if txt == '':
@@ -114,12 +118,18 @@ class AppView:
             elif txt[current-1] == ',':
                 add_time=time*10
             text['state']='disabled'
-            self.root.after(time+add_time, lambda: self.add_text_over_time(text, txt, length, current, time, newmsg))
+            self.root.after(time+add_time
+                    , lambda: self.add_text_over_time
+                    (text, txt, length, current, time, newmsg))
 
         text['state']='disabled'
-    #############################################################################
-    #                       AppView __init__                                    #
-    #############################################################################
+
+
+
+
+    ####################################################################
+    #                       AppView __init__                           #
+    ####################################################################
     def __init__(self):
         # icon
 
@@ -129,12 +139,13 @@ class AppView:
         self.q_in=Queue()
 
         self.session_id=None    # timestamp of last refresh
-        self.order_by_last="'node.id'.name" # current column to sort results on
+        self.order_by_last="'node.id'.name" # current column to sort results
         # root Tk window and styling
         self.root=Tk()
         self.root.geometry('1256x768+100+200')
         s = ttk.Style()
-        DARKMODE = True if (datetime.now().hour > 19 or datetime.now().hour < 6) else False
+        DARKMODE = True if (datetime.now().hour > 19 or \
+                datetime.now().hour < 6) else False
         if not DARKMODE:
             self.root.tk.call('source', './forest-ttk-theme/forest-light.tcl')
             s.theme_use('forest-light')
@@ -143,13 +154,15 @@ class AppView:
             s.theme_use('forest-dark')
         current_datetime = datetime.now()
         root=self.root
-        root.columnconfigure(0, weight=1) # ratio for children to resize against
-        root.rowconfigure(0, weight=1) # ratio for children to resize against
+        root.columnconfigure(0, weight=1)
+        root.rowconfigure(0, weight=1)
         root.rowconfigure(1, weight=0)
         root.rowconfigure(2, weight=0)
         root.rowconfigure(3, weight=0)
 
-        self.fe_image_ico=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48.png')
+        self.fe_image_ico= PhotoImage(file='gs/' \
+                'the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48'
+                '.png')
         self.root.iconphoto(True, self.fe_image_ico)
 
         # setup widgets and their linked variables
@@ -161,10 +174,12 @@ class AppView:
         self.resultcount_var = StringVar(value="0")
         # countdifflabel
         self.resultdiffcount_var = StringVar(value="")
-        self.session_resultcount = 0 # stores the number of rows currently on the table
-        self.lastresultcount = 0 # temporary to store the displayed result number count before refresh
+        self.session_resultcount = 0 # number of rows currently on the table
+        self.lastresultcount = 0 # temporary to store displayed
+        #result number count before refresh
         self.cursorOfferRowID = None # stores the RowID of a selected row
-        decimal.getcontext().prec=5 # sets the precision of displayed decimal numbers
+        decimal.getcontext().prec=5 # sets the precision of displayed
+        #decimal numbers
         self.rawwin = None # a window for displaying raw results
         self.ssp = None # current sound Process/Subprocess instance
 
@@ -182,7 +197,8 @@ class AppView:
         treeframe=self.treeframe
         treeframe.columnconfigure(0, weight=1)
         treeframe.columnconfigure(1,weight=0)
-        treeframe.rowconfigure(0, weight=1) # resize by same factor as root height
+        treeframe.rowconfigure(0, weight=1) # resize by same factor as 
+        #root height
         treeframe.columnconfigure(2, weight=0)
         treeframe['padding']=(0,0,0,5)
 
@@ -212,7 +228,9 @@ class AppView:
         optionframe.columnconfigure(0, weight=1)
         self.cbv_lastversion = BooleanVar()
         self.cbv_lastversion.set(True)
-        self.version_cb = ttk.Checkbutton(optionframe, text='latest version only', padding=(0,0,10,0), variable=self.cbv_lastversion, command=self._update_cmd )
+        self.version_cb = ttk.Checkbutton(optionframe
+                , text='latest version only', padding=(0,0,10,0)
+                , variable=self.cbv_lastversion, command=self._update_cmd )
         self.version_cb.grid(row=0, column=0, sticky="")
         optionframe.grid(row=1, column=0, sticky="nwes")
         
@@ -238,7 +256,8 @@ class AppView:
         # self.l_baseframe['relief']='solid'
 
         # baseframe--refreshframe
-        self.refreshFrame       = RefreshFrame(self, self._toggle_refresh_controls_closure(), baseframe)
+        self.refreshFrame       = RefreshFrame(self
+                , self._toggle_refresh_controls_closure(), baseframe)
         self.refreshFrame.w['padding']=(0,0,0,0)
         self.refreshFrame.w.grid(       column=1, row=0, sticky="wnes")
         self.refreshFrame.w['borderwidth']=2
@@ -248,17 +267,6 @@ class AppView:
         # baseframe--count_frame
         self.count_frame        = CountFrame(self, baseframe)
         self.count_frame.w.grid(        column=2, row=0, sticky="wnes")
-        # self.count_frame.w['borderwidth']=2
-        # self.count_frame.w['relief']='solid'
-
-        # baseframe--empty_frame
-        # emptyframe_right=ttk.Frame(baseframe)
-        # emptyframe_right.grid(          column=3, row=0)
-
-        # self.label_logo = ttk.Label(emptyframe_right, anchor='center')
-        # self.fe_image=PhotoImage(file='gs/the_empire_spaceship_and_sun_by_tempest790_db0ww24.png')
-        # self.label_logo['image']=self.fe_image
-        # self.label_logo.grid(column=0, row=0, sticky='wnes')
 
 
         # l_baseframe++console
@@ -271,11 +279,6 @@ class AppView:
         # self.l_baseframe['relief']='solid'
 
         self.console.grid(row=0, column=0, sticky="nwes")
-
-        # self.l_baseframe.update()
-        # framewidth= self.l_baseframe.winfo_width()
-        # actual_font_size=font.nametofont('TkDefaultFont').actual()['size']*1.5
-#        self.console['width']=int(framewidth//actual_font_size)
 
         baseframe.grid(column=0, row=2, sticky="nwes")
         # /baseframe
@@ -296,7 +299,8 @@ class AppView:
         # subbaseframe++label_selectioncount
         select_count_frame=ttk.Frame(subbaseframe)
 
-        self.label_selectioncount = ttk.Label(subbaseframe, textvariable=self.__count_selected)
+        self.label_selectioncount = ttk.Label(subbaseframe
+                , textvariable=self.__count_selected)
         self.label_selectioncount['foreground']='#217346'
         self.label_selectioncount.grid(row=0,column=0,sticky="wnes")
         # self.label_selectioncount.grid_forget()
@@ -350,7 +354,8 @@ class AppView:
         self.__cursorOfferRowID=val
 
     def on_escape_event(self, e):
-        mapped = list(filter(lambda menu: menu.winfo_ismapped() == 1, [ self.menu, self.seltree_menu ]))
+        mapped = list(filter(lambda menu: menu.winfo_ismapped() == 1
+            , [ self.menu, self.seltree_menu ]))
         if len(mapped) > 0:
             for menu in mapped:
                 menu.grab_release()
@@ -376,9 +381,7 @@ class AppView:
         pre:
         """
         debug.dlog(node_address)
-        # https://stats.golem.network/node/0x8b9b05a578c06c5c3745be61a3fdcfe0cda30224
         url=f"https://stats.golem.network/network/provider/{node_address}"
-        # https://stats.golem.network/network/provider/0x2dd9960aaefd36a87bab8f97d71077dcc602c068
         webbrowser.open_new(url)
         
     def _stateRefreshing(self, b=None):
@@ -447,7 +450,8 @@ class AppView:
 
 
     def _on_other_entry_change(self, *args):
-        self.refreshFrame.radio_frame.other_rb['value']= self.other_entry_var.get()
+        self.refreshFrame.radio_frame.other_rb['value'] \
+                = self.other_entry_var.get()
         self.subnet_var.set( self.other_entry_var.get() )
 
 
@@ -465,22 +469,26 @@ class AppView:
         if radio_frame.other_rb.instate(['!disabled']):
             subnet=self.subnet_var.get()
             if subnet != 'public-beta' and subnet != 'devnet-beta':
-                self.refreshFrame.radio_frame.other_entry.state(['!disabled'])
+                self.refreshFrame.radio_frame\
+                        .other_entry.state(['!disabled'])
 
 
 
     def _on_other_radio(self, *args):
         self.refreshFrame.radio_frame.other_entry.state(['!disabled'])
         # debug.dlog(self.other_entry_var.get() )
-        self.refreshFrame.radio_frame.other_rb['value']= self.other_entry_var.get()
+        self.refreshFrame.radio_frame.other_rb['value'] \
+            = self.other_entry_var.get()
         self.subnet_var.set( self.other_entry_var.get() )
 
 
 
     def _show_raw(self, *args):
-        ss = f"select json from extra WHERE offerRowID = {self.cursorOfferRowID}"
+        ss = f"select json from extra WHERE offerRowID " \
+                "= {self.cursorOfferRowID}"
         # review the need to pass subnet-tag on update TODO
-        self.q_out.put_nowait({ "id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
+        self.q_out.put_nowait({ "id": self.session_id,
+            "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         results=None
         msg_in = None
@@ -531,15 +539,20 @@ class AppView:
 
         for result in results:
             result=list(result)
-            currency_unit = result[-1].split('-')[-1] # one of { 'tglm', 'glm' }
-            self.tree.insert('', 'end', values=(result[0], result[1], result[2], Decimal(result[3])*Decimal(3600.0), Decimal(result[4])*Decimal(3600.0), result[5], result[6], result[7], result[8]), currency_unit=currency_unit)
+            currency_unit = result[-1].split('-')[-1]
+            # one of { 'tglm', 'glm' }
+            self.tree.insert('', 'end', values=(result[0], result[1]
+                , result[2], Decimal(result[3])*Decimal(3600.0)
+                , Decimal(result[4])*Decimal(3600.0), result[5], result[6]
+                , result[7], result[8]), currency_unit=currency_unit)
 
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
         
         if not refresh:
             disp=""
-            if self.lastresultcount != 0 and self.session_resultcount != current_resultcount:
+            if self.lastresultcount != 0 \
+                    and self.session_resultcount != current_resultcount:
                 disp+="/" + str(self.session_resultcount) + "("
                 diff =  current_resultcount - self.lastresultcount
                 POS=False
@@ -565,7 +578,8 @@ class AppView:
         selected_addresses = self.tree.last_cleared_selection
         matched_prev_selections = []
         if not refresh and len(selected_addresses) > 0:
-            selected_rowids = [ selected_address[0] for selected_address in selected_addresses ]
+            selected_rowids = [ selected_address[0] for selected_address 
+                    in selected_addresses ]
             for rowitem in self.tree.get_children(''):
                 cursor_rowid = self.tree.item(rowitem)['values'][0]
                 if cursor_rowid in selected_rowids:
@@ -596,14 +610,17 @@ class AppView:
         self.tree.last_cleared_selection.clear()
 
     def _send_message_to_model(self, msg):
-        """creates a message containing the session id and the input msg and places it into the queue out to the model"""
+        """creates a message containing the session id and the input
+        msg and places it into the queue out to the model"""
         d = {"id": self.session_id, "msg": msg}
         self.q_out.put_nowait(d)
 
 
     def _update_cmd(self, more_d=None):
-        """query model for rows on current session_id before handing off control to self.handle_incoming_result"""
-        """more_d is an optional dictionary with additonal instructions tied to specific keys, so far 'sort_on'"""
+        """query model for rows on current session_id before handing off
+        control to self.handle_incoming_result"""
+        """more_d is an optional dictionary with additonal instructions
+        tied to specific keys, so far 'sort_on'"""
         if not self.session_id:
             return
 
@@ -634,19 +651,16 @@ class AppView:
         # if len(args) > 0 and 'sort_on' in args[0]:
         if more_d and 'sort_on' in more_d:
             if more_d['sort_on']!='all':
-                self.order_by_last = more_d['sort_on'] # extract header name to sort_on stored in value of key
+                self.order_by_last = more_d['sort_on'] # extract header
+                #name to sort_on stored in value of key
             else:
                 debug.dlog(more_d)
                 self.order_by_last=None
-        # else:
-        #     self.order_by_last=None
-
         ss = self._update_or_refresh_sql()
 
         # TODO remove subnet-tag, it is already associated with the id
         msg = { "subnet-tag": self.subnet_var.get(), "sql": ss} 
         self._send_message_to_model(msg)
-        # self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         results=None
         msg_in = None
@@ -657,11 +671,15 @@ class AppView:
 
 
     def _update_or_refresh_sql(self):
-        """build a sql select statement when either update or refreshing and return text"""
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address, 'com.pricing.model.linear.coeffs'.cpu_sec" \
-            ", 'com.pricing.model.linear.coeffs'.duration_sec, 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores" \
+        """build a sql select statement when either update or refreshing
+        and return text"""
+        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address" \
+                ", 'com.pricing.model.linear.coeffs'.cpu_sec" \
+            ", 'com.pricing.model.linear.coeffs'.duration_sec" \
+            ", 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores" \
             ", 'inf.cpu'.threads, 'runtime'.version" \
-            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime' ORDER BY 'runtime'.version DESC LIMIT 1) AS mv" \
+            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime'" \
+            " ORDER BY 'runtime'.version DESC LIMIT 1) AS mv" \
             ", 'com.payment.platform'.kind" \
             " FROM 'node.id'" \
             " JOIN 'offers' USING (offerRowID)" \
@@ -675,13 +693,15 @@ class AppView:
             ss+=" AND 'runtime'.version = mv"
 
 
-        if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" and self.cpusec_entry_var.get():
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {Decimal(self.cpusec_entry_var.get())/Decimal('3600.0')+Decimal(0.0000001)}"
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= {float(self.cpusec_entry_var.get())/3600.0+0.0000001}"
+        if self.cpusec_entryframe.cbMaxCpuVar.get()=="maxcpu" \
+                and self.cpusec_entry_var.get():
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " \
+                    f"{float(self.cpusec_entry_var.get())/3600.0+0.0000001}"
          
-        if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and self.durationsec_entry_var.get():
-            # ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {Decimal(self.durationsec_entry_var.get())/Decimal(3600.0)+Decimal(0.0000001)}"
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <= {float(self.durationsec_entry_var.get())/3600+0.0000001}"
+        if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and \
+            self.durationsec_entry_var.get():
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <="  
+            +f" {float(self.durationsec_entry_var.get())/3600+0.0000001}"
 
         if self.order_by_last:
             ss+=" GROUP BY 'offers'.address"
@@ -704,15 +724,6 @@ class AppView:
 
     def _rewrite_to_console(self, msg):
         """clear the console label and write a new message"""
-        """plan/analysis:
-        
-        """
-        # get the width of the frame
-        # self.root.update_idletasks()
-        # framewidth= self.l_baseframe.winfo_width()
-        # actual_font_size=font.nametofont('TkDefaultFont').actual()['size']*1.5
-        # self.console['width']=int(framewidth//actual_font_size)
-
         self.console.grid_remove()
         self.console = Text(self.l_baseframe, height=7, width=40)
         self.console['state']='disabled'
@@ -728,7 +739,8 @@ class AppView:
 
 
     def _refresh_cmd(self, *args):
-        """create a new session and query model before handing off control to self.handle_incoming_result"""
+        """create a new session and query model before handing off
+        control to self.handle_incoming_result"""
         self._stateRefreshing(True)
         self.cursorOfferRowID=None
     
@@ -752,8 +764,10 @@ class AppView:
         self.session_id=str(datetime.now().timestamp())
 
         # ask controller to query model for results
-        msg_out = {"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} }
-        self.q_out.put_nowait({"id": self.session_id, "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
+        msg_out = {"id": self.session_id, "msg":
+                { "subnet-tag": self.subnet_var.get(), "sql": ss} }
+        self.q_out.put_nowait({"id": self.session_id, "msg":
+            { "subnet-tag": self.subnet_var.get(), "sql": ss} })
 
         # wait on reply
         self.root.after(10, self.handle_incoming_result)
@@ -765,7 +779,8 @@ class AppView:
 
 
     def handle_incoming_result(self, refresh=True):
-        """wait for results from model before passing control over to self._update"""
+        """wait for results from model before passing control over to
+        self._update"""
         try:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
@@ -775,12 +790,18 @@ class AppView:
                     pass
                     # TODO add sound when probing for offers locally
                     # if platform.system()=='Windows':
-                    #     self.ssp=Process(target=winsound.PlaySound, args=('.\\gs\\transformers.wav', winsound.SND_FILENAME), daemon=True)
+                    #     self.ssp=Process(target=winsound.PlaySound
+                    # , args=('.\\gs\\transformers.wav'
+                    # , winsound.SND_FILENAME), daemon=True)
                     #     self.ssp.start()
                     # elif platform.system()=='Linux':
-                    #     self.ssp=subprocess.Popen(['aplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    #     self.ssp=subprocess.Popen(['aplay'
+                    #, 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
+                    # stderr=subprocess.DEVNULL)
                     # elif platform.system()=='Darwin':
-                    #     self.ssp=subprocess.Popen(['afplay', 'gs/transformers.wav'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    #     self.ssp=subprocess.Popen(['afplay'
+                    #, 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
+                    #stderr=subprocess.DEVNULL)
                 else:
                     if isinstance(self.ssp, subprocess.Popen):
                         try:
@@ -812,7 +833,8 @@ class AppView:
                         self.refreshFrame._toggle_refresh_controls()
                     # may need to call _update with 0 results...
             else:
-                self._update(results, refresh) # toggle_refresh_controls down the line
+                self._update(results, refresh) 
+                # toggle_refresh_controls down the line
 
 
 
@@ -844,20 +866,25 @@ class AppView:
         try:
             # identify the coordinates of tree
             # print(tree.state())
-            if tree.instate(['!hover']) and self.selection_tree.instate(['!hover']):
+            if tree.instate(['!hover']) \
+                    and self.selection_tree.instate(['!hover']):
                 return
 
-            if tree.instate(['hover']) and tree.identify_region(event.x, event.y) == 'cell':
+            if tree.instate(['hover']) \
+                    and tree.identify_region(event.x, event.y) == 'cell':
                 id_ = tree.identify_row(event.y)
-#                debug.dlog(f"{id_}\n{type(id_)}")
-                self.menu.popup(self.tree.item( tree.identify_row(event.y) )['values'][1]
-                        , event.x, event.y, event.x_root, event.y_root)
+                self.menu.popup(self.tree.item( 
+                    tree.identify_row(event.y) )['values'][1]
+                    , event.x, event.y, event.x_root, event.y_root)
 
-                # update context of what row corresponded to the context menu click
-                self.cursorOfferRowID=tree.item( tree.identify_row(event.y) )['values'][0]
+                # update context of what row corresponded to the context
+                #menu click
+                self.cursorOfferRowID=tree.item(
+                        tree.identify_row(event.y) )['values'][0]
 
             elif self.selection_tree.instate(['hover']):
-                self.seltree_menu.popup(event.x, event.y, event.x_root, event.y_root)
+                self.seltree_menu.popup(event.x, event.y, event.x_root
+                        , event.y_root)
 
 
         except IndexError:
@@ -867,18 +894,25 @@ class AppView:
             # todo, ensure grab_set called
             self.menu.grab_release()
 
+
+
+
+
     def _start_filterms_dialog(self):
         """
-        pre: selection_tree has at least 1 row, grab_set must be called on the dialog window
+        pre: selection_tree has at least 1 row, grab_set must be 
+        called on the dialog window
         """
-        self.filtermswin = FiltermsWindow() # pre: grab_set is called on filtermswindow on init
-        # if not self.filtermswin:
-        #     self.filtermswin = FiltermsWindow()
+        self.filtermswin = FiltermsWindow() # pre: grab_set is called
+        # on filtermswindow on init
 
         if self.filtermswin:
             pass
             self.filtermswin.set_content(self.selection_tree.get_rows())
         self.filtermswin.grab_release()
+
+
+
 
     def _build_menus(self):
         """build (popup) menu skeletons and store in self context
@@ -889,11 +923,16 @@ class AppView:
         root.option_add('*tearOff', FALSE)
 
         # popup menu for main tree row item
-        callbacks = { "show-raw": self._show_raw, "browse-stats": self.open_stats_page_under_cursor }
+        callbacks = { "show-raw": self._show_raw,
+                "browse-stats": self.open_stats_page_under_cursor }
         self.menu = TreeMenu(self, callbacks )
 
         # popup menu for selection tree (any area)
         self.seltree_menu = SelTreeMenu(root, self._start_filterms_dialog)
+
+
+
+
 
     def __call__(self):
         root = self.root
@@ -907,10 +946,6 @@ class AppView:
         else:
             root.bind('<3>', self.do_popup )
 
-
-
-        # tree.insert('', 'end', values=('namevalue', 'addressvalue', 'cpuvalue', 'durationvalue', 'fixedvalue'))
-        # debug.dlog(root.geometry())
         root.mainloop()
 
 
