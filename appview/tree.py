@@ -23,6 +23,7 @@ class CustomTreeview(ttk.Treeview):
         cores=6
         threads=7
         version=8
+        model=9
 
     class StateHolder:
         __swapping = False
@@ -32,7 +33,8 @@ class CustomTreeview(ttk.Treeview):
             self._owner=owner
 
         def whether_swapping(self):
-            """indicates if a column has been dragged out of its last place"""
+            """indicates if a column has been dragged out of its
+            last place"""
             return self.__swapping
 
         
@@ -40,13 +42,15 @@ class CustomTreeview(ttk.Treeview):
             if not truthy:
                 self.__drag_start_column_number=''
             else:
-                assert drag_from != '', "expected a column number if swapping state being updated"
+                assert drag_from != '', "expected a column number if" \
+                    " swapping state being updated"
                 self.__drag_start_column_number=drag_from
             self.__swapping=truthy
 
         @property
         def drag_start_column_number(self):
-            # assert self.__swapping==True, "no column being dragged but queried for start"
+            # assert self.__swapping==True, "no column being dragged" \
+            #        " but queried for start"
             return self.__drag_start_column_number
 
         @drag_start_column_number.setter
@@ -57,7 +61,19 @@ class CustomTreeview(ttk.Treeview):
         
 
 
-    _kheadings = ('offerRowID', 'name','address','cpu (/hr)', 'duration (/hr)', 'start', 'cores', 'threads', 'version')
+    _kheadings = (
+            'offerRowID'    #0
+            , 'name'    #1
+            ,'address'  #2
+            ,'cpu (/hr)'    #3
+            , 'duration (/hr)'  #4
+            , 'start'   #5
+            , 'cores'   #6
+            , 'threads' #7
+            , 'version' #8
+            , 'modelinfo'   #9
+            )
+
     _kheadings_sql_paths = (
         None
         , "'node.id'.name"
@@ -67,13 +83,18 @@ class CustomTreeview(ttk.Treeview):
         , "'com.pricing.model.linear.coeffs'.fixed"
         , "'inf.cpu'.cores"
         , "'inf.cpu'.threads"
+        , "modelname"
         , "'runtime'.version"
             )
 
-    _heading_map = [ num for num in range(len(_kheadings)) ] # e.g. (0, 1, 2, ...)
-    _kheadings_init = tuple( [ str(num) for num in range(len(_kheadings)) ] ) # e.g. ('0', '1', '2', ...)
+    _heading_map = [ num for num in range(len(_kheadings)) ]
+        # e.g. (0, 1, 2, ...)
+    _kheadings_init = tuple( [ str(num) for num 
+        in range(len(_kheadings)) ] ) # e.g. ('0', '1', '2', ...)
+
     _headings_invisible = {0, 8}
-#    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}, {"sort_on": "'offers'.address"}, {}, {}
+#    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}
+#, {"sort_on": "'offers'.address"}, {}, {}
     _update_cmd_dict={
             "name": {"sort_on": "'node.id'.name"}
             , "address": {"sort_on": "'offers'.address"}
@@ -83,6 +104,7 @@ class CustomTreeview(ttk.Treeview):
             , "cores": {}
             , "threads": {}
             , 'version': {}
+            , "modelinfo": {}
             }
 
 
@@ -98,9 +120,9 @@ class CustomTreeview(ttk.Treeview):
 
 
 
-    #################################################################################
-    #                           CustomTreeView __init__                             #   
-    #################################################################################
+    ####################################################################
+    #               CustomTreeView __init__                            #   
+    ####################################################################
     def __init__(self, ctx, *args, **kwargs):
         """constructor for CustomTreeView"""
         """post:
@@ -138,7 +160,8 @@ class CustomTreeview(ttk.Treeview):
 
         self._update_headings()
 
-        self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
+        self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL
+                , command=self.yview)
         self.s.grid(row=0, column=1, sticky="ns")
         self['yscrollcommand']=self.s.set
         self.tag_configure('tglm', foreground='red')
@@ -187,11 +210,13 @@ class CustomTreeview(ttk.Treeview):
 
 
     def _model_sequence_from_headings(self):
-        """follow the order of the headings to return a tuple of strings corresponding to the model table.column addresses"""
+        """follow the order of the headings to return a tuple of strings
+        corresponding to the model table.column addresses"""
         """analysis
-        the current ordering is found in self._heading_map, which lists pointer indices
-        _kheadings_sql_paths contain the sql path at the corresponding indices
-        we are not interested at this time in anything before 'cpu (/hr)', so we start at index 3
+        the current ordering is found in self._heading_map, which lists
+        pointer indices. _kheadings_sql_paths contain the sql path at the
+        corresponding indices. we are not interested at this time in
+        anything before 'cpu (/hr)', so we start at index 3
         """
         t = ()
         for index in range(3, len(self._heading_map)):
@@ -203,9 +228,9 @@ class CustomTreeview(ttk.Treeview):
 
     def _update_headings(self):
         """
-        inputs                          process                             output
-        _kheadings                      each _heading_map offset+1          heading texts updated
-        _heading_map                        map heading fr _kheadings
+        inputs           process                             output
+        _kheadings       each _heading_map offset+1          gui headings
+        _heading_map     map heading fr _kheadings
                                        
         """
         self.grid_remove()
@@ -216,15 +241,26 @@ class CustomTreeview(ttk.Treeview):
             if not stretch:
                 self.column(offset, stretch=stretch, width=0)
             else:
-                self.column(offset, stretch=stretch) # superfluous
-            self.heading(offset, text=self._kheadings[heading_index], anchor='w')
+                if offset == int(self.Field.model):
+                    self.column(offset, stretch=YES, width=300)
+                elif offset == int(self.Field.name):
+                    self.column(offset, stretch=YES, width=125)
+                else:
+                    self.column(offset, stretch=YES)
+            self.heading(offset, text=self._kheadings[heading_index]
+                    , anchor='w')
+
         self._ctx.treeframe.grid()
         self.grid()
+
+
+
 
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
         # if len(self.list_selection_addresses()) > 0:
-        #     debug.dlog(f"replacing {self.last_cleared_selection} with {self.list_selection_addresses()}")
+        #     debug.dlog(f"replacing {self.last_cleared_selection}" \
+        #+ " with {self.list_selection_addresses()}")
         #     self.last_cleared_selection = self.list_selection_addresses()
         self.last_cleared_selection = self.list_selection_addresses()
 
@@ -371,7 +407,7 @@ class CustomTreeview(ttk.Treeview):
         """map ordering of results to internal ordering"""
         value_list=list(kwargs['values'])
         node_address=value_list[CustomTreeview.Field.address]
-        value_list[CustomTreeview.Field.address]=value_list[2][:8]
+        value_list[CustomTreeview.Field.address]=value_list[2][:9]
         # currency_unit=value_list[-1]
         currency_unit=kwargs['currency_unit']
         if currency_unit == 'glm':

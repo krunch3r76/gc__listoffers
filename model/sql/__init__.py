@@ -6,35 +6,48 @@ import itertools
 import decimal
 from decimal import Decimal
 import json
+import pprint
+
 import debug
-
-    
-def _create_table_statement(tablename, cols_and_types):
-    def substatement():
-        # created a comma delimited list of each column description
-        s=""
-        for col_and_type_s in cols_and_types:
-            s+=f"{col_and_type_s}, "
-        s=s[:-2]
-        return s
-
-    statement=f"create table '{tablename}' ( offerRowID INTEGER NOT NULL" \
-            f" REFERENCES offers(offerRowID), {substatement()}, extra TEXT" \
-            " DEFAULT '' )"
-
-    return statement
+from .build_database_helpers import *
+from ..get_datadir import get_datadir
+from .spyu_model import *
 
 
 
-
-
+# ++++++++++ create_database +++++++++++
 def create_database():
+
+
+    # _________ create_table_statement _________
+    def _create_table_statement(tablename, cols_and_types):
+        def substatement():
+            # created a comma delimited list of each column description
+            s=""
+            for col_and_type_s in cols_and_types:
+                s+=f"{col_and_type_s}, "
+            s=s[:-2]
+            return s
+
+        statement=f"create table '{tablename}' ( offerRowID INTEGER NOT NULL" \
+                f" REFERENCES offers(offerRowID), {substatement()}, extra TEXT" \
+                " DEFAULT '' )"
+
+        return statement
+
+    # _____ adapt_decimal _______
     def adapt_decimal(d):
         return str(d)
 
+    # _____ convert_decimal ______
     def convert_decimal(s):
         return Decimal(s.decode('utf-8'))
 
+    # _____ execute_create ______
+    def execute_create(tablename, cols_and_types):
+        con.execute( _create_table_statement(tablename, cols_and_types) )
+
+    # ------------------ BEGIN create_database
     sqlite3.register_adapter(Decimal, adapt_decimal)
     sqlite3.register_converter("DECIMAL", convert_decimal)
 
@@ -42,14 +55,12 @@ def create_database():
 
     """return a new in-memory connection"""
     con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES
-            , isolation_level=None)
-
+            , isolation_level=None, uri=True)
+    attach_spyu(con)
     con.execute("create table offers ( offerRowID INTEGER PRIMARY KEY"
         " AUTOINCREMENT NOT NULL, hash TEXT, address TEXT, ts timestamp"
         ", extra TEXT DEFAULT '')")
 
-    def execute_create(tablename, cols_and_types):
-        con.execute( _create_table_statement(tablename, cols_and_types) )
 
     execute_create('activity.caps.transfer',  [ 'protocol TEXT' ] )
     execute_create('com.payment.debit-notes', [ 'accept_timeout INTEGER' ] )
@@ -80,7 +91,7 @@ def create_database():
 
 
 
-
+# ++++++++++++ build_database +++++++++++++
 def build_database(con, offers):
     """add each offer's details to the database
     { 'timestamp': FLOAT/STR, 'offer-id': <hash:str>, 
@@ -92,91 +103,7 @@ def build_database(con, offers):
 
 
 
-    def insert_record(offer, offerRowID, tablename, *names_vals):
-        # take every other input in names_vals to build the unique_cols list
-        unique_cols=[]
-        colvals=[]
-        for i in range(0, len(names_vals), 2):
-            unique_cols.append(names_vals[i])
-            colvals.append(names_vals[i+1])
-
-        def to_csv():
-            csv=""
-            for unique_col in unique_cols:
-                csv=csv + "'" + unique_col + "'" + ", "
-            
-            csv = csv[:-2]
-            return csv
-
-        def to_placeholders():
-            placeholder_str="?, " # one for the offerRowID
-            for _ in range(len(unique_cols)):
-                placeholder_str+="?, "
-            return placeholder_str[:-2]
-
-        insert_statement=f"INSERT INTO '{tablename}' ('offerRowID',"\
-            f" {to_csv()}) VALUES ({to_placeholders()})"
-        astuple=(offerRowID, *colvals)
-        con.execute(insert_statement, astuple )
-
-
-
     cur = con.cursor()
-
-
-    def find_platform_keys(props):
-        """lists keynames pertaining to platforms tupling with the specific
-        platform name so [ 
-        ('golem.com.payment.platform.erc20-rinkeby-tglm.address'
-        , 'erc20-rinkeby-tglm'), ('...')
-        """
-        ss='golem.com.payment.platform'
-        platform_keys=[]
-        for key, value in props.items():
-            if key.startswith(ss):
-                idx_to_kind = len(ss) + 1
-                idx_to_kind_end = key.find('.', idx_to_kind)
-                platform_keys.append( (key[idx_to_kind:idx_to_kind_end], value ) )
-        return platform_keys
-
-
-    def find_scheme(props):
-        """looks up a the scheme value then builds the expected
-        derived golem.com.scheme.<name>.interval_sec returning the name and
-        key as a tuple"""
-        scheme_name=props['golem.com.scheme']
-        expected_field="golem.com.scheme." + scheme_name + ".interval_sec"
-        return scheme_name, expected_field
-
-
-    def dictionary_of_linear_coeffs(usage_vector,  coeffs):
-        """populate a dictionary of { "duration_sec", "cpu_sec", "fixed" }
-        and return"""
-        d = dict()
-        if usage_vector[0] == "golem.usage.duration_sec":
-            d["duration_sec"] = coeffs[0]
-            d["cpu_sec"] =coeffs[1]
-        else:
-            d["duration_sec"] = coeffs[1]
-            d["cpu_sec"] = coeffs[0]
-        d["fixed"]=coeffs[2]
-
-        return d
-
-
-    def debug_select(ss):
-        print(ss)
-        cur.execute(ss)
-        for row in cur:
-            print(row)
-
-
-    def debug_print_table(tablename, rowid=None):
-        ss=f"select * from '{tablename}'"
-        if rowid:
-            ss+=f" WHERE ROWID={rowid}"
-        debug_select(ss)
-
 
     # offers table
     for offer in offers:
@@ -188,7 +115,7 @@ def build_database(con, offers):
         lastrow=cur.lastrowid
 
         def _insert_record(*args):
-            insert_record(offer, lastrow, *args)
+            insert_record(con, offer, lastrow, *args)
 
         props = offer['props']
         # activity.caps.transfer

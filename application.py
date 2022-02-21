@@ -43,8 +43,8 @@ if __name__ == "__main__":
     """
     controller_process=None
     INVALID_CLA=False
-    if len(sys.argv) == 1:
-        # <script>
+    if len(sys.argv) == 1: # no arguments
+        # <script executable>
         # configure for controller to use local connection to model
         from model.offer_lookup import OfferLookup
         print(f"\033[1mrunning locally\033[0m")
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         appView()
         # parse arguments
         # <remote server or client ip> <remote server port>
-    elif len(sys.argv) >=2:
+    elif len(sys.argv) >=2: # one or more cli arguments
         # <script> <client|serve> [<host>] [<port>]
             if len(sys.argv) >=3:
                 ip=sys.argv[2]

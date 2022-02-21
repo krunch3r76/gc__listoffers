@@ -72,6 +72,9 @@ class TreeMenu(Menu):
 
 
 
+
+
+
 class SelTreeMenu(Menu):
     def _add_addr_items(self, addr_text):
         """add a label to indicate which specific address is corresponding"""
@@ -93,14 +96,15 @@ class SelTreeMenu(Menu):
         _ctx=self._ctx
         self.post(x_root, y_root)
 
+
+
+
+
+
 class AppView:
     cancel_current_displayed_message = False # review
     message_being_displayed = False # review
 
-    @property
-    def haveSpyu(self):
-        ss = "SELECT FROM sqlite_master WHERE type='table' AND " \
-        + "name='provider'"
 
         
     def add_text_over_time(self, text, txt, length, current=0, time=25
@@ -490,7 +494,7 @@ class AppView:
 
     def _show_raw(self, *args):
         ss = f"select json from extra WHERE offerRowID " \
-                "= {self.cursorOfferRowID}"
+                f"= {self.cursorOfferRowID}"
         # review the need to pass subnet-tag on update TODO
         self.q_out.put_nowait({ "id": self.session_id,
             "msg": { "subnet-tag": self.subnet_var.get(), "sql": ss} })
@@ -549,8 +553,8 @@ class AppView:
             self.tree.insert('', 'end', values=(result[0], result[1]
                 , result[2], Decimal(result[3])*Decimal(3600.0)
                 , Decimal(result[4])*Decimal(3600.0), result[5], result[6]
-                , result[7], result[8]), currency_unit=currency_unit)
-
+                , result[7], result[8], result[11]), currency_unit=currency_unit,
+                )
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
         
@@ -679,15 +683,25 @@ class AppView:
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
         and return text"""
-        ss = "select 'node.id'.offerRowID, 'node.id'.name, 'offers'.address" \
-                ", 'com.pricing.model.linear.coeffs'.cpu_sec" \
-            ", 'com.pricing.model.linear.coeffs'.duration_sec" \
-            ", 'com.pricing.model.linear.coeffs'.fixed, 'inf.cpu'.cores" \
-            ", 'inf.cpu'.threads, 'runtime'.version" \
-            ", MAX('offers'.ts), (select 'runtime'.version FROM 'runtime'"
+        ss ="""
+select 'node.id'.offerRowID
+, 'node.id'.name
+, 'offers'.address
+, 'com.pricing.model.linear.coeffs'.cpu_sec
+, 'com.pricing.model.linear.coeffs'.duration_sec 
+, 'com.pricing.model.linear.coeffs'.fixed
+, 'inf.cpu'.cores
+, 'inf.cpu'.threads
+, 'runtime'.version
+, MAX('offers'.ts)
+, (select 'runtime'.version FROM 'runtime'
+    ORDER BY 'runtime'.version DESC LIMIT 1) AS mv
+, (SELECT modelname FROM spyu.provider
+   NATURAL JOIN spyu.nodeInfo WHERE provider.addr 
+   = 'offers'.address) AS modelname
+        """
 
         ss = ss + \
-            " ORDER BY 'runtime'.version DESC LIMIT 1) AS mv" \
             ", 'com.payment.platform'.kind" \
             " FROM 'node.id'" \
             " JOIN 'offers' USING (offerRowID)" \
@@ -774,11 +788,10 @@ class AppView:
         # ask controller to query model for results
         msg_out = {"id": self.session_id, "msg":
                 { "subnet-tag": self.subnet_var.get(), "sql": ss} }
-        self.q_out.put_nowait({"id": self.session_id, "msg":
-            { "subnet-tag": self.subnet_var.get(), "sql": ss} })
+        self.q_out.put_nowait(msg_out)
 
         # wait on reply
-        self.root.after(10, self.handle_incoming_result)
+        self.root.after(5, self.handle_incoming_result)
 
 
 
@@ -822,7 +835,7 @@ class AppView:
                         if not self.ssp.is_alive():
                             self.ssp = None
 
-            self.root.after(10, lambda: self.handle_incoming_result(refresh))
+            self.root.after(1, lambda: self.handle_incoming_result(refresh))
 
         else:
             results = msg_in["msg"]
@@ -841,6 +854,7 @@ class AppView:
                         self.refreshFrame._toggle_refresh_controls()
                     # may need to call _update with 0 results...
             else:
+                # debug.dlog(f"model results: {results}\n", 100)
                 self._update(results, refresh) 
                 # toggle_refresh_controls down the line
 

@@ -1,5 +1,5 @@
 # lookup.py
-# interact with yagna api to download the text of the current offers
+# interact with stats/yagna api to download the text of the current offers
 import sys # debug
 
 import asyncio
@@ -119,8 +119,8 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
             debug.dlog(f"stats http response status: {response.status}" \
                     + f" with reason phrase: {response.msg}",1)
             result_list = json.loads(response.read().decode('utf-8'))
-    except:
-        debug.dlog("exception")
+    except Exception as e:
+        debug.dlog(f"exception: {e}")
         offers = ['error']
     else:
         offer_d=dict()
@@ -150,9 +150,10 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
 
 async def list_offers(subnet_tag: str):
     """query stats api otherwise scan yagna for offers then 
-    return results as a list of dictionary objects"""
+    return offers as a list of dictionary objects"""
+
     """
-    called by: OfferLookup
+    called by: OfferLookup()
     pre: none
     in: subnet to filter results against
     out: list of offer dictionary objects, which may be empty
@@ -163,15 +164,18 @@ async def list_offers(subnet_tag: str):
     offers = None
     fallback = False
 
+    # launch non-asynchronous routine for https to stats
     recv_end, send_end = multiprocessing.Pipe(False)
     p = multiprocessing.Process(target=_list_offers_on_stats
             , args=(send_end, subnet_tag), daemon=True)
     p.start()
+
+    # asynchronously await a response from over pipe
     while not recv_end.poll():
         await asyncio.sleep(0.01)
     offers = recv_end.recv()
 
-    if len(offers) > 0 and offers[0]=='error':
+    if len(offers) > 0 and offers[0]=='error': # review TODO
         fallback=True
 
     if fallback:

@@ -3,7 +3,7 @@
 from .get_datadir import get_datadir
 import sqlite3
 
-class SpyModel:
+class SpyuModel:
     def __init__(self):
         self._spyudb_mtime = 0.0
         datadir=get_datadir()
