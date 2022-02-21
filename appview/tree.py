@@ -71,7 +71,7 @@ class CustomTreeview(ttk.Treeview):
             , 'cores'   #6
             , 'threads' #7
             , 'version' #8
-            , 'modelinfo'   #9
+            , 'modelname'   #9
             )
 
     _kheadings_sql_paths = (
@@ -83,8 +83,8 @@ class CustomTreeview(ttk.Treeview):
         , "'com.pricing.model.linear.coeffs'.fixed"
         , "'inf.cpu'.cores"
         , "'inf.cpu'.threads"
-        , "modelname"
         , "'runtime'.version"
+        , "modelname"
             )
 
     _heading_map = [ num for num in range(len(_kheadings)) ]
@@ -104,7 +104,7 @@ class CustomTreeview(ttk.Treeview):
             , "cores": {}
             , "threads": {}
             , 'version': {}
-            , "modelinfo": {}
+            , "modelname": {}
             }
 
 
@@ -222,6 +222,7 @@ class CustomTreeview(ttk.Treeview):
         for index in range(3, len(self._heading_map)):
             heading_index = self._heading_map[index]
             t+=(self._kheadings_sql_paths[heading_index],)
+            # debug.dlog(t)
         return t
 
 
@@ -378,14 +379,15 @@ class CustomTreeview(ttk.Treeview):
         """
         # debug.dlog(f"swapping {numbered_col} with {numbered_col_other}")
         # convert to heading offset
-        numbered_col_internal = int(numbered_col[1])-1
-        numbered_col_other_internal = int(numbered_col_other[1])-1
+        numbered_col_internal = int(numbered_col[1:])-1
+        numbered_col_other_internal = int(numbered_col_other[1:])-1
 
 
         # lookup 
         heading_value_1 = self._heading_map[numbered_col_internal]
         heading_value_1_offset = numbered_col_internal
 
+        debug.dlog(self._heading_map)
         heading_value_2 = self._heading_map[numbered_col_other_internal]
         heading_value_2_offset = numbered_col_other_internal
 
