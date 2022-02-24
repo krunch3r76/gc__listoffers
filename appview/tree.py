@@ -58,7 +58,6 @@ class CustomTreeview(ttk.Treeview):
             assert isinstance(colstr, str), "colstr input as non-string"
             debug.dlog(colstr)
             self.__drag_start_column_number=colstr
-        
 
 
     _kheadings = (
@@ -89,7 +88,7 @@ class CustomTreeview(ttk.Treeview):
 
     _heading_map = [ num for num in range(len(_kheadings)) ]
         # e.g. (0, 1, 2, ...)
-    _kheadings_init = tuple( [ str(num) for num 
+    _kheadings_init = tuple( [ str(num) for num
         in range(len(_kheadings)) ] ) # e.g. ('0', '1', '2', ...)
 
     _headings_invisible = {0, 8}
@@ -131,7 +130,6 @@ class CustomTreeview(ttk.Treeview):
 
             buttons bound
             column options set
-            
         """
         self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
@@ -168,14 +166,18 @@ class CustomTreeview(ttk.Treeview):
 
 
     def list_selection_addresses(self):
-        """extract the node address values from the selection and return as a list or empty list"""
+        """extract the node address values from the selection and return
+        as a list or empty list"""
         thelist = []
         for item_id in self.selection():
             thelist.append(
                 (
-                    self.item(item_id)['values'][CustomTreeview.Field.offerRowID],
-                    self.item(item_id)['values'][CustomTreeview.Field.address],
-                    self.item(item_id)['values'][CustomTreeview.Field.name]
+                    self.item(item_id)['values']
+                        [CustomTreeview.Field.offerRowID],
+                    self.item(item_id)['values']
+                        [CustomTreeview.Field.address],
+                    self.item(item_id)['values']
+                        [CustomTreeview.Field.name]
                 )
                     )
             # print(self.item(item_id)['values'])
@@ -188,13 +190,14 @@ class CustomTreeview(ttk.Treeview):
         sel = self.selection()
         if len(sel) == 1:
             rowid=self.item(sel)['values'][CustomTreeview.Field.offerRowID]
-            # rowid=self.item(sel)['values'][CustomTreeview.Field.offerRowID]
         return rowid
 
 
     def on_select(self, e=None):
-        """update the count selected linked variable unless tree is swapping or updating"""
-        if not self._stateHolder.whether_swapping() and not self._ctx.whetherUpdating:
+        """update the count selected linked variable unless tree is
+        swapping or updating"""
+        if (not self._stateHolder.whether_swapping()
+                and not self._ctx.whetherUpdating):
             count_selected = len(self.selection())
             if count_selected == 1:
                 self._ctx.cursorOfferRowID = self.get_selected_rowid()
@@ -232,7 +235,6 @@ class CustomTreeview(ttk.Treeview):
         inputs           process                             output
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
-                                       
         """
         self.grid_remove()
         self._ctx.treeframe.grid_remove()
@@ -242,18 +244,18 @@ class CustomTreeview(ttk.Treeview):
             if not stretch:
                 self.column(offset, stretch=stretch, width=0)
             else:
-                if offset == int(self.Field.model):
+                if self._heading_map[offset] == int(self.Field.model):
                     self.column(offset, stretch=YES, width=300)
-                elif offset == int(self.Field.name):
+                    print("300")
+                elif self._heading_map[offset] == int(self.Field.name):
                     self.column(offset, stretch=YES, width=125)
                 else:
-                    self.column(offset, stretch=YES)
+                    self.column(offset, stretch=YES, width=0)
             self.heading(offset, text=self._kheadings[heading_index]
                     , anchor='w')
-
         self._ctx.treeframe.grid()
         self.grid()
-
+        self.update_idletasks()
 
 
 
@@ -267,18 +269,16 @@ class CustomTreeview(ttk.Treeview):
 
         widget = event.widget
         region = widget.identify_region(event.x, event.y)
-        # debug.dlog(region, 2)
         if region == "heading":
             widget._drag_start_x=event.x
             widget._drag_start_y=event.y
-            # self._stateHolder.transition_swapping(True, widget.identify_column(event.x) )
-            self._stateHolder.drag_start_column_number=widget.identify_column(event.x)
+            self._stateHolder.drag_start_column_number \
+                    = widget.identify_column(event.x)
         elif region == "separator":
             self._separatorDragging=True
             return "break"
         else:
             self._stateHolder.transition_swapping(False) # review
-            # self._stateHolder.drag_start_column_number=None
 
     def on_motion(self, event):
         widget = event.widget
@@ -288,7 +288,8 @@ class CustomTreeview(ttk.Treeview):
             return "break"
 
     def on_drag_motion(self, event):
-        """swap columns when moved into a new column (except where restricted)"""
+        """swap columns when moved into a new column (except where
+        restricted)"""
 
         if self._separatorDragging==True:
             return
@@ -300,16 +301,27 @@ class CustomTreeview(ttk.Treeview):
 
         if region == "heading":
             if not self._stateHolder.whether_swapping():
-                if hover_col not in ("#2", "#3") and hover_col != self._stateHolder.drag_start_column_number:
-                    self._stateHolder.transition_swapping(True, self._stateHolder.drag_start_column_number) 
+                if ( hover_col not in ("#2", "#3")
+                     and hover_col
+                        != self._stateHolder.drag_start_column_number ):
+                    self._stateHolder.transition_swapping(True
+                        , self._stateHolder.drag_start_column_number)
             elif self._stateHolder.whether_swapping():
-                if hover_col not in ("#2", "#3") and self._stateHolder.drag_start_column_number not in ("#2", "#3"):
-                    # debug.dlog(f"start: {self._stateHolder.drag_start_column_number}; hover_col: {hover_col}")
-                    if self._stateHolder.drag_start_column_number != hover_col:
-                        self._swap_numbered_columns(self._stateHolder.drag_start_column_number, hover_col)
+                if ( hover_col not in ("#2", "#3")
+                        and self._stateHolder.drag_start_column_number
+                        not in ("#2", "#3") ):
+                    # debug.dlog(f"start: "
+                    # f"{self._stateHolder.drag_start_column_number}"
+                    # f"; hover_col: {hover_col}")
+                    if ( self._stateHolder.drag_start_column_number
+                        != hover_col ):
+                        self._swap_numbered_columns(
+                                self._stateHolder.drag_start_column_number
+                                , hover_col)
 
     def on_drag_release(self, event):
-        """update display when a column has been moved (assumed non-movable columns not moved)"""
+        """update display when a column has been moved (assumed
+        non-movable columns not moved)"""
         if self._separatorDragging==True:
             self._separatorDragging=False
             return
@@ -335,7 +347,7 @@ class CustomTreeview(ttk.Treeview):
                     self._ctx._update_cmd(self._update_cmd_dict['address'])
                 # [ on a column that could have been moved ]
                 else:
-                    cmd={"sort_on": "all"} 
+                    cmd={"sort_on": "all"}
                     self._ctx._update_cmd(cmd)
         elif region == "separator":
             return "break"
