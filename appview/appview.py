@@ -242,7 +242,6 @@ class AppView:
                 , variable=self.cbv_lastversion, command=self._update_cmd )
         self.version_cb.grid(row=0, column=0, sticky="")
         optionframe.grid(row=1, column=0, sticky="nwes")
-        
 
 
         #################################################
@@ -292,7 +291,6 @@ class AppView:
         baseframe.grid(column=0, row=2, sticky="nwes")
         # /baseframe
 
-        
         #################################################
         # subbaseframe                                  #
         #################################################
@@ -392,7 +390,8 @@ class AppView:
         debug.dlog(node_address)
         url=f"https://stats.golem.network/network/provider/{node_address}"
         webbrowser.open_new(url)
-        
+
+
     def _stateRefreshing(self, b=None):
         if b == True:
             self._states['refreshing'] = True
@@ -520,7 +519,7 @@ class AppView:
             props=results_json # full results including props
             props_s = json.dumps(props, indent=5)
             # create/replace a new window
-            self.rawwin = Toplevel(self.root)        
+            self.rawwin = Toplevel(self.root)
             self.rawwin.columnconfigure(0, weight=1)
             self.rawwin.rowconfigure(0, weight=1)
 
@@ -555,9 +554,10 @@ class AppView:
                 , Decimal(result[4])*Decimal(3600.0), result[5], result[6]
                 , result[7], result[8], result[11]), currency_unit=currency_unit,
                 )
+
         current_resultcount=len(results)
         self.resultcount_var.set(str(current_resultcount))
-        
+
         if not refresh:
             disp=""
             if self.lastresultcount != 0 \
@@ -572,7 +572,7 @@ class AppView:
                 # self.resultcount_var.set(str(new_resultcount))
             else:
                 self.resultdiffcount_var.set("") # consider edge cases
-                
+
         if refresh:
             self.refreshFrame._toggle_refresh_controls()
 
@@ -696,9 +696,14 @@ select 'node.id'.offerRowID
 , MAX('offers'.ts)
 , (select 'runtime'.version FROM 'runtime'
     ORDER BY 'runtime'.version DESC LIMIT 1) AS mv
-, (SELECT modelname FROM spyu.provider
-   NATURAL JOIN spyu.nodeInfo WHERE provider.addr 
-   = 'offers'.address) AS modelname
+, ifnull( (SELECT modelname FROM spyu.provider
+   NATURAL JOIN spyu.nodeInfo
+    WHERE provider.addr = 'offers'.address), '') AS modelname
+, (SELECT grep_freq(modelname) FROM
+(SELECT modelname FROM spyu.provider
+   NATURAL JOIN spyu.nodeInfo
+    WHERE provider.addr = 'offers'.address) AS modelname
+) AS freq
         """
 
         ss = ss + \
@@ -719,10 +724,10 @@ select 'node.id'.offerRowID
                 and self.cpusec_entry_var.get():
             ss+= f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " \
                     f"{float(self.cpusec_entry_var.get())/3600.0+0.0000001}"
-         
+
         if self.dursec_entryframe.cbDurSecVar.get()=="maxdur" and \
             self.durationsec_entry_var.get():
-            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <="  
+            ss+= f" AND 'com.pricing.model.linear.coeffs'.duration_sec <="
             +f" {float(self.durationsec_entry_var.get())/3600+0.0000001}"
 
         if self.order_by_last:

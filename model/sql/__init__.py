@@ -43,6 +43,13 @@ def create_database():
     def convert_decimal(s):
         return Decimal(s.decode('utf-8'))
 
+    # _____ grep_freq ______
+    def grep_freq(modelname):
+        grepped=''
+        if '@' in modelname:
+            grepped = modelname.split('@')[-1].strip()
+        return grepped
+
     # _____ execute_create ______
     def execute_create(tablename, cols_and_types):
         con.execute( _create_table_statement(tablename, cols_and_types) )
@@ -57,6 +64,8 @@ def create_database():
     con = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES
             , isolation_level=None, uri=True)
     attach_spyu(con)
+    con.create_function("grep_freq", 1, grep_freq)
+
     con.execute("create table offers ( offerRowID INTEGER PRIMARY KEY"
         " AUTOINCREMENT NOT NULL, hash TEXT, address TEXT, ts timestamp"
         ", extra TEXT DEFAULT '')")

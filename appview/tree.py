@@ -224,7 +224,10 @@ class CustomTreeview(ttk.Treeview):
         t = ()
         for index in range(3, len(self._heading_map)):
             heading_index = self._heading_map[index]
-            t+=(self._kheadings_sql_paths[heading_index],)
+            sql_path=self._kheadings_sql_paths[heading_index]
+            if sql_path == 'modelname':
+                sql_path = 'freq' # kludge
+            t+=(sql_path,)
             # debug.dlog(t)
         return t
 
@@ -246,7 +249,6 @@ class CustomTreeview(ttk.Treeview):
             else:
                 if self._heading_map[offset] == int(self.Field.model):
                     self.column(offset, stretch=YES, width=300)
-                    print("300")
                 elif self._heading_map[offset] == int(self.Field.name):
                     self.column(offset, stretch=YES, width=125)
                 else:
