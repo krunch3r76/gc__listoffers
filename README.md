@@ -32,8 +32,8 @@ From github.com:krunch3r76/gc__listoffers
 ```bash
 (gc__listoffers)$ git checkout main
 (gc__listoffers)$ git reset --hard HEAD
-(gc__listoffers)$ git clean -dfx
 (gc__listoffers)$ git pull
+(gc__listoffers)$ git clean -dfx
 (gc__listoffers)$ git checkout v0.4.5
 ```
 # usage
@@ -49,14 +49,14 @@ $ cd gc__listoffers
 ./gc__listoffers$ python3 -m venv myvenv
 ./gc__listoffers$ . myvenv/bin/activate
 (myvenv) ./gc__listoffers$ pip install yapapi
-(myvenv) ./gc__listoffers$ python3 application.py
+(myvenv) ./gc__listoffers$ python3 gc__listoffers.py
 ```
 On Windows:
 ```cmd
 .\gc__listoffers> python.exe -m venv myvenv
 .\gc__listoffers> .\myvenv\Scripts\activate
 (myvenv) .\gc__listoffers> pip install yapapi
-(myvenv) .\gc__listoffers> python application.py
+(myvenv) .\gc__listoffers> python gc__listoffers.py
 ```
 
 # how to interpet the interface
@@ -93,10 +93,10 @@ see offer details via the contextual menu system!
 ```bash
 # on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
 $ export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
-(server) ./gc__listoffers (myvenv) $ python3 application.py serve localhost 8000
+(server) ./gc__listoffers (myvenv) $ python3 gc__listoffers.py serve localhost 8000
 
 # on the remote machine (Windows okay)
-(client) ./gc__listoffers $ python3 application.py client <ip-address-of-server> 8000
+(client) ./gc__listoffers $ python3 gc__listoffers.py client <ip-address-of-server> 8000
 ```
 
 ## what is an app key?
@@ -122,7 +122,7 @@ $ yagna app-key list --json
   ]
 }
 $ export YAGNA_APPKEY=591184ff4e7d495aa32ce16c0c72228a # use your key not mine
-$ python3 ./application.py
+$ python3 ./gc__listoffers.py
 ```
 
 # TODO
