@@ -15,6 +15,11 @@ https://user-images.githubusercontent.com/46289600/148477831-0c024de3-757d-420d-
 
 this video demonstrates how gc__listoffers is intended to be used by requestors to have better control. it illustrates functionality utilizing two other projects of mine: gc__filterms and entropythief. please see my pinned repositories for details.
 
+https://user-images.githubusercontent.com/46289600/155652172-654b37b5-7669-4f1c-bb18-b47fe8bc4053.mp4
+
+this video demonstrates interop with gc_spyu to add model information
+
+
 # usage
 ## ensure python3-tk is installed
 ```bash
