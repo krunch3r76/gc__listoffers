@@ -30,9 +30,11 @@ From github.com:krunch3r76/gc__listoffers
 
 # upgrade installation to latest tag, wiping current installation
 ```bash
-(gc_listoffers)$ git clean -dfx
-(gc_listoffers)$ git pull
-(gc_listoffers)$ git checkout v0.4.5
+(gc__listoffers)$ git checkout main
+(gc__listoffers)$ git reset --hard HEAD
+(gc__listoffers)$ git clean -dfx
+(gc__listoffers)$ git pull
+(gc__listoffers)$ git checkout v0.4.5
 ```
 # usage
 ## ensure python3-tk is installed
