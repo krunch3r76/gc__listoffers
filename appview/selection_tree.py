@@ -5,32 +5,35 @@ import enum
 
 import debug
 
+
 class SelectionTreeview(ttk.Treeview):
     """
     notes:
         headings are not displayed by default
     """
-    class Field(enum.IntEnum):
-        offerRowID=0
-        name=1
-        address=2
 
-    _kHeadings = ('offerRowId', 'name', 'address')
+    class Field(enum.IntEnum):
+        offerRowID = 0
+        name = 1
+        address = 2
+
+    _kHeadings = ("offerRowId", "name", "address")
     _gridinfo = None
+
     def __init__(self, ctx, *args, **kwargs):
-        #kwargs['columns']=self._kHeadings
+        # kwargs['columns']=self._kHeadings
         super().__init__(*args, **kwargs)
         self._ctx = ctx
 
-        self['columns']=self._kHeadings
-        self['selectmode']='none'
-        self.column('#0', width=0, stretch=NO)
+        self["columns"] = self._kHeadings
+        self["selectmode"] = "none"
+        self.column("#0", width=0, stretch=NO)
         self.column(0, width=0, stretch=NO)
         for i in range(1, len(self._kHeadings)):
-            self.column(i, width=80, anchor='w', stretch=YES)
-            self.heading(i, text=self._kHeadings[i], anchor='w')
+            self.column(i, width=80, anchor="w", stretch=YES)
+            self.heading(i, text=self._kHeadings[i], anchor="w")
 
-        self['show']='tree'
+        self["show"] = "tree"
 
     def regrid(self):
         assert self._gridinfo != None
@@ -53,12 +56,12 @@ class SelectionTreeview(ttk.Treeview):
         """replace the list with input values"""
         self.clearit()
         for values in val_list:
-            self.insert('', 'end', values=values)
+            self.insert("", "end", values=values)
 
     def get_rows(self):
         """return a list of rows as tuples where the first element is guaranteed to be the node address"""
         rv = list()
-        children=self.get_children('')
+        children = self.get_children("")
         for childitem in children:
-            rv.append(tuple(self.item(childitem)['values'][1:]))
+            rv.append(tuple(self.item(childitem)["values"][1:]))
         return rv

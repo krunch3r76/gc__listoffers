@@ -4,6 +4,7 @@
 import sys
 import pathlib
 
+
 def get_datadir() -> pathlib.Path:
 
     """
@@ -23,6 +24,7 @@ def get_datadir() -> pathlib.Path:
         return home / ".local/share"
     elif sys.platform == "darwin":
         return home / "Library/Application Support"
+
 
 # create your program's directory
 

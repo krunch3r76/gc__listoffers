@@ -1,6 +1,6 @@
 # lookup.py
 # interact with stats/yagna api to download the text of the current offers
-import sys # debug
+import sys  # debug
 
 import asyncio
 from asyncio import TimeoutError
@@ -22,25 +22,21 @@ from dataclasses import dataclass
 
 import multiprocessing
 import urllib.request
+
 examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
-
-
-
 
 
 @dataclass
 class MyPayload(yapapi.payload.Payload):
     """custom payload for demand builder that filters for vm runtimes only"""
+
     """
     required by: _list_offers
     """
     runtime: str = yapapi.props.base.constraint(
-            yapapi.props.inf.INF_RUNTIME_NAME
-            , default=yapapi.props.inf.RUNTIME_VM)
-
-
-
+        yapapi.props.inf.INF_RUNTIME_NAME, default=yapapi.props.inf.RUNTIME_VM
+    )
 
 
 async def _list_offers(subnet_tag: str):
@@ -52,54 +48,50 @@ async def _list_offers(subnet_tag: str):
     post: none
     """
     # fp = open("debugmsg.txt", "w")
-    conf = Configuration() # this configures access to the yagna daemon
-    #using the environment appkey
+    conf = Configuration()  # this configures access to the yagna daemon
+    # using the environment appkey
     async with conf.market() as client:
         market_api = Market(client)
         dbuild = DemandBuilder()
-        dbuild.add(yp.NodeInfo(name="some scanning node"
-            , subnet_tag=subnet_tag))
+        dbuild.add(yp.NodeInfo(name="some scanning node", subnet_tag=subnet_tag))
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
         await dbuild.decorate(MyPayload())
         debug.dlog(dbuild)
         offers = []
         offer_ids_seen = set()
-        dupcount=0
+        dupcount = 0
         try:
-            async with market_api.subscribe(dbuild.properties
-                    , dbuild.constraints) as subscription:
+            async with market_api.subscribe(
+                dbuild.properties, dbuild.constraints
+            ) as subscription:
                 offer_d = dict()
                 ai = subscription.events().__aiter__()
-                timed_out=False
+                timed_out = False
                 while not timed_out:
                     offer_d.clear()
                     try:
                         event = await asyncio.wait_for(
-                                ai.__anext__()
-                                , timeout=12
-                            ) # <class 'yapapi.rest.market.OfferProposal'>
-                        offer_d["offer-id"]=event.id
+                            ai.__anext__(), timeout=12
+                        )  # <class 'yapapi.rest.market.OfferProposal'>
+                        offer_d["offer-id"] = event.id
 
                         if offer_d["offer-id"] not in offer_ids_seen:
                             offer_ids_seen.add(offer_d["offer-id"])
-                            offer_d["timestamp"]=datetime.now() # note, naive
-                            offer_d["issuer-address"]=event.issuer
-                            offer_d["props"]=event.props # dict
+                            offer_d["timestamp"] = datetime.now()  # note, naive
+                            offer_d["issuer-address"] = event.issuer
+                            offer_d["props"] = event.props  # dict
                             offers.append(dict(offer_d))
                             # a dict copy, i.e. with a unique handle
                         else:
-                            dupcount+=1
+                            dupcount += 1
                             debug.dlog(f"duplicate count: {dupcount}")
                     except TimeoutError:
-                        timed_out=True
+                        timed_out = True
             debug.dlog(f"number of offer_ids_seen: {len(offer_ids_seen)}")
             return offers
 
         except ya_market.exceptions.ApiException as e:
             raise e
-
-
-
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
@@ -114,42 +106,43 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     offers = []
     try:
         with urllib.request.urlopen(
-                'https://api.stats.golem.network/v1/network/online')  \
-                        as response:
-            debug.dlog(f"stats http response status: {response.status}" \
-                    + f" with reason phrase: {response.msg}",1)
-            result_list = json.loads(response.read().decode('utf-8'))
+            "https://api.stats.golem.network/v1/network/online"
+        ) as response:
+            debug.dlog(
+                f"stats http response status: {response.status}"
+                + f" with reason phrase: {response.msg}",
+                1,
+            )
+            result_list = json.loads(response.read().decode("utf-8"))
     except Exception as e:
         debug.dlog(f"exception: {e}")
-        offers = ['error']
+        offers = ["error"]
     else:
-        offer_d=dict()
+        offer_d = dict()
         import pprint
+
         for result in result_list:
-            props = result['data']
+            props = result["data"]
             # consider processing result['online'] which
             # so far is invariably true
-            if props['golem.runtime.name']=='vm' and \
-                props['golem.node.debug.subnet']==subnet_tag:
-                offer_d["timestamp"] \
-                    =datetime.fromisoformat(result['updated_at'])
-                offer_d["offer-id"]=0
-                offer_d["issuer-address"]=result['node_id']
-                offer_d["props"]=props
-                offer_d["earnings_total"]=result['earnings_total']
-                offer_d["last_benchmark"]=result['last_benchmark']
+            if (
+                props["golem.runtime.name"] == "vm"
+                and props["golem.node.debug.subnet"] == subnet_tag
+            ):
+                offer_d["timestamp"] = datetime.fromisoformat(result["updated_at"])
+                offer_d["offer-id"] = 0
+                offer_d["issuer-address"] = result["node_id"]
+                offer_d["props"] = props
+                offer_d["earnings_total"] = result["earnings_total"]
+                offer_d["last_benchmark"] = result["last_benchmark"]
                 offers.append(offer_d.copy())
                 offer_d.clear()
 
     send_end.send(offers)
 
 
-
-
-
-
 async def list_offers(subnet_tag: str):
-    """query stats api otherwise scan yagna for offers then 
+    """query stats api otherwise scan yagna for offers then
     return offers as a list of dictionary objects"""
 
     """
@@ -166,8 +159,9 @@ async def list_offers(subnet_tag: str):
 
     # launch non-asynchronous routine for https to stats
     recv_end, send_end = multiprocessing.Pipe(False)
-    p = multiprocessing.Process(target=_list_offers_on_stats
-            , args=(send_end, subnet_tag), daemon=True)
+    p = multiprocessing.Process(
+        target=_list_offers_on_stats, args=(send_end, subnet_tag), daemon=True
+    )
     p.start()
 
     # asynchronously await a response from over pipe
@@ -175,18 +169,15 @@ async def list_offers(subnet_tag: str):
         await asyncio.sleep(0.01)
     offers = recv_end.recv()
 
-    if len(offers) > 0 and offers[0]=='error': # review TODO
-        fallback=True
+    if len(offers) > 0 and offers[0] == "error":  # review TODO
+        fallback = True
 
     if fallback:
         debug.dlog("fallback to offer probe")
         try:
-            offers = await _list_offers(
-                        subnet_tag
-                        )
+            offers = await _list_offers(subnet_tag)
         except yapapi.rest.configuration.MissingConfiguration as e:
-            debug.dlog("raising "
-                "yapapi.rest.configuration.MissingConfiguration")
+            debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
             raise e
         except ya_market.exceptions.ApiException as e:
             raise e
@@ -197,4 +188,3 @@ async def list_offers(subnet_tag: str):
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
     return offers
-

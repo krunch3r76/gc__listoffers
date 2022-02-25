@@ -1,2 +1,1 @@
-from . appview import AppView
-
+from .appview import AppView
