@@ -22,7 +22,7 @@ this video demonstrates interop with gc_spyu to add model information
 
 # check for new / latest release tag
 ```bash
-(gc_spyu)$ git fetch
+(gc_listoffers)$ git fetch
 From github.com:krunch3r76/gc__listoffers
    d87b579..01f72be  master     -> origin/master
  * [new tag]         v0.4.5     -> v0.4.5
@@ -30,9 +30,9 @@ From github.com:krunch3r76/gc__listoffers
 
 # upgrade installation to latest tag, wiping current installation
 ```bash
-(gc_spyu)$ git clean -dfx
-(gc_spyu)$ git pull
-(gc_spyu)$ git checkout v0.4.5
+(gc_listoffers)$ git clean -dfx
+(gc_listoffers)$ git pull
+(gc_listoffers)$ git checkout v0.4.5
 ```
 # usage
 ## ensure python3-tk is installed
