@@ -197,3 +197,46 @@ class DurSecFrame:
         self.cb.state(["!disabled"])
         self._refresh_entry_state()
         # self.durationsec_entry.state(['!disabled'])
+
+
+class FeatureEntryFrame:
+    def __init__(self, master, *args, **kwargs):
+        self.master = master
+        self.w = ttk.Frame(*args, **kwargs)
+
+        self.cbFeatureEntryVar = StringVar()
+        self.cb = ttk.Checkbutton(
+            self.w,
+            text="feature",
+            command=self.master._cb_feature_checkbutton,
+            onvalue="feature",
+            offvalue="nofeature",
+            variable=self.cbFeatureEntryVar,
+            padding=(0, 0, 5, 0),
+        )
+        #     ...entry
+        self.feature_entry = ttk.Entry(
+            self.w, textvariable=self.master.featureEntryVar, width=12
+        )
+        self.feature_entry.state(["disabled"])
+        self.feature_entry.bind("<FocusOut>", lambda e: self.master._update_cmd())
+        self.feature_entry.bind("<Return>", lambda e: self.master.root.focus_set())
+        # self.durationsec_entry.bind('<Return>', lambda e: self.master._update_cmd())
+
+        self.cb.grid(column=0, row=0, sticky="w")
+        self.feature_entry.grid(column=1, row=0, stick="w")
+
+    def _refresh_entry_state(self):
+        if self.cbFeatureEntryVar.get() == "feature":
+            self.feature_entry.state(["!disabled"])
+        else:
+            self.feature_entry.state(["disabled"])
+
+    def disable(self):
+        self.cb.state(["disabled"])
+        self.feature_entry.state(["disabled"])
+
+    def enable(self):
+        self.cb.state(["!disabled"])
+        self._refresh_entry_state()
+        # self.durationsec_entry.state(['!disabled'])

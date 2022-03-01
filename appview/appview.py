@@ -169,6 +169,7 @@ class AppView:
         # setup widgets and their linked variables
         self.cpusec_entry_var = StringVar(value="0.1")
         self.durationsec_entry_var = StringVar(value="0.02")
+        self.featureEntryVar=StringVar(value="")
         self.subnet_var = StringVar()
         self.other_entry_var = StringVar()
         # countlabel
@@ -292,7 +293,6 @@ class AppView:
         subbaseframe.columnconfigure(0, weight=1)
         subbaseframe.columnconfigure(1, weight=1)
         subbaseframe.columnconfigure(2, weight=1)
-        # subbaseframe.columnconfigure(3, weight=1)
 
         self.__count_selected = StringVar()
         # subbaseframe++label_selectioncount
@@ -311,12 +311,16 @@ class AppView:
         filterframe = ttk.Frame(subbaseframe)
         filterframe.columnconfigure(0, weight=1)
         filterframe.columnconfigure(1, weight=1)
+        filterframe.columnconfigure(2, weight=1)
         # subbaseframe++cpusec_entryframe
         self.cpusec_entryframe = CPUSecFrame(self, filterframe)
         self.cpusec_entryframe.w.grid(column=0, row=0, sticky="e")
         # subbaseframe++dursec_entryframe
         self.dursec_entryframe = DurSecFrame(self, filterframe)
         self.dursec_entryframe.w.grid(column=1, row=0, sticky="w")
+
+        self.feature_entryframe = FeatureEntryFrame(self, filterframe)
+        self.feature_entryframe.w.grid(column=2, row=0, sticky="e")
 
         filterframe["borderwidth"] = 2
         # filterframe['relief']='ridge'
@@ -416,6 +420,7 @@ class AppView:
 
                 self.cpusec_entryframe.disable()
                 self.dursec_entryframe.disable()
+                self.feature_entryframe.disable()
                 self.version_cb.state(["disabled"])
                 disabled = True
             else:
@@ -428,6 +433,7 @@ class AppView:
 
                 self.cpusec_entryframe.enable()
                 self.dursec_entryframe.enable()
+                self.feature_entryframe.enable()
                 self.version_cb.state(["!disabled"])
 
                 disabled = False
@@ -666,7 +672,7 @@ select 'node.id'.offerRowID
 , 'node.id'.name
 , 'offers'.address
 , 'com.pricing.model.linear.coeffs'.cpu_sec
-, 'com.pricing.model.linear.coeffs'.duration_sec 
+, 'com.pricing.model.linear.coeffs'.duration_sec
 , 'com.pricing.model.linear.coeffs'.fixed
 , 'inf.cpu'.cores
 , 'inf.cpu'.threads
@@ -682,11 +688,11 @@ select 'node.id'.offerRowID
    NATURAL JOIN spyu.nodeInfo
     WHERE provider.addr = 'offers'.address) AS modelname
 ) AS freq
+, 'com.payment.platform'.kind
+,   'inf.cpu'.[capabilities] AS caps
         """
-
         ss = (
-            ss + ", 'com.payment.platform'.kind"
-            " FROM 'node.id'"
+            ss + " FROM 'node.id'"
             " JOIN 'offers' USING (offerRowID)"
             " JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)"
             " JOIN 'runtime'  USING (offerRowID)"
@@ -713,6 +719,17 @@ select 'node.id'.offerRowID
         ):
             ss += f" AND 'com.pricing.model.linear.coeffs'.duration_sec <=" \
             f" {float(self.durationsec_entry_var.get())/(3600+0.0000001)}"
+
+        if (
+            self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
+            and self.featureEntryVar.get()
+            ):
+                ss += ''
+                ss += (" AND EXISTS (SELECT * FROM json_each(caps) WHERE " 
+                 f"json_each.value LIKE '%{self.featureEntryVar.get()}%')"
+                )
+                # ss += " AND EXISTS (SELECT * FROM json_each(caps))"
+
 
         if self.order_by_last:
             ss += " GROUP BY 'offers'.address"
@@ -836,9 +853,17 @@ select 'node.id'.offerRowID
                     self.refreshFrame._toggle_refresh_controls()
                 # may need to call _update with 0 results...
             else:
-                # debug.dlog(f"model results: {results}\n", 100)
+                debug.dlog(f"model results (first): {results[0]}\n", 10)
                 self._update(results, refresh)
                 # toggle_refresh_controls down the line
+
+    # TODO abstract and consolidate common code
+    def _cb_feature_checkbutton(self):
+        if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
+            self.feature_entryframe.feature_entry.state(["!disabled"])
+        else:
+            self.feature_entryframe.feature_entry.state(["disabled"])
+            self._update_cmd()
 
     def _cb_cpusec_checkbutton(self):
         if self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu":

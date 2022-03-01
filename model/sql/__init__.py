@@ -203,7 +203,7 @@ def build_database(con, offers):
                     "UPDATE 'inf.cpu' SET ( 'capabilities', 'model',"
                     "'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?",
                     (
-                        str(props["golem.inf.cpu.capabilities"]),
+                        json.dumps(props["golem.inf.cpu.capabilities"]),
                         props["golem.inf.cpu.model"],
                         props["golem.inf.cpu.vendor"],
                         lastrow,
