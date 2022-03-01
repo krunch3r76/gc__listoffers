@@ -689,8 +689,10 @@ select 'node.id'.offerRowID
     WHERE provider.addr = 'offers'.address) AS modelname
 ) AS freq
 , 'com.payment.platform'.kind
-,   'inf.cpu'.[capabilities] AS caps
+, (SELECT json_array(*) FROM json_each('inf.cpu'.[capabilities])
+    WHERE json_each.value LIKE '%avx')
         """
+#,   'inf.cpu'.[capabilities] AS caps
         ss = (
             ss + " FROM 'node.id'"
             " JOIN 'offers' USING (offerRowID)"
@@ -725,10 +727,9 @@ select 'node.id'.offerRowID
             and self.featureEntryVar.get()
             ):
                 ss += ''
-                ss += (" AND EXISTS (SELECT * FROM json_each(caps) WHERE " 
-                 f"json_each.value LIKE '%{self.featureEntryVar.get()}%')"
-                )
-                # ss += " AND EXISTS (SELECT * FROM json_each(caps))"
+                # ss += (" AND EXISTS (SELECT * FROM json_each(caps) WHERE "
+                #  f"json_each.value LIKE '%{self.featureEntryVar.get()}%')"
+                # )
 
 
         if self.order_by_last:
