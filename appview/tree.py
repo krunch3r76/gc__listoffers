@@ -25,6 +25,7 @@ class CustomTreeview(ttk.Treeview):
         threads = 7
         version = 8
         model = 9
+        features = 10
 
     class StateHolder:
         __swapping = False
@@ -71,6 +72,7 @@ class CustomTreeview(ttk.Treeview):
         "threads",  # 7
         "version",  # 8
         "modelname",  # 9
+        "features",
     )
 
     _kheadings_sql_paths = (
@@ -84,6 +86,7 @@ class CustomTreeview(ttk.Treeview):
         "'inf.cpu'.threads",
         "'runtime'.version",
         "modelname",
+        "filteredFeatures",
     )
 
     _heading_map = [num for num in range(len(_kheadings))]
@@ -105,6 +108,7 @@ class CustomTreeview(ttk.Treeview):
         "threads": {},
         "version": {},
         "modelname": {},
+        "features": {}
     }
 
     def change_visibility(self, colnum, whetherVisible):
