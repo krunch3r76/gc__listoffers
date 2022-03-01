@@ -667,8 +667,9 @@ class AppView:
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
         and return text"""
-        feature_filter='p'
-
+        feature_filter=''
+        if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
+            feature_filter=self.featureEntryVar.get()
         ss = """
 select 'node.id'.offerRowID
 , 'node.id'.name
@@ -692,11 +693,13 @@ select 'node.id'.offerRowID
 ) AS freq
 , 'com.payment.platform'.kind
         """
-        ss+= (
-                ", ( SELECT json_array(*) FROM (SELECT json_array(value) FROM json_each('inf.cpu'.[capabilities]) "
-                f"WHERE json_each.value LIKE '%{feature_filter}%')"
-                ")"
-                )
+
+        ss+=f""",(
+                SELECT json_group_array(value) FROM
+                ( SELECT value FROM json_each('inf.cpu'.[capabilities])
+                WHERE json_each.value LIKE '%{feature_filter}%' )
+                ) AS filteredFeatures
+        """
 
 #,   'inf.cpu'.[capabilities] AS caps
         ss = (
@@ -733,6 +736,9 @@ select 'node.id'.offerRowID
             and self.featureEntryVar.get()
             ):
                 ss += ''
+                ss +=f"""
+                 AND json_array_length(filteredFeatures) > 0
+                """
                 # ss += (" AND EXISTS (SELECT * FROM json_each(caps) WHERE "
                 #  f"json_each.value LIKE '%{self.featureEntryVar.get()}%')"
                 # )
