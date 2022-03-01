@@ -523,7 +523,7 @@ class AppView:
 
         for result in results:
             result = list(result)
-            currency_unit = result[-1].split("-")[-1]
+            currency_unit = result[13].split("-")[-1]
             # one of { 'tglm', 'glm' }
             self.tree.insert(
                 "",
@@ -667,6 +667,8 @@ class AppView:
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
         and return text"""
+        feature_filter='p'
+
         ss = """
 select 'node.id'.offerRowID
 , 'node.id'.name
@@ -689,9 +691,13 @@ select 'node.id'.offerRowID
     WHERE provider.addr = 'offers'.address) AS modelname
 ) AS freq
 , 'com.payment.platform'.kind
-, (SELECT json_array(*) FROM json_each('inf.cpu'.[capabilities])
-    WHERE json_each.value LIKE '%avx')
         """
+        ss+= (
+                ", ( SELECT json_array(*) FROM (SELECT json_array(value) FROM json_each('inf.cpu'.[capabilities]) "
+                f"WHERE json_each.value LIKE '%{feature_filter}%')"
+                ")"
+                )
+
 #,   'inf.cpu'.[capabilities] AS caps
         ss = (
             ss + " FROM 'node.id'"
