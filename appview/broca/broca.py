@@ -58,9 +58,9 @@ dialog3 = {
 dialogs.append(dialog3)
 
 dialog4 = {
-    "script": "okay, the offers i found are displayed in the table" " above.",
+    "script": "okay, the offers i found are displayed in the table" " above. you can press ENTER on the filter fields to apply a particular filter.",
     "substitutions": {
-        "okay": ["super", "great", "excellent", "yipee"],
+        "okay": ["super", "great", "excellent", "yipee", "perfect"],
         "found": ["discovered"],
         "displayed": ["represented"],
         "count": ["total", "number"],
