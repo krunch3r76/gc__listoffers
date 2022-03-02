@@ -156,7 +156,7 @@ class CustomTreeview(ttk.Treeview):
         # debug.dlog(f"internal columns: {self['columns']}")
         self.last_cleared_selection = list()
 
-        self._update_headings()
+        # self._update_headings()
 
         self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
         self.s.grid(row=0, column=1, sticky="ns")
@@ -228,25 +228,22 @@ class CustomTreeview(ttk.Treeview):
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
-        #if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-        #    feature_filter=self.featureEntryVar.get()
-        # try:
-        #     debug.dlog(type(self._ctx))
-        #     debug.dlog(type(self._ctx.feature_entryframe))
-        #     if self._ctx.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-        #         self.change_visibility(10, True)
-        #     else:
-        #         self.change_visibility(10, False)
-        # except:
-        #     pass
+        feature_filter=''
+        debug.dlog(f"----->{self._ctx.feature_entryframe.cbFeatureEntryVar.get()}")
+        if self._ctx.feature_entryframe.cbFeatureEntryVar.get() == "feature":
+            feature_filter=self._ctx.featureEntryVar.get()
+            self.change_visibility(10, True)
+        else:
+            self.change_visibility(10, False)
 
         self.grid_remove()
         self._ctx.treeframe.grid_remove()
         for offset, heading_index in enumerate(self._heading_map):
             heading_text = self._kheadings[heading_index]
-            stretch = YES if offset not in self._headings_invisible else NO
+            stretch = YES if self._heading_map[offset] not in self._headings_invisible else NO
+            debug.dlog(self._headings_invisible)
             if not stretch:
-                self.column(offset, stretch=stretch, width=0)
+                self.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
                     self.column(offset, stretch=YES, width=200)

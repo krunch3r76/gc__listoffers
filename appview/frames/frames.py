@@ -214,6 +214,7 @@ class FeatureEntryFrame:
             variable=self.cbFeatureEntryVar,
             padding=(0, 0, 5, 0),
         )
+        self.cbFeatureEntryVar.set("nofeature")
         #     ...entry
         self.feature_entry = ttk.Entry(
             self.w, textvariable=self.master.featureEntryVar, width=12

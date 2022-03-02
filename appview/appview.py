@@ -210,7 +210,6 @@ class AppView:
         # treeframe--selection_tree
         self.selection_tree = SelectionTreeview(self, treeframe)
 
-        self.tree.grid(column=0, row=0, sticky="news")
         self.selection_tree.pseudogrid(column=2, row=0, sticky="nwes")
         treeframe.grid(column=0, row=0, sticky="news")
         # /treeframe
@@ -347,6 +346,10 @@ class AppView:
         self.filtermswin = None
         self._states = dict()
         self.whetherUpdating = False
+
+        # kludge, postpone update headings until all sub frames made
+        self.tree._update_headings()
+        self.tree.grid(column=0, row=0, sticky="news")
 
     @property
     def cursorOfferRowID(self):
@@ -520,7 +523,7 @@ class AppView:
         """
         if refresh:
             self.session_resultcount = len(results)
-
+        self.tree._update_headings()
         for result in results:
             result = list(result)
             currency_unit = result[13].split("-")[-1]
@@ -622,7 +625,7 @@ class AppView:
             return
 
         self.whetherUpdating = True
-
+        self.tree._update_headings()
         if self.cursorOfferRowID == None:
             self.cursorOfferRowID = self.tree.get_selected_rowid()
 
