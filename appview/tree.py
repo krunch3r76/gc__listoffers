@@ -95,7 +95,8 @@ class CustomTreeview(ttk.Treeview):
         [str(num) for num in range(len(_kheadings))]
     )  # e.g. ('0', '1', '2', ...)
 
-    _headings_invisible = {0, 8}
+    _headings_invisible = {0, 8, 10}
+
     #    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}
     # , {"sort_on": "'offers'.address"}, {}, {}
     _update_cmd_dict = {
@@ -227,6 +228,18 @@ class CustomTreeview(ttk.Treeview):
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
+        #if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
+        #    feature_filter=self.featureEntryVar.get()
+        try:
+            debug.dlog(type(self._ctx))
+            debug.dlog(type(self._ctx.feature_entryframe))
+            if self._ctx.feature_entryframe.cbFeatureEntryVar.get() == "feature":
+                self.change_visibility(10, True)
+            else:
+                self.change_visibility(10, False)
+        except:
+            pass
+
         self.grid_remove()
         self._ctx.treeframe.grid_remove()
         for offset, heading_index in enumerate(self._heading_map):
@@ -236,9 +249,9 @@ class CustomTreeview(ttk.Treeview):
                 self.column(offset, stretch=stretch, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
-                    self.column(offset, stretch=YES, width=300)
+                    self.column(offset, stretch=YES, width=200)
                 elif self._heading_map[offset] == int(self.Field.name):
-                    self.column(offset, stretch=YES, width=125)
+                    self.column(offset, stretch=YES, width=75)
                 else:
                     self.column(offset, stretch=YES, width=0)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")

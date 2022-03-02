@@ -539,6 +539,7 @@ class AppView:
                     result[7],
                     result[8],
                     result[11],
+                    result[14],
                 ),
                 currency_unit=currency_unit,
             )
@@ -701,7 +702,6 @@ select 'node.id'.offerRowID
                 ) AS filteredFeatures
         """
 
-#,   'inf.cpu'.[capabilities] AS caps
         ss = (
             ss + " FROM 'node.id'"
             " JOIN 'offers' USING (offerRowID)"
@@ -739,9 +739,6 @@ select 'node.id'.offerRowID
                 ss +=f"""
                  AND json_array_length(filteredFeatures) > 0
                 """
-                # ss += (" AND EXISTS (SELECT * FROM json_each(caps) WHERE "
-                #  f"json_each.value LIKE '%{self.featureEntryVar.get()}%')"
-                # )
 
 
         if self.order_by_last:
