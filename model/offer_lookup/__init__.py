@@ -3,15 +3,19 @@ from .lookup import list_offers
 import sys  # debug
 import json
 import debug
-import aiohttp
 
+
+import importlib
+yapapi_loader = importlib.util.find_spec("yapapi")
+if yapapi_loader:
+    import aiohttp
+    import yapapi
+    import ya_market
 # from . lookupoffers import lookupoffers
 
 #
 # this creates a dependency on yapapi and may be avoided using
 # custom exceptions
-import yapapi
-import ya_market
 
 #
 

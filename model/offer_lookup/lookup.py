@@ -10,14 +10,18 @@ import sys
 import pathlib
 import debug
 
-import ya_market
-from yapapi import props as yp
-from yapapi.props import inf
-from yapapi.log import enable_default_logger
-from yapapi.props.builder import DemandBuilder
-from yapapi.rest import Configuration, Market, Activity, Payment  # noqa
-import yapapi
-import aiohttp
+import importlib
+yapapi_loader = importlib.util.find_spec("yapapi")
+if yapapi_loader:
+    import ya_market
+    from yapapi import props as yp
+    from yapapi.props import inf
+    from yapapi.log import enable_default_logger
+    from yapapi.props.builder import DemandBuilder
+    from yapapi.rest import Configuration, Market, Activity, Payment  # noqa
+    import yapapi
+    import aiohttp
+
 from dataclasses import dataclass
 
 import multiprocessing
@@ -27,16 +31,6 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-@dataclass
-class MyPayload(yapapi.payload.Payload):
-    """custom payload for demand builder that filters for vm runtimes only"""
-
-    """
-    required by: _list_offers
-    """
-    runtime: str = yapapi.props.base.constraint(
-        yapapi.props.inf.INF_RUNTIME_NAME, default=yapapi.props.inf.RUNTIME_VM
-    )
 
 
 async def _list_offers(subnet_tag: str):
@@ -47,6 +41,18 @@ async def _list_offers(subnet_tag: str):
     out: list of offer dictionary objects
     post: none
     """
+
+    @dataclass
+    class MyPayload(yapapi.payload.Payload):
+        """custom payload for demand builder that filters for vm runtimes only"""
+
+        """
+        required by: _list_offers
+        """
+        runtime: str = yapapi.props.base.constraint(
+            yapapi.props.inf.INF_RUNTIME_NAME, default=yapapi.props.inf.RUNTIME_VM
+        )
+
     # fp = open("debugmsg.txt", "w")
     conf = Configuration()  # this configures access to the yagna daemon
     # using the environment appkey
@@ -172,7 +178,7 @@ async def list_offers(subnet_tag: str):
     if len(offers) > 0 and offers[0] == "error":  # review TODO
         fallback = True
 
-    if fallback:
+    if fallback and yapapi_loader:
         debug.dlog("fallback to offer probe")
         try:
             offers = await _list_offers(subnet_tag)
