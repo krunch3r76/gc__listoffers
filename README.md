@@ -46,10 +46,7 @@ From github.com:krunch3r76/gc__listoffers
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
 ./gc__listoffers$ git checkout v0.4.9
-./gc__listoffers$ python3 -m venv myvenv
-./gc__listoffers$ . myvenv/bin/activate
-(myvenv) ./gc__listoffers$ pip install yapapi
-(myvenv) ./gc__listoffers$ python3 gc__listoffers.py
+./gc__listoffers$ python3 gc__listoffers.py
 ```
 On Windows:
 ```cmd
