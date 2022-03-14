@@ -202,7 +202,7 @@ class AppView:
         treeframe.rowconfigure(0, weight=1)  # resize by same factor as
         # root height
         treeframe.columnconfigure(2, weight=0)
-        treeframe["padding"] = (0, 0, 0, 5)
+        treeframe["padding"] = (0, 0, 0, 10)
 
         # treeframe--tree
         self.tree = CustomTreeview(self, treeframe)
