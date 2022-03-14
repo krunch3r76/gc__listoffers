@@ -11,7 +11,9 @@ import pathlib
 import debug
 
 import importlib
+
 yapapi_loader = importlib.util.find_spec("yapapi")
+
 if yapapi_loader:
     import ya_market
     from yapapi import props as yp
@@ -77,22 +79,24 @@ async def _list_offers(subnet_tag: str):
                     offer_d.clear()
                     try:
                         event = await asyncio.wait_for(
-                            ai.__anext__(), timeout=12
+                            ai.__anext__(), timeout=10
                         )  # <class 'yapapi.rest.market.OfferProposal'>
                         offer_d["offer-id"] = event.id
-
                         if offer_d["offer-id"] not in offer_ids_seen:
                             offer_ids_seen.add(offer_d["offer-id"])
                             offer_d["timestamp"] = datetime.now()  # note, naive
                             offer_d["issuer-address"] = event.issuer
                             offer_d["props"] = event.props  # dict
                             offers.append(dict(offer_d))
+                            print(f"unfiltered offers collected so far on all {subnet_tag}:"
+                                    f" {len(offers)}", end="\r")
                             # a dict copy, i.e. with a unique handle
                         else:
                             dupcount += 1
                             debug.dlog(f"duplicate count: {dupcount}")
                     except TimeoutError:
                         timed_out = True
+            print("")
             debug.dlog(f"number of offer_ids_seen: {len(offer_ids_seen)}")
             return offers
 
@@ -162,24 +166,32 @@ async def list_offers(subnet_tag: str):
     """
     offers = None
     fallback = False
+    debugfallback = False # debug
 
-    # launch non-asynchronous routine for https to stats
-    recv_end, send_end = multiprocessing.Pipe(False)
-    p = multiprocessing.Process(
-        target=_list_offers_on_stats, args=(send_end, subnet_tag), daemon=True
-    )
-    p.start()
 
-    # asynchronously await a response from over pipe
-    while not recv_end.poll():
-        await asyncio.sleep(0.01)
-    offers = recv_end.recv()
+    if not debugfallback:
+        # launch non-asynchronous routine for https to stats
+        recv_end, send_end = multiprocessing.Pipe(False)
+        p = multiprocessing.Process(
+            target=_list_offers_on_stats, args=(send_end, subnet_tag), daemon=True
+        )
+        p.start()
+
+        # asynchronously await a response from over pipe
+        while not recv_end.poll():
+            await asyncio.sleep(0.01)
+        offers = recv_end.recv()
+    else:
+        offers=['error']
 
     if len(offers) > 0 and offers[0] == "error":  # review TODO
         fallback = True
 
     if fallback and yapapi_loader:
-        debug.dlog("fallback to offer probe")
+        offers=[]
+        print("there was a problem connecting to stats, falling back to probing."
+                " this might take awhile")
+        debug.dlog("falling back to offer probe")
         try:
             offers = await _list_offers(subnet_tag)
         except yapapi.rest.configuration.MissingConfiguration as e:
@@ -193,4 +205,6 @@ async def list_offers(subnet_tag: str):
             debug.dlog(e)
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
+    elif fallback:
+        offers=[]
     return offers

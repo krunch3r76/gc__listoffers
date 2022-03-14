@@ -852,6 +852,7 @@ select 'node.id'.offerRowID
         else:
             results = msg_in["msg"]
             if len(results) > 1 and results[0] == "error":
+                debug.dlog(f"error results: {results}")
                 if results[1] == "invalid api key":
                     self._rewrite_to_console(fetch_new_dialog(4))
                 elif results[1] == "invalid api key server side":
