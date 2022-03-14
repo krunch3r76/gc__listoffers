@@ -410,13 +410,8 @@ class CustomTreeview(ttk.Treeview):
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
         value_list = list(kwargs["values"])
-        print(type(value_list[-2]))
-        try:
-            if len(value_list[-2].strip()) == 0:
-                value_list[-2]='-'
-        except:
-            print(f"type value_list[-2] is {type(value_list[-2])} and value is {value_list[-2]}")
-                
+        if len(value_list[-2].strip()) == 0:
+            value_list[-2]='-'
         node_address = value_list[CustomTreeview.Field.address]
         value_list[CustomTreeview.Field.address] = value_list[2][:9]
         # currency_unit=value_list[-1]
