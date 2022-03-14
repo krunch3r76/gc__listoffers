@@ -115,17 +115,31 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     """
     offers = []
     try:
-        with urllib.request.urlopen(
-            "https://api.stats.golem.network/v1/network/online"
-        ) as response:
-            debug.dlog(
-                f"stats http response status: {response.status}"
-                + f" with reason phrase: {response.msg}",
-                1,
-            )
-            result_list = json.loads(response.read().decode("utf-8"))
+        debug.dlog("trying stats")
+        try:
+                with urllib.request.urlopen(
+                    "https://api.stats.golem.network/v1/network/online"
+                ) as response:
+                    debug.dlog(
+                        f"stats http response status: {response.status}"
+                        + f" with reason phrase: {response.msg}",
+                        1,
+                    )
+                    result_list = json.loads(response.read().decode("utf-8"))
+        except urllib.error.URLError as e: 
+                if 'CERTIFICATE_VERIFY_FAILED' in e.__str__():
+                        import ssl
+                        ssl._create_default_https_context = ssl._create_unverified_context
+                        with urllib.request.urlopen(
+                            "https://api.stats.golem.network/v1/network/online",
+                        ) as response:
+                            debug.dlog(
+                                f"stats http response status: {response.status}"
+                                + f" with reason phrase: {response.msg}",
+                                1,
+                            )
+                            result_list = json.loads(response.read().decode("utf-8"))
     except Exception as e:
-        debug.dlog(f"exception: {e}")
         offers = ["error"]
     else:
         offer_d = dict()
@@ -153,6 +167,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
 
 async def list_offers(subnet_tag: str):
     """query stats api otherwise scan yagna for offers then
+    debug.dlog("listoffers called")
     return offers as a list of dictionary objects"""
 
     """
@@ -206,7 +221,7 @@ async def list_offers(subnet_tag: str):
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
     elif fallback:
-        print("there was a problem connection to stats and fallback was not"
+        print("there was a problem connecting to stats and fallback was not"
                 " available! make sure you are connected"
                 " to the internet. if so, stats may be unavailable."
                 " you can try running yagna to perform a manual probe.")

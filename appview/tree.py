@@ -252,7 +252,7 @@ class CustomTreeview(ttk.Treeview):
                 elif self._heading_map[offset] == int(self.Field.features):
                     self.column(offset, stretch=YES, width=150)
                 else:
-                    self.column(offset, stretch=YES, width=0)
+                    self.column(offset, stretch=YES)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")
         self._ctx.treeframe.grid()
         self.grid()

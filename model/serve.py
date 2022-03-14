@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import sys
 import debug
 
-offerLookup = OfferLookup()
+# offerLookup = OfferLookup()
 
 
 class HTTPRequestHandler(BaseHTTPRequestHandler):

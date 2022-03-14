@@ -26,7 +26,6 @@ class OfferLookup:
     def __init__(self):
         self._session_id = "1"
         self._con = None
-
     # _-_-_-_- __call __ _-_-_-_-
     async def __call__(self, id_, subnet_tag, sql):
         """find offers, recreate database, execute sql
@@ -47,6 +46,8 @@ class OfferLookup:
                 rows.extend(["error", 401])
             except aiohttp.client_exceptions.ClientConnectorError:
                 rows.extend(["error", 111])
+            except Exception as e:
+                print(f"unhandled exception {e}")
             else:
                 if offers != None:  # kludge
                     if len(offers) > 0:
