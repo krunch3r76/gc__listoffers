@@ -206,7 +206,7 @@ class AppView:
 
         # treeframe--tree
         self.tree = CustomTreeview(self, treeframe)
-
+        self.tree.configure(padding=(0,0,0,15))
         # treeframe--selection_tree
         self.selection_tree = SelectionTreeview(self, treeframe)
 

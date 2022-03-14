@@ -257,6 +257,7 @@ class CustomTreeview(ttk.Treeview):
         self._ctx.treeframe.grid()
         self.grid()
         self.update_idletasks()
+        # self._ctx.selection_tree.pseudogrid()
 
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
