@@ -168,7 +168,7 @@ async def list_offers(subnet_tag: str):
     fallback = False
     debugfallback = False # debug
 
-
+    debug.dlog(f"debugfallback: {debugfallback}",1)
     if not debugfallback:
         # launch non-asynchronous routine for https to stats
         recv_end, send_end = multiprocessing.Pipe(False)
@@ -206,5 +206,7 @@ async def list_offers(subnet_tag: str):
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
     elif fallback:
+        print("there was a problem connection to stats and fallback was not"
+                " available!")
         offers=[]
     return offers

@@ -241,7 +241,7 @@ class CustomTreeview(ttk.Treeview):
         for offset, heading_index in enumerate(self._heading_map):
             heading_text = self._kheadings[heading_index]
             stretch = YES if self._heading_map[offset] not in self._headings_invisible else NO
-            debug.dlog(self._headings_invisible)
+            # debug.dlog(self._headings_invisible)
             if not stretch:
                 self.column(offset, stretch=NO, width=0)
             else:
