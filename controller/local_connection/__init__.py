@@ -44,7 +44,7 @@ class LocalConnection:  # later make subclass of abstract
                 self.q_out.put_nowait(msg_out)
         else:
             errormsg = "no results seen from callback"
-            debug.dlog(errormsg, 0)
+            debug.dlog(errormsg, 1)
             msg = ["error", "no results"]
             msg_out = {"id": signal["id"], "msg": msg}
             self.q_out.put_nowait(msg_out)

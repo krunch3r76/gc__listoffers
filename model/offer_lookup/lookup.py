@@ -207,6 +207,8 @@ async def list_offers(subnet_tag: str):
             debug.dlog(e.__class__.__name__)
     elif fallback:
         print("there was a problem connection to stats and fallback was not"
-                " available!")
+                " available! make sure you are connected"
+                " to the internet. if so, stats may be unavailable."
+                " you can try running yagna to perform a manual probe.")
         offers=[]
     return offers
