@@ -50,10 +50,8 @@ $ cd gc__listoffers
 ```
 On Windows:
 ```cmd
-.\gc__listoffers> python.exe -m venv myvenv
-.\gc__listoffers> .\myvenv\Scripts\activate
-(myvenv) .\gc__listoffers> pip install yapapi
-(myvenv) .\gc__listoffers> python gc__listoffers.py
+REM clone as above
+.\gc__listoffers> python gc__listoffers.py
 ```
 
 # how to interpet the interface
