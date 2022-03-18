@@ -9,6 +9,9 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 **NOTE: you will see yourself listed among the results unless the probe for offers was made manually (non-default)**
 
+# quick install
+head over to releases and download the zip or tar file from the latest release. extract and double click gc__listoffers.py
+
 # video
 
 https://user-images.githubusercontent.com/46289600/148477831-0c024de3-757d-420d-b3f1-4b00336f2a3d.mp4
