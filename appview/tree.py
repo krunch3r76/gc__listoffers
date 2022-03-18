@@ -2,10 +2,14 @@ from tkinter import ttk
 from tkinter import *
 from tkinter import font
 import enum
-
+from collections import namedtuple
+from pprint import pprint, pformat
 import debug
+import statistics
+import bisect
 
-
+PricingData = namedtuple('PricingData', ['cpu', 'env', 'start'])
+PricingQuintiles = namedtuple('PricingQuintiles', ['cpu', 'env', 'start'])
 class CustomTreeview(ttk.Treeview):
     """notes:
     #2 refers to the first column, which is always name
@@ -30,7 +34,7 @@ class CustomTreeview(ttk.Treeview):
     class StateHolder:
         __swapping = False
         __drag_start_column_number = ""
-
+        __inserting=False
         def __init__(self, owner):
             self._owner = owner
 
@@ -48,6 +52,19 @@ class CustomTreeview(ttk.Treeview):
                 )
                 self.__drag_start_column_number = drag_from
             self.__swapping = truthy
+
+        @property
+        def inserting(self):
+            return self.__inserting
+
+        @inserting.setter
+        def inserting(self, truth_value):
+            self.__inserting=truth_value
+            if self.__inserting==False:
+                debug.dlog("insertion complete")
+                self._owner.quintiles('public-beta')
+                # debug.dlog(f"median env {pformat(env_quantiles)}")
+                # debug.dlog(f"median cpu {pformat(cpu_quantiles)}")
 
         @property
         def drag_start_column_number(self):
@@ -162,6 +179,68 @@ class CustomTreeview(ttk.Treeview):
         self.s.grid(row=0, column=1, sticky="ns")
         self["yscrollcommand"] = self.s.set
         self.tag_configure("tglm", foreground="red")
+        self._pricingGlm = [] # named tuples of cpu, env, start
+        self._pricingTglm = [] # named tuples of cpu, env, start
+
+    def quintiles(self, subnet, method='inclusive'):
+        """return named tuples of cpu, env, start quintiles paired with counts"""
+        # ( env_quantiles:PricingQuintiles, env_counts, cpu..., start...)
+        # subnet is public.beta <=> pricingGlm used
+
+        if subnet=='public-beta':
+            pricingCurrency=self._pricingGlm
+        else:
+            pricingCurrency=self.pricing.Tglm
+
+        def __find_counts(quantiles, prices):
+            """count the number of prices <= the first datapoint not greater than each quantile"""
+            # in: one of env, cpu, start quintiles and associated pricing data
+
+            def find_le(a, x):
+                # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
+                'Find rightmost value less than or equal to x'
+                i = bisect.bisect_right(a, x)
+                if i:
+                    return a[i-1]
+                raise ValueError
+
+            counts=[]
+            for quantile in quantiles:
+                le = find_le(prices, quantile)
+                counts.append(
+                        ( sum(1 for price in prices if price <= le), le, )
+                        )
+            return counts
+
+        envPrices = [ pricing.env for pricing in pricingCurrency ]
+        envPrices.sort()
+        cpuPrices = [ pricing.cpu for pricing in pricingCurrency ]
+        cpuPrices.sort()
+        startPrices = [ pricing.start for pricing in pricingCurrency ]
+        startPrices.sort()
+
+        env_quantiles = statistics.quantiles(
+                envPrices,
+                n=5,
+                method=method
+                )
+        env_counts = __find_counts(env_quantiles,
+               envPrices
+               )
+        debug.dlog(env_quantiles)
+        debug.dlog(env_counts)
+        cpu_quantiles = statistics.quantiles(
+                cpuPrices,
+                n=5,
+                method=method
+                )
+
+        start_quintiles = statistics.quantiles(
+                startPrices,
+                n=5,
+                method=method
+                )
+
 
     def list_selection_addresses(self):
         """extract the node address values from the selection and return
@@ -358,16 +437,12 @@ class CustomTreeview(ttk.Treeview):
         # self._separatorDragging = False
 
     def clearit(self, retain_selection=False):
+        self._pricingGlm.clear()
+        self._pricingTglm.clear()
         if not retain_selection:
-            # debug.dlog(f"replacing {self.last_cleared_selection} with {self.list_selection_addresses()}")
-            # self.last_cleared_selection = self.list_selection_addresses()
-            debug.dlog("CLEARING SELECTION")
             self.last_cleared_selection.clear()
         else:
             if len(self.list_selection_addresses()) > 0:  # assume update needed
-                debug.dlog(
-                    f"replacing last_cleared_selection {self.last_cleared_selection} with {self.list_selection_addresses()}"
-                )
                 self.last_cleared_selection = self.list_selection_addresses()
 
         children = self.get_children()
@@ -408,6 +483,14 @@ class CustomTreeview(ttk.Treeview):
 
         self._stateHolder.transition_swapping(True, numbered_col_other)
 
+    def notify_insert_begin(self):
+        """informs Tree to expect insertions"""
+        self._stateHolder.inserting=True
+
+    def notify_insert_end(self):
+        """informs Tree that all insertions have been completed"""
+        self._stateHolder.inserting=False
+
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
         value_list = list(kwargs["values"])
@@ -421,6 +504,8 @@ class CustomTreeview(ttk.Treeview):
             super().insert(
                 "", "end", values=self._values_reordered(value_list), iid=node_address
             )
+            self._pricingGlm.append(PricingData(value_list[3], value_list[4], value_list[5]))
+
         else:
             super().insert(
                 "",
@@ -429,6 +514,7 @@ class CustomTreeview(ttk.Treeview):
                 iid=node_address,
                 tags=("tglm"),
             )
+            self._pricingTglm.append(PricingData(value_list[3], value_list[4], value_list[5]))
         # super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
     def get_heading(self, index):

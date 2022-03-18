@@ -524,6 +524,7 @@ class AppView:
         if refresh:
             self.session_resultcount = len(results)
         self.tree._update_headings()
+        self.tree.notify_insert_begin()
         for result in results:
             result = list(result)
             currency_unit = result[13].split("-")[-1]
@@ -546,7 +547,7 @@ class AppView:
                 ),
                 currency_unit=currency_unit,
             )
-
+        self.tree.notify_insert_end()
         current_resultcount = len(results)
         self.resultcount_var.set(str(current_resultcount))
 
@@ -724,7 +725,7 @@ select 'node.id'.offerRowID
         ):
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= "
-                f"{float(self.cpusec_entry_var.get())/3600.0+0.0000001}"
+                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0000000')}"
             )
 
         if (
@@ -732,7 +733,7 @@ select 'node.id'.offerRowID
             and self.durationsec_entry_var.get()
         ):
             ss += f" AND 'com.pricing.model.linear.coeffs'.duration_sec <=" \
-            f" {float(self.durationsec_entry_var.get())/(3600+0.0000001)}"
+            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0000000')}"
 
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"

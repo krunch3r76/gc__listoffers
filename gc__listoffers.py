@@ -39,7 +39,7 @@ if __name__ == "__main__":
         # configure for controller to use local connection to model
         from model.offer_lookup import OfferLookup
 
-        print(f"\033[1mrunning locally\033[0m")
+        print(f"\033[1mrunning gc__listoffers locally\033[0m")
         offerLookup = OfferLookup()  # implements model
         appView = AppView()
 
