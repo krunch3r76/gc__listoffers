@@ -19,6 +19,7 @@ class Pricing:
     cpu: list[Decimal]
     env: list[Decimal]
     start: list[Decimal]
+    count: int
 
     cpuQuintetCounts: list[Decimal]
     envQuintetCounts: list[Decimal]
@@ -32,6 +33,25 @@ class Pricing:
         self.env.sort()
         self.start = [ price.start for price in self.pricing ]
         self.start.sort()
+        self.count=len(pricing)
+
+        # if len(self.cpu) == 0:
+        #     self.cpu.append(0)
+
+        # if len(self.env) == 0:
+        #     self.env.append(0)
+
+        # if len(self.start) == 0:
+        #     self.start.append(0)
+
+        # if len(self.cpu) == 1:
+        #     self.cpu.append(self.cpu[0])
+
+        # if len(self.env) == 1:
+        #     self.env.append(self.env[0])
+
+        # if len(self.start) == 1:
+        #     self.start.append(self.start[0])
 
         def find_counts(prices):
             def find_le(a, x):
@@ -42,18 +62,23 @@ class Pricing:
                     return a[i-1]
                 raise ValueError
 
-            quintiles = statistics.quantiles(
-                    prices,
-                    n=5,
-                    method='inclusive'
-                    )
+            try:
+                quintiles = statistics.quantiles(
+                        prices,
+                        n=5,
+                        method='inclusive'
+                        )
 
-            quintet = list(map(lambda quintile: find_le(prices, quintile), quintiles))
-            counts = list(
-                    map(lambda _quintet_: sum(1 for price in prices if price <= _quintet_),
-                        quintet)
-                    )
-            return tuple(zip(quintet, counts))
+                quintet = list(map(lambda quintile: find_le(prices, quintile), quintiles))
+                counts = list(
+                        map(lambda _quintet_: sum(1 for price in prices if price <= _quintet_),
+                            quintet)
+                        )
+                rv = tuple(zip(quintet, counts))
+            except statistics.StatisticsError: # < 2 data points
+                rv = None
+
+            return rv
 
         self.cpuQuintetCounts = find_counts(self.cpu)
         self.envQuintetCounts = find_counts(self.env)
@@ -62,6 +87,7 @@ class Pricing:
         debug.dlog(f"cpuQuintetCounts: {pformat(self.cpuQuintetCounts)}")
         debug.dlog(f"envQuintetCounts: {pformat(self.envQuintetCounts)}")
         debug.dlog(f"startQuintetCounts: {pformat(self.startQuintetCounts)}")
+        debug.dlog(f"max count: {self.count}")
 class CustomTreeview(ttk.Treeview):
     """notes:
     #2 refers to the first column, which is always name
@@ -115,12 +141,16 @@ class CustomTreeview(ttk.Treeview):
             if self.__inserting==False:
                 debug.dlog("insertion complete")
                 self._owner._pricingGlm = Pricing(self._owner._pricingGlmIntermediate)
-                self._owner.quintiles('public-beta')
+                self._owner._pricingTglm = Pricing(self._owner._pricingTglmIntermediate)
+                # self._owner.quintiles('public-beta')
                 # debug.dlog(f"median env {pformat(env_quantiles)}")
                 # debug.dlog(f"median cpu {pformat(cpu_quantiles)}")
-            else:
-                del(self._pricingGlm)
-                del(self._pricingTglm)
+            else: # new insertion started
+                del(self._owner._pricingGlm)
+                del(self._owner._pricingTglm)
+                self._owner._pricingGlmIntermediate.clear()
+                self._owner._pricingTglmIntermediate.clear()
+
         @property
         def drag_start_column_number(self):
             # assert self.__swapping==True, "no column being dragged" \
