@@ -1,12 +1,19 @@
 from tkinter import *
 from tkinter import ttk
 import debug
+from pprint import pprint, pformat
 
 DIC411 = "#003366"
 DIC544 = "#4D4D4D"
 
 
 class RefreshFrame:
+    #   _toggle_refresh_controls() {ref}
+    #   w
+    #   master
+    #   refreshButton
+    #   radio_frame
+
     class RadioFrame:
         def __init__(self, master, *args, **kwargs):
             self.w = ttk.Frame(*args, **kwargs)
@@ -59,6 +66,9 @@ class RefreshFrame:
             self.other_rb.grid(column=0, row=1, sticky="w")
             self.other_entry.grid(column=1, row=1, sticky="w")
 
+    # ----------------------------------------------------------------------- #
+    #   RefreshFrame::  __init__
+    # ----------------------------------------------------------------------- #
     def __init__(self, master, toggle_refresh_controls, *args, **kwargs):
         self.w = ttk.Frame(*args, **kwargs)
         self._toggle_refresh_controls = toggle_refresh_controls
@@ -85,8 +95,9 @@ class CountFrame:
         foregroundcolor=DIC544
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
-        self.glmcount_var=IntVar()
-        self.glmcount_var=111
+        self.w.rowconfigure(0, weight=1)
+        self.w.rowconfigure(1, weight=1)
+        self.w.columnconfigure(0, weight=1)
         self.count_label = ttk.Label(
             self.w,
             textvariable=self.master.resultcount_var,
@@ -94,12 +105,18 @@ class CountFrame:
             font="TkDefaultFont 20",
         )
 
-        self.glmcount_label = ttk.Label(
+        self.glmcounts_tv = ttk.Treeview(
                 self.w,
-                textvariable=self.glmcount_var,
-                foreground=foregroundcolor,
-                font="TkDefaultFont 10",
-        )
+                columns=['primary','secondary'],
+                selectmode='none',
+                show='',
+                height=1
+        ) #Treeview
+        self.glmcounts_tv.insert(parent='', index='end', iid='onlyrow',
+                values=['one','two'])
+        self.glmcounts_tv.column('primary', stretch=False, width=25)
+        self.glmcounts_tv.column('secondary', stretch=False, width=25)
+        self.glmcounts_tv.item('onlyrow', values=['100', '200'])
 
         # self.count_diff_label = ttk.Label(
         #     self.w,
@@ -108,9 +125,9 @@ class CountFrame:
         #     font="TkDefaultFont 20",
         # )
 
-        self.count_label.grid(column=0, row=0, sticky="s")
-        # self.count_label.grid(column=0, row=1)
-        self.count_diff_label.grid(column=1, row=0)
+        self.count_label.grid(column=0, row=0, sticky="n")
+        self.glmcounts_tv.grid(column=0, row=1, sticky="n")
+        # self.count_diff_label.grid(column=1, row=0)
 
 
 class CPUSecFrame:
