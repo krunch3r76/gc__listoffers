@@ -35,23 +35,6 @@ class Pricing:
         self.start.sort()
         self.count=len(pricing)
 
-        # if len(self.cpu) == 0:
-        #     self.cpu.append(0)
-
-        # if len(self.env) == 0:
-        #     self.env.append(0)
-
-        # if len(self.start) == 0:
-        #     self.start.append(0)
-
-        # if len(self.cpu) == 1:
-        #     self.cpu.append(self.cpu[0])
-
-        # if len(self.env) == 1:
-        #     self.env.append(self.env[0])
-
-        # if len(self.start) == 1:
-        #     self.start.append(self.start[0])
 
         def find_counts(prices):
             def find_le(a, x):
@@ -142,9 +125,6 @@ class CustomTreeview(ttk.Treeview):
                 debug.dlog("insertion complete")
                 self._owner._pricingGlm = Pricing(self._owner._pricingGlmIntermediate)
                 self._owner._pricingTglm = Pricing(self._owner._pricingTglmIntermediate)
-                # self._owner.quintiles('public-beta')
-                # debug.dlog(f"median env {pformat(env_quantiles)}")
-                # debug.dlog(f"median cpu {pformat(cpu_quantiles)}")
             else: # new insertion started
                 del(self._owner._pricingGlm)
                 del(self._owner._pricingTglm)

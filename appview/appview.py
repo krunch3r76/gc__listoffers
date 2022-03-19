@@ -268,7 +268,7 @@ class AppView:
 
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)
-        self.count_frame.w.grid(column=2, row=0, sticky="wnes")
+        self.count_frame.w.grid(column=2, row=0, sticky="")
 
         # l_baseframe++console
         self.console = Text(self.l_baseframe, height=7, width=40)
@@ -336,6 +336,15 @@ class AppView:
 
         subbaseframe["borderwidth"] = 2
         # subbaseframe['relief']='ridge'
+        self.cbv_manual_probe=BooleanVar()
+        self.manual_probe_cb=ttk.Checkbutton(
+            subbaseframe,
+            text="manual probe",
+            padding=(0, 0, 50, 0),
+            variable=self.cbv_manual_probe,
+        )
+        self.manual_probe_cb["state"] = "disabled"
+        self.manual_probe_cb.grid(row=0, column=3, sticky="")
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
 

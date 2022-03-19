@@ -82,23 +82,34 @@ class RefreshFrame:
 
 class CountFrame:
     def __init__(self, master, *args, **kwargs):
+        foregroundcolor=DIC544
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
-
+        self.glmcount_var=IntVar()
+        self.glmcount_var=111
         self.count_label = ttk.Label(
             self.w,
             textvariable=self.master.resultcount_var,
-            foreground=DIC544,
-            font="TkDefaultFont 20",
-        )
-        self.count_diff_label = ttk.Label(
-            self.w,
-            textvariable=self.master.resultdiffcount_var,
-            foreground=DIC544,
+            foreground=foregroundcolor,
             font="TkDefaultFont 20",
         )
 
+        self.glmcount_label = ttk.Label(
+                self.w,
+                textvariable=self.glmcount_var,
+                foreground=foregroundcolor,
+                font="TkDefaultFont 10",
+        )
+
+        # self.count_diff_label = ttk.Label(
+        #     self.w,
+        #     textvariable=self.master.resultdiffcount_var,
+        #     foreground=DIC544,
+        #     font="TkDefaultFont 20",
+        # )
+
         self.count_label.grid(column=0, row=0, sticky="s")
+        # self.count_label.grid(column=0, row=1)
         self.count_diff_label.grid(column=1, row=0)
 
 
