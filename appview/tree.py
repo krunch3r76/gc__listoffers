@@ -7,9 +7,61 @@ from pprint import pprint, pformat
 import debug
 import statistics
 import bisect
+from dataclasses import dataclass
+from decimal import Decimal
 
 PricingData = namedtuple('PricingData', ['cpu', 'env', 'start'])
 PricingQuintiles = namedtuple('PricingQuintiles', ['cpu', 'env', 'start'])
+
+@dataclass
+class Pricing:
+    pricing: list[PricingData]
+    cpu: list[Decimal]
+    env: list[Decimal]
+    start: list[Decimal]
+
+    cpuQuintetCounts: list[Decimal]
+    envQuintetCounts: list[Decimal]
+    startQuintetCounts: list[Decimal]
+
+    def __init__(self, pricing):
+        self.pricing = pricing
+        self.cpu = [ price.cpu for price in self.pricing ]
+        self.cpu.sort()
+        self.env = [ price.env for price in self.pricing ]
+        self.env.sort()
+        self.start = [ price.start for price in self.pricing ]
+        self.start.sort()
+
+        def find_counts(prices):
+            def find_le(a, x):
+                # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
+                'Find rightmost value less than or equal to x'
+                i = bisect.bisect_right(a, x)
+                if i:
+                    return a[i-1]
+                raise ValueError
+
+            quintiles = statistics.quantiles(
+                    prices,
+                    n=5,
+                    method='inclusive'
+                    )
+
+            quintet = list(map(lambda quintile: find_le(prices, quintile), quintiles))
+            counts = list(
+                    map(lambda _quintet_: sum(1 for price in prices if price <= _quintet_),
+                        quintet)
+                    )
+            return tuple(zip(quintet, counts))
+
+        self.cpuQuintetCounts = find_counts(self.cpu)
+        self.envQuintetCounts = find_counts(self.env)
+        self.startQuintetCounts = find_counts(self.start)
+
+        debug.dlog(f"cpuQuintetCounts: {pformat(self.cpuQuintetCounts)}")
+        debug.dlog(f"envQuintetCounts: {pformat(self.envQuintetCounts)}")
+        debug.dlog(f"startQuintetCounts: {pformat(self.startQuintetCounts)}")
 class CustomTreeview(ttk.Treeview):
     """notes:
     #2 refers to the first column, which is always name
@@ -62,6 +114,7 @@ class CustomTreeview(ttk.Treeview):
             self.__inserting=truth_value
             if self.__inserting==False:
                 debug.dlog("insertion complete")
+                self._owner._pricingGlm = Pricing(self._owner._pricingGlmIntermediate)
                 self._owner.quintiles('public-beta')
                 # debug.dlog(f"median env {pformat(env_quantiles)}")
                 # debug.dlog(f"median cpu {pformat(cpu_quantiles)}")
@@ -79,17 +132,17 @@ class CustomTreeview(ttk.Treeview):
             self.__drag_start_column_number = colstr
 
     _kheadings = (
-        "offerRowID",  # 0
-        "name",  # 1
-        "address",  # 2
-        "cpu (/hr)",  # 3
+        "offerRowID",   # 0
+        "name",         # 1
+        "address",      # 2
+        "cpu (/hr)",    # 3
         "duration (/hr)",  # 4
-        "start",  # 5
-        "cores",  # 6
-        "threads",  # 7
-        "version",  # 8
-        "modelname",  # 9
-        "features",
+        "start",        # 5
+        "cores",        # 6
+        "threads",      # 7
+        "version",      # 8
+        "modelname",    # 9
+        "features",     # 10
     )
 
     _kheadings_sql_paths = (
@@ -179,30 +232,26 @@ class CustomTreeview(ttk.Treeview):
         self.s.grid(row=0, column=1, sticky="ns")
         self["yscrollcommand"] = self.s.set
         self.tag_configure("tglm", foreground="red")
-        self._pricingGlm = [] # named tuples of cpu, env, start
-        self._pricingTglm = [] # named tuples of cpu, env, start
-
+        self._pricingGlm = None # = [] # named tuples of cpu, env, start
+        self._pricingTglm = None # [] # named tuples of cpu, env, start
+        self._pricingGlmIntermediate = []
+        self._pricingTglmIntermediate = []
     def quintiles(self, subnet, method='inclusive'):
+        if subnet=='public-beta':
+            pricingCurrency=self._pricingGlm
+        else:
+            pricingCurrency=self._pricingTglm
+
+    def _quintiles(self, subnet, method='inclusive'):
         """return named tuples of cpu, env, start quintiles paired with counts"""
         # ( env_quantiles:PricingQuintiles, env_counts, cpu..., start...)
         # subnet is public.beta <=> pricingGlm used
 
-        if subnet=='public-beta':
-            pricingCurrency=self._pricingGlm
-        else:
-            pricingCurrency=self.pricing.Tglm
 
         def __find_counts(quantiles, prices):
             """count the number of prices <= the first datapoint not greater than each quantile"""
             # in: one of env, cpu, start quintiles and associated pricing data
 
-            def find_le(a, x):
-                # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
-                'Find rightmost value less than or equal to x'
-                i = bisect.bisect_right(a, x)
-                if i:
-                    return a[i-1]
-                raise ValueError
 
             counts=[]
             for quantile in quantiles:
@@ -437,8 +486,8 @@ class CustomTreeview(ttk.Treeview):
         # self._separatorDragging = False
 
     def clearit(self, retain_selection=False):
-        self._pricingGlm.clear()
-        self._pricingTglm.clear()
+        # self._pricingGlm.clear()
+        # self._pricingTglm.clear()
         if not retain_selection:
             self.last_cleared_selection.clear()
         else:
@@ -504,8 +553,7 @@ class CustomTreeview(ttk.Treeview):
             super().insert(
                 "", "end", values=self._values_reordered(value_list), iid=node_address
             )
-            self._pricingGlm.append(PricingData(value_list[3], value_list[4], value_list[5]))
-
+            self._pricingGlmIntermediate.append(PricingData(value_list[3], value_list[4], value_list[5]))
         else:
             super().insert(
                 "",
@@ -514,7 +562,7 @@ class CustomTreeview(ttk.Treeview):
                 iid=node_address,
                 tags=("tglm"),
             )
-            self._pricingTglm.append(PricingData(value_list[3], value_list[4], value_list[5]))
+            self._pricingTglmIntermediate.append(PricingData(value_list[3], value_list[4], value_list[5]))
         # super().insert('', 'end', values=self._values_reordered(kwargs['values']))
 
     def get_heading(self, index):
