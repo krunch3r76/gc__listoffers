@@ -118,7 +118,9 @@ class CustomTreeview(ttk.Treeview):
                 self._owner.quintiles('public-beta')
                 # debug.dlog(f"median env {pformat(env_quantiles)}")
                 # debug.dlog(f"median cpu {pformat(cpu_quantiles)}")
-
+            else:
+                del(self._pricingGlm)
+                del(self._pricingTglm)
         @property
         def drag_start_column_number(self):
             # assert self.__swapping==True, "no column being dragged" \
@@ -236,59 +238,7 @@ class CustomTreeview(ttk.Treeview):
         self._pricingTglm = None # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
         self._pricingTglmIntermediate = []
-    def quintiles(self, subnet, method='inclusive'):
-        if subnet=='public-beta':
-            pricingCurrency=self._pricingGlm
-        else:
-            pricingCurrency=self._pricingTglm
 
-    def _quintiles(self, subnet, method='inclusive'):
-        """return named tuples of cpu, env, start quintiles paired with counts"""
-        # ( env_quantiles:PricingQuintiles, env_counts, cpu..., start...)
-        # subnet is public.beta <=> pricingGlm used
-
-
-        def __find_counts(quantiles, prices):
-            """count the number of prices <= the first datapoint not greater than each quantile"""
-            # in: one of env, cpu, start quintiles and associated pricing data
-
-
-            counts=[]
-            for quantile in quantiles:
-                le = find_le(prices, quantile)
-                counts.append(
-                        ( sum(1 for price in prices if price <= le), le, )
-                        )
-            return counts
-
-        envPrices = [ pricing.env for pricing in pricingCurrency ]
-        envPrices.sort()
-        cpuPrices = [ pricing.cpu for pricing in pricingCurrency ]
-        cpuPrices.sort()
-        startPrices = [ pricing.start for pricing in pricingCurrency ]
-        startPrices.sort()
-
-        env_quantiles = statistics.quantiles(
-                envPrices,
-                n=5,
-                method=method
-                )
-        env_counts = __find_counts(env_quantiles,
-               envPrices
-               )
-        debug.dlog(env_quantiles)
-        debug.dlog(env_counts)
-        cpu_quantiles = statistics.quantiles(
-                cpuPrices,
-                n=5,
-                method=method
-                )
-
-        start_quintiles = statistics.quantiles(
-                startPrices,
-                n=5,
-                method=method
-                )
 
 
     def list_selection_addresses(self):
