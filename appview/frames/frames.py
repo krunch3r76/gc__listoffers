@@ -109,19 +109,34 @@ class CountFrame:
             font="TkDefaultFont 20",
         )
 
+        s=ttk.Style()
+        s.configure('count.Treeview', foreground='green')
+        s.layout('count.Treeview', [('Treeview.field',
+  {'borderwidth': 0,
+   'children': [('Treeview.padding',
+                 {'children': [('Treeview.treearea', {'sticky': 'nswe'})],
+                  'sticky': 'nswe'})],
+   'sticky': 'nswe'})]
+  )
+        print("s.layout:")
+        pprint(s.layout('count.Treeview'))
+        print("s.configure('count.Treeview'):")
+        pprint(s.configure('count.Treeview'))
+
         self.glmcounts_tv = ttk.Treeview(
                 self.w,
                 columns=['p','s'],
                 selectmode='none',
                 show='',
-                height=0
+                height=0,
+                style='count.Treeview'
         ) #Treeview
         self.glmcounts_tv.insert(parent='', index='end', iid='onlyrow',
                 values=['one','two'])
         self.glmcounts_tv.column('p', stretch=False, width=30, anchor='w')
-        self.glmcounts_tv.column('s', stretch=False, width=30, anchor='e')
+        self.glmcounts_tv.column('s', stretch=False, width=30, anchor=(E))
         self.glmcounts_tv.item('onlyrow', values=['100', '200'])
-        pprint(self.glmcounts_tv.configure())
+        # pprint("\n",self.glmcounts_tv.configure())
         # self.count_diff_label = ttk.Label(
         #     self.w,
         #     textvariable=self.master.resultdiffcount_var,
@@ -129,7 +144,10 @@ class CountFrame:
         #     font="TkDefaultFont 20",
         # )
 
-        _debug_enable_border(self.glmcounts_tv)
+        # _debug_enable_border(self.w)
+        # _debug_enable_border(self.count_label)
+
+        print(f"style: {self.glmcounts_tv['style']}")
 
         self.count_label.grid(column=0, row=0, sticky="n")
         self.glmcounts_tv.grid(column=0, row=1, sticky="n")
