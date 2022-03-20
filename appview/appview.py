@@ -2,7 +2,7 @@
 import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
-
+from pprint import pprint, pformat #debugging
 g_blah="blah"
 
 try:
@@ -177,7 +177,7 @@ class AppView:
         # countlabel
         # self.resultcount_var = StringVar(value="0")
         # countdifflabel
-        self.resultdiffcount_var = StringVar(value="")
+        # self.resultdiffcount_var = StringVar(value="")
         self.session_resultcount = 0  # number of rows currently on the table
         self.lastresultcount = 0  # temporary to store displayed
         # result number count before refresh
@@ -228,6 +228,7 @@ class AppView:
         #################################################
         optionframe = ttk.Frame(root)
         optionframe.columnconfigure(0, weight=1)
+        optionframe.rowconfigure(0, weight=1)
         # self.cbv_lastversion = BooleanVar()
         # self.cbv_lastversion.set(True)
         # self.version_cb = ttk.Checkbutton(
@@ -238,7 +239,9 @@ class AppView:
         #     command=self._update_cmd,
         # )
         # self.version_cb.grid(row=0, column=0, sticky="w")
-        optionframe.grid(row=1, column=0, sticky="nwes")
+        self.numSummaryFrame = NumSummaryFrame(self)
+        self.numSummaryFrame.w.grid()
+        optionframe.grid(row=1, column=0, sticky="w")
 
         #################################################
         # baseframe                                     #
@@ -580,6 +583,10 @@ class AppView:
 
         self.count_frame.update_counts(str(current_resultcount), *glmcounts, '')
         # self.count_frame.resultcount_var.set(str(current_resultcount))
+        # debug.dlog(pformat(self.tree.numerical_summary(False if self.subnet_var.get() =='public-beta' else True)))
+        self.numSummaryFrame.fill(self.tree.numerical_summary(False if self.subnet_var.get()
+            =='public-beta' else True)
+                                )
 
         if not refresh:
             disp = ""
@@ -593,9 +600,10 @@ class AppView:
                 if diff > 0:
                     disp += "+"
                 disp += str(current_resultcount - self.lastresultcount) + ")"
-                self.resultdiffcount_var.set(disp)
+                # self.resultdiffcount_var.set(disp)
             else:
-                self.resultdiffcount_var.set("")  # consider edge cases
+                pass
+            # self.resultdiffcount_var.set("")  # consider edge cases
 
         if refresh:
             self.refreshFrame._toggle_refresh_controls()
@@ -821,7 +829,7 @@ select 'node.id'.offerRowID
         # reset widgets to be refreshed
         # self.count_frame.resultcount_var.set("")
         self.count_frame.clear_counts()
-        self.resultdiffcount_var.set("")
+        # self.resultdiffcount_var.set("")
         self.tree.clearit()
         # self.tree.delete(*self.tree.get_children())
         self.tree.update_idletasks()
