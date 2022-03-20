@@ -311,6 +311,13 @@ class NumSummaryFrame:
         self.w.rowconfigure(1, weight=1)
         widthDefault=26
 
+        rowlabel1=ttk.Label(self.w, text='cpu', anchor='center', width=widthDefault)
+        rowlabel2=ttk.Label(self.w, text='dur')
+        rowlabel3=ttk.Label(self.w, text='start')
+        rowlabel1.grid(row=1,column=0)
+        rowlabel2.grid(row=2,column=0)
+        rowlabel3.grid(row=3,column=0)
+
         self.headingMin=ttk.Label(self.w, text='min', width=widthDefault)
         self.heading20=ttk.Label(self.w, text='20%', width=widthDefault)
         self.heading40=ttk.Label(self.w, text='40%', width=widthDefault)
@@ -320,7 +327,7 @@ class NumSummaryFrame:
 
         for offset, heading in enumerate([self.headingMin, self.heading20, self.heading40,
             self.heading60, self.heading80, self.headingMax]):
-            heading.grid(row=0, column=offset)
+            heading.grid(row=0, column=offset+1)
 
         textDefault='-'
         row1labels = []
@@ -335,7 +342,7 @@ class NumSummaryFrame:
         for index, rowlabels in enumerate([ row1labels, row2labels,
             row3labels]):
             for offset, cell in enumerate(rowlabels):
-                cell.grid(row=index+1, column=offset, sticky="news")
+                cell.grid(row=index+1, column=offset+1, sticky="news")
         self.rows=(row1labels, row2labels, row3labels,)
 
     def fill(self, values):

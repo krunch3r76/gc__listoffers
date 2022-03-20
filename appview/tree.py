@@ -139,8 +139,8 @@ class CustomTreeview(ttk.Treeview):
                 self._owner._pricingGlm = Pricing(self._owner._pricingGlmIntermediate)
                 self._owner._pricingTglm = Pricing(self._owner._pricingTglmIntermediate)
             else: # new insertion started
-                del(self._owner._pricingGlm)
-                del(self._owner._pricingTglm)
+                # del(self._owner._pricingGlm)
+                # del(self._owner._pricingTglm)
                 self._owner._pricingGlmIntermediate.clear()
                 self._owner._pricingTglmIntermediate.clear()
 
