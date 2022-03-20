@@ -146,10 +146,10 @@ class AppView:
         self.root = Tk()
         self.root.geometry("1256x768+100+200")
         s = ttk.Style()
-        DARKMODE = (
+        self.DARKMODE = (
             True if (datetime.now().hour > 19 or datetime.now().hour < 6) else False
         )
-        if not DARKMODE:
+        if not self.DARKMODE:
             self.root.tk.call("source", "./forest-ttk-theme/forest-light.tcl")
             s.theme_use("forest-light")
         else:
@@ -189,7 +189,7 @@ class AppView:
 
         # configure layout
         style = ttk.Style()
-        if DARKMODE == False:
+        if self.DARKMODE == False:
             style.configure("Treeview.Heading", foreground=DIC411)
 
         root.title("Provider View")
@@ -228,16 +228,16 @@ class AppView:
         #################################################
         optionframe = ttk.Frame(root)
         optionframe.columnconfigure(0, weight=1)
-        self.cbv_lastversion = BooleanVar()
-        self.cbv_lastversion.set(True)
-        self.version_cb = ttk.Checkbutton(
-            optionframe,
-            text="latest version only",
-            padding=(0, 0, 10, 0),
-            variable=self.cbv_lastversion,
-            command=self._update_cmd,
-        )
-        self.version_cb.grid(row=0, column=0, sticky="")
+        # self.cbv_lastversion = BooleanVar()
+        # self.cbv_lastversion.set(True)
+        # self.version_cb = ttk.Checkbutton(
+        #     optionframe,
+        #     text="latest version only",
+        #     padding=(10, 0, 10, 0),
+        #     variable=self.cbv_lastversion,
+        #     command=self._update_cmd,
+        # )
+        # self.version_cb.grid(row=0, column=0, sticky="w")
         optionframe.grid(row=1, column=0, sticky="nwes")
 
         #################################################
@@ -267,6 +267,19 @@ class AppView:
         self.refreshFrame.w.grid(column=1, row=0, sticky="wnes")
         self.refreshFrame.w["borderwidth"] = 2
         # self.refreshFrame.w['relief']='solid'
+
+
+        self.cbv_lastversion = BooleanVar()
+        self.cbv_lastversion.set(True)
+        self.version_cb = ttk.Checkbutton(
+            self.refreshFrame.w,
+            text="latest version only",
+            padding=(10, 0, 10, 0),
+            variable=self.cbv_lastversion,
+            command=self._update_cmd,
+        )
+        self.version_cb.grid(row=0, column=1, sticky="w")
+
 
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)

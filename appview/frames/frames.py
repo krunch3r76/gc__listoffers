@@ -83,6 +83,7 @@ class RefreshFrame:
         self.radio_frame.w["padding"] = (0, 5, 0, 5)
 
         self.w.columnconfigure(0, weight=1)
+        self.w.columnconfigure(1, weight=1)
         self.w.rowconfigure(0, weight=1)
         self.w.rowconfigure(1, weight=1)
 
@@ -96,7 +97,11 @@ class CountFrame:
             wid["borderwidth"]=2
             wid["relief"]="solid"
 
-        foregroundcolor=DIC544
+        if not master.DARKMODE:
+            foregroundcolor=DIC544
+        else:
+            foregroundcolor='#eeeeee'
+        pprint(ttk.Style().configure('.'))
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
         self.resultcount_var = StringVar()
@@ -295,3 +300,33 @@ class FeatureEntryFrame:
         self.cb.state(["!disabled"])
         self._refresh_entry_state()
         # self.durationsec_entry.state(['!disabled'])
+
+class NumSummaryFrame:
+    def __init__(self, master, *args, **kwargs):
+        self.master=master
+        self.w = ttk.Frame(*args, **kwargs)
+        widthDefault=13
+
+        self.headingMin=ttk.Label(self.w, text='min', width=widthDefault)
+        self.heading20=ttk.Label(self.w, text='20%', width=widthDefault)
+        self.heading40=ttk.Label(self.w, text='40%', width=widthDefault)
+        self.heading60=ttk.Label(self.w, text='60%', width=widthDefault)
+        self.heading80=ttk.Label(self.w, text='80%', width=widthDefault)
+        self.headingMax=ttk.Label(self.w, text='max', width=widthDefault)
+
+        for heading in [self.headingMin, self.heading20, self.heading40, self.heading60,
+                self.heading80, self.headingMax]:
+            heading.grid(row=0, column=0)
+
+        self.cellMin=ttk.Label(self.w, text='', width=widthDefault)
+        self.cell20=ttk.Label(self.w, text='', width=widthDefault)
+        self.cell40=ttk.Label(self.w, text='', width=widthDefault)
+        self.cell60=ttk.Label(self.w, text='', width=widthDefault)
+        self.cell80=ttk.Label(self.w, text='', width=widthDefault)
+        self.cellMax=ttk.Label(self.w, text='', width=widthDefault)
+
+        for cell in [self.cellMin, self.cell20, self.cell40, self.cell60, self.cell80,
+                self.cellMax]:
+            heading.grid(row=1, column=0)
+
+
