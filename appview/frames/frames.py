@@ -126,7 +126,7 @@ class CountFrame:
         self.glmcount2_label = ttk.Label(
             self.w,
             textvariable=self.glmcount2_var,
-            font="TkDefaultFont 10"
+            font="TkDefaultFont 10",
         )
 
         self.glmcount_separator = ttk.Label(
@@ -135,7 +135,7 @@ class CountFrame:
                 font="TkDefaultFont 10"
         )
 
-        self.resultcount_var.trace_add("write", lambda a, b, c: print(a,b,c,"it has been written"))
+        # self.resultcount_var.trace_add("write", lambda *args: print("it has been written"))
 
         self.count_label.grid(column=0, columnspan=3, row=0, sticky="n")
         self.glmcount1_label.grid(column=0, row=1, sticky="w")
@@ -143,6 +143,18 @@ class CountFrame:
         self.glmcount2_label.grid(column=2, row=1, sticky="e")
         # self.count_diff_label.grid(column=1, row=0)
 
+    # primary_currency may be deprecated soon
+    def update_counts(self, total, primary, secondary, primary_currency=''):
+        self.resultcount_var.set(total)
+        self.glmcount1_var.set(primary)
+        self.glmcount_separator.configure(text='|')
+        self.glmcount2_var.set(secondary)
+
+    def clear_counts(self):
+        self.resultcount_var.set('')
+        self.glmcount1_var.set('')
+        self.glmcount_separator.configure(text='')
+        self.glmcount2_var.set('')
 
 class CPUSecFrame:
     """

@@ -71,7 +71,19 @@ class Pricing:
         debug.dlog(f"envQuintetCounts: {pformat(self.envQuintetCounts)}")
         debug.dlog(f"startQuintetCounts: {pformat(self.startQuintetCounts)}")
         debug.dlog(f"max count: {self.count}")
+        debug.dlog(f"len self: {len(self)}")
+
+    def __len__(self):
+        return len(self.pricing)
+
 class CustomTreeview(ttk.Treeview):
+    """
+    CustomTreeview
+    --------------
+    +glmcounts()
+    ...
+
+    """
     """notes:
     #2 refers to the first column, which is always name
     #3 refers to the second column, which is always address
@@ -532,3 +544,11 @@ class CustomTreeview(ttk.Treeview):
 
     def clear(self):
         self.delete(*self.get_children())
+
+    def glmcounts(self, reverse=False):
+        """return the number of rows corresponding to glm and tglm as a pair"""
+        if not reverse:
+            return (len(self._pricingGlm), len(self._pricingTglm), )
+        else:
+            return (len(self._pricingTglm), len(self._pricingGlm), )
+

@@ -560,7 +560,13 @@ class AppView:
             )
         self.tree.notify_insert_end()
         current_resultcount = len(results)
-        self.count_frame.resultcount_var.set(str(current_resultcount))
+        # query tree for glm and tglm counts
+
+        glmcounts=self.tree.glmcounts(reverse=False if self.subnet_var.get()=='public-beta'
+                else True)
+
+        self.count_frame.update_counts(str(current_resultcount), *glmcounts, '')
+        # self.count_frame.resultcount_var.set(str(current_resultcount))
 
         if not refresh:
             disp = ""
@@ -649,9 +655,9 @@ class AppView:
         else:
             self.lastresultcount = 0
 
-        self.count_frame.resultcount_var.set("")
-        self.resultdiffcount_var.set("")
-
+        # self.count_frame.resultcount_var.set("")
+        # self.resultdiffcount_var.set("")
+        self.count_frame.clear_counts()
         self.tree.clearit(retain_selection=True)
 
         if not self.cbv_lastversion.get():
@@ -735,7 +741,7 @@ select 'node.id'.offerRowID
         ):
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= "
-                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0000000')}"
+                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0')}"
             )
 
         if (
@@ -743,7 +749,7 @@ select 'node.id'.offerRowID
             and self.durationsec_entry_var.get()
         ):
             ss += f" AND 'com.pricing.model.linear.coeffs'.duration_sec <=" \
-            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0000000')}"
+            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0')}"
 
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
@@ -800,7 +806,8 @@ select 'node.id'.offerRowID
         self.refreshFrame._toggle_refresh_controls()
 
         # reset widgets to be refreshed
-        self.count_frame.resultcount_var.set("")
+        # self.count_frame.resultcount_var.set("")
+        self.count_frame.clear_counts()
         self.resultdiffcount_var.set("")
         self.tree.clearit()
         # self.tree.delete(*self.tree.get_children())
