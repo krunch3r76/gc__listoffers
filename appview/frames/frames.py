@@ -99,58 +99,48 @@ class CountFrame:
         foregroundcolor=DIC544
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
+        self.resultcount_var = StringVar()
+        self.glmcount1_var = StringVar()
+        self.glmcount2_var = StringVar()
+        #debug
+        self.glmcount1_var.set('0')
+        self.glmcount2_var.set('0')
+        self.resultcount_var.set('0')
         self.w.rowconfigure(0, weight=1)
         self.w.rowconfigure(1, weight=1)
         self.w.columnconfigure(0, weight=1)
+        self.w.columnconfigure(1, weight=0)
+        self.w.columnconfigure(2, weight=1)
         self.count_label = ttk.Label(
             self.w,
-            textvariable=self.master.resultcount_var,
+            textvariable=self.resultcount_var,
             foreground=foregroundcolor,
             font="TkDefaultFont 20",
         )
 
-        s=ttk.Style()
-        s.configure('count.Treeview', foreground='green')
-        s.layout('count.Treeview', [('Treeview.field',
-  {'borderwidth': 0,
-   'children': [('Treeview.padding',
-                 {'children': [('Treeview.treearea', {'sticky': 'nswe'})],
-                  'sticky': 'nswe'})],
-   'sticky': 'nswe'})]
-  )
-        print("s.layout:")
-        pprint(s.layout('count.Treeview'))
-        print("s.configure('count.Treeview'):")
-        pprint(s.configure('count.Treeview'))
+        self.glmcount1_label = ttk.Label(
+            self.w,
+            textvariable=self.glmcount1_var,
+            font="TkDefaultFont 10"
+        )
+        self.glmcount2_label = ttk.Label(
+            self.w,
+            textvariable=self.glmcount2_var,
+            font="TkDefaultFont 10"
+        )
 
-        self.glmcounts_tv = ttk.Treeview(
+        self.glmcount_separator = ttk.Label(
                 self.w,
-                columns=['p','s'],
-                selectmode='none',
-                show='',
-                height=0,
-                style='count.Treeview'
-        ) #Treeview
-        self.glmcounts_tv.insert(parent='', index='end', iid='onlyrow',
-                values=['one','two'])
-        self.glmcounts_tv.column('p', stretch=False, width=30, anchor='w')
-        self.glmcounts_tv.column('s', stretch=False, width=30, anchor=(E))
-        self.glmcounts_tv.item('onlyrow', values=['100', '200'])
-        # pprint("\n",self.glmcounts_tv.configure())
-        # self.count_diff_label = ttk.Label(
-        #     self.w,
-        #     textvariable=self.master.resultdiffcount_var,
-        #     foreground=DIC544,
-        #     font="TkDefaultFont 20",
-        # )
+                text='|',
+                font="TkDefaultFont 10"
+        )
 
-        # _debug_enable_border(self.w)
-        # _debug_enable_border(self.count_label)
+        self.resultcount_var.trace_add("write", lambda a, b, c: print(a,b,c,"it has been written"))
 
-        print(f"style: {self.glmcounts_tv['style']}")
-
-        self.count_label.grid(column=0, row=0, sticky="n")
-        self.glmcounts_tv.grid(column=0, row=1, sticky="n")
+        self.count_label.grid(column=0, columnspan=3, row=0, sticky="n")
+        self.glmcount1_label.grid(column=0, row=1, sticky="w")
+        self.glmcount_separator.grid(column=1,row=1, sticky="")
+        self.glmcount2_label.grid(column=2, row=1, sticky="e")
         # self.count_diff_label.grid(column=1, row=0)
 
 
