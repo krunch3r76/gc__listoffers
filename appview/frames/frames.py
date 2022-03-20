@@ -1,12 +1,19 @@
 from tkinter import *
 from tkinter import ttk
 import debug
+from pprint import pprint, pformat
 
 DIC411 = "#003366"
 DIC544 = "#4D4D4D"
 
 
 class RefreshFrame:
+    #   _toggle_refresh_controls() {ref}
+    #   w
+    #   master
+    #   refreshButton
+    #   radio_frame
+
     class RadioFrame:
         def __init__(self, master, *args, **kwargs):
             self.w = ttk.Frame(*args, **kwargs)
@@ -59,6 +66,9 @@ class RefreshFrame:
             self.other_rb.grid(column=0, row=1, sticky="w")
             self.other_entry.grid(column=1, row=1, sticky="w")
 
+    # ----------------------------------------------------------------------- #
+    #   RefreshFrame::  __init__
+    # ----------------------------------------------------------------------- #
     def __init__(self, master, toggle_refresh_controls, *args, **kwargs):
         self.w = ttk.Frame(*args, **kwargs)
         self._toggle_refresh_controls = toggle_refresh_controls
@@ -82,25 +92,69 @@ class RefreshFrame:
 
 class CountFrame:
     def __init__(self, master, *args, **kwargs):
+        def _debug_enable_border(wid):
+            wid["borderwidth"]=2
+            wid["relief"]="solid"
+
+        foregroundcolor=DIC544
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
-
+        self.resultcount_var = StringVar()
+        self.glmcount1_var = StringVar()
+        self.glmcount2_var = StringVar()
+        #debug
+        self.glmcount1_var.set('0')
+        self.glmcount2_var.set('0')
+        self.resultcount_var.set('0')
+        self.w.rowconfigure(0, weight=1)
+        self.w.rowconfigure(1, weight=1)
+        self.w.columnconfigure(0, weight=1)
+        self.w.columnconfigure(1, weight=0)
+        self.w.columnconfigure(2, weight=1)
         self.count_label = ttk.Label(
             self.w,
-            textvariable=self.master.resultcount_var,
-            foreground=DIC544,
+            textvariable=self.resultcount_var,
+            foreground=foregroundcolor,
             font="TkDefaultFont 20",
         )
-        self.count_diff_label = ttk.Label(
+
+        self.glmcount1_label = ttk.Label(
             self.w,
-            textvariable=self.master.resultdiffcount_var,
-            foreground=DIC544,
-            font="TkDefaultFont 20",
+            textvariable=self.glmcount1_var,
+            font="TkDefaultFont 10"
+        )
+        self.glmcount2_label = ttk.Label(
+            self.w,
+            textvariable=self.glmcount2_var,
+            font="TkDefaultFont 10",
         )
 
-        self.count_label.grid(column=0, row=0, sticky="s")
-        self.count_diff_label.grid(column=1, row=0)
+        self.glmcount_separator = ttk.Label(
+                self.w,
+                text='|',
+                font="TkDefaultFont 10"
+        )
 
+        # self.resultcount_var.trace_add("write", lambda *args: print("it has been written"))
+
+        self.count_label.grid(column=0, columnspan=3, row=0, sticky="n")
+        self.glmcount1_label.grid(column=0, row=1, sticky="w")
+        self.glmcount_separator.grid(column=1,row=1, sticky="")
+        self.glmcount2_label.grid(column=2, row=1, sticky="e")
+        # self.count_diff_label.grid(column=1, row=0)
+
+    # primary_currency may be deprecated soon
+    def update_counts(self, total, primary, secondary, primary_currency=''):
+        self.resultcount_var.set(total)
+        self.glmcount1_var.set(primary)
+        self.glmcount_separator.configure(text='|')
+        self.glmcount2_var.set(secondary)
+
+    def clear_counts(self):
+        self.resultcount_var.set('')
+        self.glmcount1_var.set('')
+        self.glmcount_separator.configure(text='')
+        self.glmcount2_var.set('')
 
 class CPUSecFrame:
     """

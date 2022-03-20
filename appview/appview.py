@@ -3,6 +3,8 @@ import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
 
+g_blah="blah"
+
 try:
     from tkinter import *
 except ModuleNotFoundError:
@@ -173,7 +175,7 @@ class AppView:
         self.subnet_var = StringVar()
         self.other_entry_var = StringVar()
         # countlabel
-        self.resultcount_var = StringVar(value="0")
+        # self.resultcount_var = StringVar(value="0")
         # countdifflabel
         self.resultdiffcount_var = StringVar(value="")
         self.session_resultcount = 0  # number of rows currently on the table
@@ -268,7 +270,7 @@ class AppView:
 
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)
-        self.count_frame.w.grid(column=2, row=0, sticky="wnes")
+        self.count_frame.w.grid(column=2, row=0, sticky="")
 
         # l_baseframe++console
         self.console = Text(self.l_baseframe, height=7, width=40)
@@ -336,6 +338,15 @@ class AppView:
 
         subbaseframe["borderwidth"] = 2
         # subbaseframe['relief']='ridge'
+        self.cbv_manual_probe=BooleanVar()
+        self.manual_probe_cb=ttk.Checkbutton(
+            subbaseframe,
+            text="manual probe",
+            padding=(0, 0, 50, 0),
+            variable=self.cbv_manual_probe,
+        )
+        self.manual_probe_cb["state"] = "disabled"
+        self.manual_probe_cb.grid(row=0, column=3, sticky="")
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
 
@@ -549,7 +560,13 @@ class AppView:
             )
         self.tree.notify_insert_end()
         current_resultcount = len(results)
-        self.resultcount_var.set(str(current_resultcount))
+        # query tree for glm and tglm counts
+
+        glmcounts=self.tree.glmcounts(reverse=False if self.subnet_var.get()=='public-beta'
+                else True)
+
+        self.count_frame.update_counts(str(current_resultcount), *glmcounts, '')
+        # self.count_frame.resultcount_var.set(str(current_resultcount))
 
         if not refresh:
             disp = ""
@@ -564,7 +581,6 @@ class AppView:
                     disp += "+"
                 disp += str(current_resultcount - self.lastresultcount) + ")"
                 self.resultdiffcount_var.set(disp)
-                # self.resultcount_var.set(str(new_resultcount))
             else:
                 self.resultdiffcount_var.set("")  # consider edge cases
 
@@ -634,14 +650,14 @@ class AppView:
 
         # self.refreshFrame._toggle_refresh_controls()
 
-        if self.resultcount_var.get() != "":
-            self.lastresultcount = int(self.resultcount_var.get())
+        if self.count_frame.resultcount_var.get() != "":
+            self.lastresultcount = int(self.count_frame.resultcount_var.get())
         else:
             self.lastresultcount = 0
 
-        self.resultcount_var.set("")
-        self.resultdiffcount_var.set("")
-
+        # self.count_frame.resultcount_var.set("")
+        # self.resultdiffcount_var.set("")
+        self.count_frame.clear_counts()
         self.tree.clearit(retain_selection=True)
 
         if not self.cbv_lastversion.get():
@@ -725,7 +741,7 @@ select 'node.id'.offerRowID
         ):
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= "
-                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0000000')}"
+                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0')}"
             )
 
         if (
@@ -733,7 +749,7 @@ select 'node.id'.offerRowID
             and self.durationsec_entry_var.get()
         ):
             ss += f" AND 'com.pricing.model.linear.coeffs'.duration_sec <=" \
-            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0000000')}"
+            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0')}"
 
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
@@ -790,7 +806,8 @@ select 'node.id'.offerRowID
         self.refreshFrame._toggle_refresh_controls()
 
         # reset widgets to be refreshed
-        self.resultcount_var.set("")
+        # self.count_frame.resultcount_var.set("")
+        self.count_frame.clear_counts()
         self.resultdiffcount_var.set("")
         self.tree.clearit()
         # self.tree.delete(*self.tree.get_children())
