@@ -101,7 +101,7 @@ class CountFrame:
             foregroundcolor=DIC544
         else:
             foregroundcolor='#eeeeee'
-        pprint(ttk.Style().configure('.'))
+
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
         self.resultcount_var = StringVar()
@@ -305,7 +305,11 @@ class NumSummaryFrame:
     def __init__(self, master, *args, **kwargs):
         self.master=master
         self.w = ttk.Frame(*args, **kwargs)
-        widthDefault=13
+        for col in range(6):
+            self.w.columnconfigure(col, weight=1)
+        self.w.rowconfigure(0, weight=1)
+        self.w.rowconfigure(1, weight=1)
+        widthDefault=26
 
         self.headingMin=ttk.Label(self.w, text='min', width=widthDefault)
         self.heading20=ttk.Label(self.w, text='20%', width=widthDefault)
@@ -314,19 +318,47 @@ class NumSummaryFrame:
         self.heading80=ttk.Label(self.w, text='80%', width=widthDefault)
         self.headingMax=ttk.Label(self.w, text='max', width=widthDefault)
 
-        for heading in [self.headingMin, self.heading20, self.heading40, self.heading60,
-                self.heading80, self.headingMax]:
-            heading.grid(row=0, column=0)
+        for offset, heading in enumerate([self.headingMin, self.heading20, self.heading40,
+            self.heading60, self.heading80, self.headingMax]):
+            heading.grid(row=0, column=offset)
 
-        self.cellMin=ttk.Label(self.w, text='', width=widthDefault)
-        self.cell20=ttk.Label(self.w, text='', width=widthDefault)
-        self.cell40=ttk.Label(self.w, text='', width=widthDefault)
-        self.cell60=ttk.Label(self.w, text='', width=widthDefault)
-        self.cell80=ttk.Label(self.w, text='', width=widthDefault)
-        self.cellMax=ttk.Label(self.w, text='', width=widthDefault)
+        textDefault='-'
+        row1labels = []
+        row2labels = []
+        row3labels = []
 
-        for cell in [self.cellMin, self.cell20, self.cell40, self.cell60, self.cell80,
-                self.cellMax]:
-            heading.grid(row=1, column=0)
+        for _ in range(6):
+            row1labels.append(ttk.Label(self.w, text=textDefault, width=widthDefault))
+            row2labels.append(ttk.Label(self.w, text=textDefault, width=widthDefault))
+            row3labels.append(ttk.Label(self.w, text=textDefault, width=widthDefault))
 
+        for index, rowlabels in enumerate([ row1labels, row2labels,
+            row3labels]):
+            for offset, cell in enumerate(rowlabels):
+                cell.grid(row=index+1, column=offset, sticky="news")
+        self.rows=(row1labels, row2labels, row3labels,)
+
+    def fill(self, values):
+        # debug.dlog(pformat(values))
+        # debug.dlog(pformat(values[1:-1]))
+
+        values_strlists = []
+        for valuePath_list in [ values.cpu, values.env, values.start ]:
+            temp_strlist = [ f"{value[0]} ({value[1]})" for value in valuePath_list[1:-1] ]
+            temp_strlist.insert(0, str(valuePath_list[0]))
+            temp_strlist.append(str(valuePath_list[-1]))
+            values_strlists.append(temp_strlist)
+
+        for row_offset, value_strlist in enumerate(values_strlists):
+            for offset, cell in enumerate(self.rows[row_offset]):
+                cell.configure(text=value_strlist[offset])
+
+        # debug.dlog(pformat(values_strlists))
+        # values_cpu_strlist = [ f"{value[0]} {value[1]}" for value in values.cpu[1:-1] ]
+        # values_cpu_strlist.insert(0, str(values.cpu[0]))
+        # values_cpu_strlist.append(str(values.cpu[-1]))
+
+        print("------------")
+        # for offset, cell in enumerate(self.cells):
+        #     cell.configure(text=values_str[offset])
 

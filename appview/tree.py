@@ -12,6 +12,7 @@ from decimal import Decimal
 
 PricingData = namedtuple('PricingData', ['cpu', 'env', 'start'])
 PricingQuintiles = namedtuple('PricingQuintiles', ['cpu', 'env', 'start'])
+PricingSummaries = namedtuple('PricingStats', ['cpu', 'env', 'start'])
 
 @dataclass
 class Pricing:
@@ -67,11 +68,11 @@ class Pricing:
         self.envQuintetCounts = find_counts(self.env)
         self.startQuintetCounts = find_counts(self.start)
 
-        debug.dlog(f"cpuQuintetCounts: {pformat(self.cpuQuintetCounts)}")
-        debug.dlog(f"envQuintetCounts: {pformat(self.envQuintetCounts)}")
-        debug.dlog(f"startQuintetCounts: {pformat(self.startQuintetCounts)}")
-        debug.dlog(f"max count: {self.count}")
-        debug.dlog(f"len self: {len(self)}")
+        # debug.dlog(f"cpuQuintetCounts: {pformat(self.cpuQuintetCounts)}")
+        # debug.dlog(f"envQuintetCounts: {pformat(self.envQuintetCounts)}")
+        # debug.dlog(f"startQuintetCounts: {pformat(self.startQuintetCounts)}")
+        # debug.dlog(f"max count: {self.count}")
+        # debug.dlog(f"len self: {len(self)}")
 
     def __len__(self):
         return len(self.pricing)
@@ -552,3 +553,14 @@ class CustomTreeview(ttk.Treeview):
         else:
             return (len(self._pricingTglm), len(self._pricingGlm), )
 
+    def numerical_summary(self, tglm=False):
+        if not tglm:
+            pricing=self._pricingGlm
+        else:
+            pricing=self._pricingTglm
+        pricingStats=PricingSummaries(
+            cpu=(min(pricing.cpu), *pricing.cpuQuintetCounts, max(pricing.cpu),),
+            env=(min(pricing.env), *pricing.envQuintetCounts, max(pricing.env),),
+            start=(min(pricing.start), *pricing.startQuintetCounts, max(pricing.start),)
+            )
+        return pricingStats
