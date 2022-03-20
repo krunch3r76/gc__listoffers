@@ -679,6 +679,7 @@ class AppView:
         # self.count_frame.resultcount_var.set("")
         # self.resultdiffcount_var.set("")
         self.count_frame.clear_counts()
+        self.numSummaryFrame.clear()
         self.tree.clearit(retain_selection=True)
 
         if not self.cbv_lastversion.get():
@@ -828,6 +829,7 @@ select 'node.id'.offerRowID
 
         # reset widgets to be refreshed
         # self.count_frame.resultcount_var.set("")
+        self.numSummaryFrame.clear()
         self.count_frame.clear_counts()
         # self.resultdiffcount_var.set("")
         self.tree.clearit()

@@ -345,27 +345,28 @@ class NumSummaryFrame:
                 cell.grid(row=index+1, column=offset+1, sticky="news")
         self.rows=(row1labels, row2labels, row3labels,)
 
-    def fill(self, values):
-        # debug.dlog(pformat(values))
-        # debug.dlog(pformat(values[1:-1]))
-
+    def clear(self):
         values_strlists = []
-        for valuePath_list in [ values.cpu, values.env, values.start ]:
-            temp_strlist = [ f"{value[0]} ({value[1]})" for value in valuePath_list[1:-1] ]
-            temp_strlist.insert(0, str(valuePath_list[0]))
-            temp_strlist.append(str(valuePath_list[-1]))
-            values_strlists.append(temp_strlist)
-
+        for _ in range(3):
+            values_strlists.append(["-", "-", "-", "-", "-", "-"])
         for row_offset, value_strlist in enumerate(values_strlists):
             for offset, cell in enumerate(self.rows[row_offset]):
                 cell.configure(text=value_strlist[offset])
 
-        # debug.dlog(pformat(values_strlists))
-        # values_cpu_strlist = [ f"{value[0]} {value[1]}" for value in values.cpu[1:-1] ]
-        # values_cpu_strlist.insert(0, str(values.cpu[0]))
-        # values_cpu_strlist.append(str(values.cpu[-1]))
+    def fill(self, values):
+        # debug.dlog(pformat(values))
+        # debug.dlog(pformat(values[1:-1]))
+        values_strlists = []
+        if values == None:
+            self.clear() # review
+            debug.dlog("values none, cleared")
+        else:
+            for valuePath_list in [ values.cpu, values.env, values.start ]:
+                temp_strlist = [ f"{value[0]} ({value[1]})" for value in valuePath_list[1:-1] ]
+                temp_strlist.insert(0, str(valuePath_list[0]))
+                temp_strlist.append(str(valuePath_list[-1]))
+                values_strlists.append(temp_strlist)
 
-        print("------------")
-        # for offset, cell in enumerate(self.cells):
-        #     cell.configure(text=values_str[offset])
-
+        for row_offset, value_strlist in enumerate(values_strlists):
+            for offset, cell in enumerate(self.rows[row_offset]):
+                cell.configure(text=value_strlist[offset])

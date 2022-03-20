@@ -558,9 +558,12 @@ class CustomTreeview(ttk.Treeview):
             pricing=self._pricingGlm
         else:
             pricing=self._pricingTglm
-        pricingStats=PricingSummaries(
-            cpu=(min(pricing.cpu), *pricing.cpuQuintetCounts, max(pricing.cpu),),
-            env=(min(pricing.env), *pricing.envQuintetCounts, max(pricing.env),),
-            start=(min(pricing.start), *pricing.startQuintetCounts, max(pricing.start),)
-            )
+        try:
+            pricingStats=PricingSummaries(
+                cpu=(min(pricing.cpu), *pricing.cpuQuintetCounts, max(pricing.cpu),),
+                env=(min(pricing.env), *pricing.envQuintetCounts, max(pricing.env),),
+                start=(min(pricing.start), *pricing.startQuintetCounts, max(pricing.start),)
+                )
+        except:
+            pricingStats=None
         return pricingStats
