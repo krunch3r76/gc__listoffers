@@ -92,6 +92,10 @@ class RefreshFrame:
 
 class CountFrame:
     def __init__(self, master, *args, **kwargs):
+        def _debug_enable_border(wid):
+            wid["borderwidth"]=2
+            wid["relief"]="solid"
+
         foregroundcolor=DIC544
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
@@ -107,23 +111,25 @@ class CountFrame:
 
         self.glmcounts_tv = ttk.Treeview(
                 self.w,
-                columns=['primary','secondary'],
+                columns=['p','s'],
                 selectmode='none',
                 show='',
-                height=1
+                height=0
         ) #Treeview
         self.glmcounts_tv.insert(parent='', index='end', iid='onlyrow',
                 values=['one','two'])
-        self.glmcounts_tv.column('primary', stretch=False, width=25)
-        self.glmcounts_tv.column('secondary', stretch=False, width=25)
+        self.glmcounts_tv.column('p', stretch=False, width=30, anchor='w')
+        self.glmcounts_tv.column('s', stretch=False, width=30, anchor='e')
         self.glmcounts_tv.item('onlyrow', values=['100', '200'])
-
+        pprint(self.glmcounts_tv.configure())
         # self.count_diff_label = ttk.Label(
         #     self.w,
         #     textvariable=self.master.resultdiffcount_var,
         #     foreground=DIC544,
         #     font="TkDefaultFont 20",
         # )
+
+        _debug_enable_border(self.glmcounts_tv)
 
         self.count_label.grid(column=0, row=0, sticky="n")
         self.glmcounts_tv.grid(column=0, row=1, sticky="n")
