@@ -770,8 +770,10 @@ select 'node.id'.offerRowID
             and self.cpusec_entry_var.get()
         ):
             cpu_per_sec = to_secs(self.cpusec_entry_var.get())
-            ss += ( f" AND 'com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}"
-                f" <=  {epsilon}" )
+            ss += (
+                f" AND 'com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}"
+                f" <=  {epsilon}"
+            )
             # ss += f" AND ('com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}) > 0.00001"
             # ss += f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " f"'{cpu_per_sec}'"
 
@@ -780,9 +782,10 @@ select 'node.id'.offerRowID
             and self.durationsec_entry_var.get()
         ):
             duration_per_sec = to_secs(self.durationsec_entry_var.get())
-            ss += ( f" AND 'com.pricing.model.linear.coeffs'.duration_sec "
-                    f" - {duration_per_sec} < {epsilon}"
-                    )
+            ss += (
+                f" AND 'com.pricing.model.linear.coeffs'.duration_sec "
+                f" - {duration_per_sec} < {epsilon}"
+            )
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
             and self.featureEntryVar.get()
