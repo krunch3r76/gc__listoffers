@@ -28,7 +28,7 @@ this video demonstrates interop with gc_spyu to add model information
 (gc_listoffers)$ git fetch
 From github.com:krunch3r76/gc__listoffers
    d87b579..01f72be  master     -> origin/master
- * [new tag]         v.5.2     -> v.5.2
+ * [new tag]         v.5.3     -> v.5.3
 ```
 
 # upgrade installation to latest tag, wiping current installation
@@ -37,7 +37,7 @@ From github.com:krunch3r76/gc__listoffers
 (gc__listoffers)$ git reset --hard HEAD
 (gc__listoffers)$ git pull
 (gc__listoffers)$ git clean -dfx
-(gc__listoffers)$ git checkout v.5.2
+(gc__listoffers)$ git checkout v.5.3
 ```
 # usage
 ## ensure python3-tk is installed
@@ -48,7 +48,7 @@ From github.com:krunch3r76/gc__listoffers
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-./gc__listoffers$ git checkout v.5.2
+./gc__listoffers$ git checkout v.5.3
 ./gc__listoffers$ python3 gc__listoffers.py
 ```
 On Windows:

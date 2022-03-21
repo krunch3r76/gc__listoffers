@@ -2,8 +2,9 @@
 import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
-from pprint import pprint, pformat #debugging
-g_blah="blah"
+from pprint import pprint, pformat  # debugging
+
+g_blah = "blah"
 
 try:
     from tkinter import *
@@ -171,7 +172,7 @@ class AppView:
         # setup widgets and their linked variables
         self.cpusec_entry_var = StringVar(value="0.1")
         self.durationsec_entry_var = StringVar(value="0.02")
-        self.featureEntryVar=StringVar(value="")
+        self.featureEntryVar = StringVar(value="")
         self.subnet_var = StringVar()
         self.other_entry_var = StringVar()
         # countlabel
@@ -208,7 +209,7 @@ class AppView:
 
         # treeframe--tree
         self.tree = CustomTreeview(self, treeframe)
-        self.tree.configure(padding=(0,0,0,15))
+        self.tree.configure(padding=(0, 0, 0, 15))
         # treeframe--selection_tree
         self.selection_tree = SelectionTreeview(self, treeframe)
 
@@ -271,7 +272,6 @@ class AppView:
         self.refreshFrame.w["borderwidth"] = 2
         # self.refreshFrame.w['relief']='solid'
 
-
         self.cbv_lastversion = BooleanVar()
         self.cbv_lastversion.set(True)
         self.version_cb = ttk.Checkbutton(
@@ -282,7 +282,6 @@ class AppView:
             command=self._update_cmd,
         )
         self.version_cb.grid(row=0, column=1, sticky="w")
-
 
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)
@@ -354,8 +353,8 @@ class AppView:
 
         subbaseframe["borderwidth"] = 2
         # subbaseframe['relief']='ridge'
-        self.cbv_manual_probe=BooleanVar()
-        self.manual_probe_cb=ttk.Checkbutton(
+        self.cbv_manual_probe = BooleanVar()
+        self.manual_probe_cb = ttk.Checkbutton(
             subbaseframe,
             text="manual probe",
             padding=(0, 0, 50, 0),
@@ -578,15 +577,18 @@ class AppView:
         current_resultcount = len(results)
         # query tree for glm and tglm counts
 
-        glmcounts=self.tree.glmcounts(reverse=False if self.subnet_var.get()=='public-beta'
-                else True)
+        glmcounts = self.tree.glmcounts(
+            reverse=False if self.subnet_var.get() == "public-beta" else True
+        )
 
-        self.count_frame.update_counts(str(current_resultcount), *glmcounts, '')
+        self.count_frame.update_counts(str(current_resultcount), *glmcounts, "")
         # self.count_frame.resultcount_var.set(str(current_resultcount))
         # debug.dlog(pformat(self.tree.numerical_summary(False if self.subnet_var.get() =='public-beta' else True)))
-        self.numSummaryFrame.fill(self.tree.numerical_summary(False if self.subnet_var.get()
-            =='public-beta' else True)
-                                )
+        self.numSummaryFrame.fill(
+            self.tree.numerical_summary(
+                False if self.subnet_var.get() == "public-beta" else True
+            )
+        )
 
         if not refresh:
             disp = ""
@@ -710,9 +712,9 @@ class AppView:
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
         and return text"""
-        feature_filter=''
+        feature_filter = ""
         if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-            feature_filter=self.featureEntryVar.get()
+            feature_filter = self.featureEntryVar.get()
         ss = """
 select 'node.id'.offerRowID
 , 'node.id'.name
@@ -737,7 +739,7 @@ select 'node.id'.offerRowID
 , 'com.payment.platform'.kind
         """
 
-        ss+=f""",(
+        ss += f""",(
                 SELECT json_group_array(value) FROM
                 ( SELECT value FROM json_each('inf.cpu'.[capabilities])
                 WHERE json_each.value LIKE '%{feature_filter}%' )
@@ -761,27 +763,31 @@ select 'node.id'.offerRowID
             self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu"
             and self.cpusec_entry_var.get()
         ):
-            ss += (
-                f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= "
-                f"{Decimal(str(self.cpusec_entry_var.get()))/Decimal('3600.0')}"
-            )
+            cpu_per_sec = (
+                Decimal(str(self.cpusec_entry_var.get())) + Decimal("0.000001")
+            ) / Decimal("3600.0")
+            ss += f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " f"{cpu_per_sec}"
 
         if (
             self.dursec_entryframe.cbDurSecVar.get() == "maxdur"
             and self.durationsec_entry_var.get()
         ):
-            ss += f" AND 'com.pricing.model.linear.coeffs'.duration_sec <=" \
-            f" {Decimal(str(self.durationsec_entry_var.get()))/Decimal('3600.0')}"
+            duration_per_sec = (
+                Decimal(str(self.durationsec_entry_var.get())) + Decimal("0.000001")
+            ) / Decimal("3600.0")
+            ss += (
+                f" AND 'com.pricing.model.linear.coeffs'.duration_sec <="
+                f" {duration_per_sec}"
+            )
 
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
             and self.featureEntryVar.get()
-            ):
-                ss += ''
-                ss +=f"""
+        ):
+            ss += ""
+            ss += f"""
                  AND json_array_length(filteredFeatures) > 0
                 """
-
 
         if self.order_by_last:
             ss += " GROUP BY 'offers'.address"

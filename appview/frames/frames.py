@@ -94,23 +94,23 @@ class RefreshFrame:
 class CountFrame:
     def __init__(self, master, *args, **kwargs):
         def _debug_enable_border(wid):
-            wid["borderwidth"]=2
-            wid["relief"]="solid"
+            wid["borderwidth"] = 2
+            wid["relief"] = "solid"
 
         if not master.DARKMODE:
-            foregroundcolor=DIC544
+            foregroundcolor = DIC544
         else:
-            foregroundcolor='#eeeeee'
+            foregroundcolor = "#eeeeee"
 
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
         self.resultcount_var = StringVar()
         self.glmcount1_var = StringVar()
         self.glmcount2_var = StringVar()
-        #debug
-        self.glmcount1_var.set('0')
-        self.glmcount2_var.set('0')
-        self.resultcount_var.set('0')
+        # debug
+        self.glmcount1_var.set("0")
+        self.glmcount2_var.set("0")
+        self.resultcount_var.set("0")
         self.w.rowconfigure(0, weight=1)
         self.w.rowconfigure(1, weight=1)
         self.w.columnconfigure(0, weight=1)
@@ -124,9 +124,7 @@ class CountFrame:
         )
 
         self.glmcount1_label = ttk.Label(
-            self.w,
-            textvariable=self.glmcount1_var,
-            font="TkDefaultFont 10"
+            self.w, textvariable=self.glmcount1_var, font="TkDefaultFont 10"
         )
         self.glmcount2_label = ttk.Label(
             self.w,
@@ -134,32 +132,29 @@ class CountFrame:
             font="TkDefaultFont 10",
         )
 
-        self.glmcount_separator = ttk.Label(
-                self.w,
-                text='|',
-                font="TkDefaultFont 10"
-        )
+        self.glmcount_separator = ttk.Label(self.w, text="|", font="TkDefaultFont 10")
 
         # self.resultcount_var.trace_add("write", lambda *args: print("it has been written"))
 
         self.count_label.grid(column=0, columnspan=3, row=0, sticky="n")
         self.glmcount1_label.grid(column=0, row=1, sticky="w")
-        self.glmcount_separator.grid(column=1,row=1, sticky="")
+        self.glmcount_separator.grid(column=1, row=1, sticky="")
         self.glmcount2_label.grid(column=2, row=1, sticky="e")
         # self.count_diff_label.grid(column=1, row=0)
 
     # primary_currency may be deprecated soon
-    def update_counts(self, total, primary, secondary, primary_currency=''):
+    def update_counts(self, total, primary, secondary, primary_currency=""):
         self.resultcount_var.set(total)
         self.glmcount1_var.set(primary)
-        self.glmcount_separator.configure(text='|')
+        self.glmcount_separator.configure(text="|")
         self.glmcount2_var.set(secondary)
 
     def clear_counts(self):
-        self.resultcount_var.set('')
-        self.glmcount1_var.set('')
-        self.glmcount_separator.configure(text='')
-        self.glmcount2_var.set('')
+        self.resultcount_var.set("")
+        self.glmcount1_var.set("")
+        self.glmcount_separator.configure(text="")
+        self.glmcount2_var.set("")
+
 
 class CPUSecFrame:
     """
@@ -301,35 +296,44 @@ class FeatureEntryFrame:
         self._refresh_entry_state()
         # self.durationsec_entry.state(['!disabled'])
 
+
 class NumSummaryFrame:
     def __init__(self, master, *args, **kwargs):
-        self.master=master
+        self.master = master
         self.w = ttk.Frame(*args, **kwargs)
         for col in range(6):
             self.w.columnconfigure(col, weight=1)
         self.w.rowconfigure(0, weight=1)
         self.w.rowconfigure(1, weight=1)
-        widthDefault=26
+        widthDefault = 26
 
-        rowlabel1=ttk.Label(self.w, text='cpu', anchor='center', width=widthDefault)
-        rowlabel2=ttk.Label(self.w, text='dur')
-        rowlabel3=ttk.Label(self.w, text='start')
-        rowlabel1.grid(row=1,column=0)
-        rowlabel2.grid(row=2,column=0)
-        rowlabel3.grid(row=3,column=0)
+        rowlabel1 = ttk.Label(self.w, text="cpu", anchor="center", width=widthDefault)
+        rowlabel2 = ttk.Label(self.w, text="dur")
+        rowlabel3 = ttk.Label(self.w, text="start")
+        rowlabel1.grid(row=1, column=0)
+        rowlabel2.grid(row=2, column=0)
+        rowlabel3.grid(row=3, column=0)
 
-        self.headingMin=ttk.Label(self.w, text='min', width=widthDefault)
-        self.heading20=ttk.Label(self.w, text='20%', width=widthDefault)
-        self.heading40=ttk.Label(self.w, text='40%', width=widthDefault)
-        self.heading60=ttk.Label(self.w, text='60%', width=widthDefault)
-        self.heading80=ttk.Label(self.w, text='80%', width=widthDefault)
-        self.headingMax=ttk.Label(self.w, text='max', width=widthDefault)
+        self.headingMin = ttk.Label(self.w, text="min", width=widthDefault)
+        self.heading20 = ttk.Label(self.w, text="~20%", width=widthDefault)
+        self.heading40 = ttk.Label(self.w, text="~40%", width=widthDefault)
+        self.heading60 = ttk.Label(self.w, text="~60%", width=widthDefault)
+        self.heading80 = ttk.Label(self.w, text="~80%", width=widthDefault)
+        self.headingMax = ttk.Label(self.w, text="max", width=widthDefault)
 
-        for offset, heading in enumerate([self.headingMin, self.heading20, self.heading40,
-            self.heading60, self.heading80, self.headingMax]):
-            heading.grid(row=0, column=offset+1)
+        for offset, heading in enumerate(
+            [
+                self.headingMin,
+                self.heading20,
+                self.heading40,
+                self.heading60,
+                self.heading80,
+                self.headingMax,
+            ]
+        ):
+            heading.grid(row=0, column=offset + 1)
 
-        textDefault='-'
+        textDefault = "-"
         row1labels = []
         row2labels = []
         row3labels = []
@@ -339,11 +343,14 @@ class NumSummaryFrame:
             row2labels.append(ttk.Label(self.w, text=textDefault, width=widthDefault))
             row3labels.append(ttk.Label(self.w, text=textDefault, width=widthDefault))
 
-        for index, rowlabels in enumerate([ row1labels, row2labels,
-            row3labels]):
+        for index, rowlabels in enumerate([row1labels, row2labels, row3labels]):
             for offset, cell in enumerate(rowlabels):
-                cell.grid(row=index+1, column=offset+1, sticky="news")
-        self.rows=(row1labels, row2labels, row3labels,)
+                cell.grid(row=index + 1, column=offset + 1, sticky="news")
+        self.rows = (
+            row1labels,
+            row2labels,
+            row3labels,
+        )
 
     def clear(self):
         values_strlists = []
@@ -358,11 +365,13 @@ class NumSummaryFrame:
         # debug.dlog(pformat(values[1:-1]))
         values_strlists = []
         if values == None:
-            self.clear() # review
+            self.clear()  # review
             debug.dlog("values none, cleared")
         else:
-            for valuePath_list in [ values.cpu, values.env, values.start ]:
-                temp_strlist = [ f"{value[0]} ({value[1]})" for value in valuePath_list[1:-1] ]
+            for valuePath_list in [values.cpu, values.env, values.start]:
+                temp_strlist = [
+                    f"{value[0]} ({value[1]})" for value in valuePath_list[1:-1]
+                ]
                 temp_strlist.insert(0, str(valuePath_list[0]))
                 temp_strlist.append(str(valuePath_list[-1]))
                 values_strlists.append(temp_strlist)
