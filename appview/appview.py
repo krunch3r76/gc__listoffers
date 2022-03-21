@@ -759,27 +759,30 @@ select 'node.id'.offerRowID
         if self.cbv_lastversion.get():
             ss += " AND 'runtime'.version = mv"
 
+        epsilon = "0.000000001"
+
+        def to_secs(decstr):
+            epsilonized = Decimal(decstr) / Decimal("3600.0")
+            return epsilonized
+
         if (
             self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu"
             and self.cpusec_entry_var.get()
         ):
-            cpu_per_sec = (
-                Decimal(str(self.cpusec_entry_var.get())) + Decimal("0.000001")
-            ) / Decimal("3600.0")
-            ss += f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " f"{cpu_per_sec}"
+            cpu_per_sec = to_secs(self.cpusec_entry_var.get())
+            ss += ( f" AND 'com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}"
+                f" <=  {epsilon}" )
+            # ss += f" AND ('com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}) > 0.00001"
+            # ss += f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " f"'{cpu_per_sec}'"
 
         if (
             self.dursec_entryframe.cbDurSecVar.get() == "maxdur"
             and self.durationsec_entry_var.get()
         ):
-            duration_per_sec = (
-                Decimal(str(self.durationsec_entry_var.get())) + Decimal("0.000001")
-            ) / Decimal("3600.0")
-            ss += (
-                f" AND 'com.pricing.model.linear.coeffs'.duration_sec <="
-                f" {duration_per_sec}"
-            )
-
+            duration_per_sec = to_secs(self.durationsec_entry_var.get())
+            ss += ( f" AND 'com.pricing.model.linear.coeffs'.duration_sec "
+                    f" - {duration_per_sec} < {epsilon}"
+                    )
         if (
             self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
             and self.featureEntryVar.get()
