@@ -761,7 +761,7 @@ select 'node.id'.offerRowID
 
         epsilon = "0.000000001"
 
-        def to_secs(decstr):
+        def from_secs(decstr):
             epsilonized = Decimal(decstr) / Decimal("3600.0")
             return epsilonized
 
@@ -769,7 +769,7 @@ select 'node.id'.offerRowID
             self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu"
             and self.cpusec_entry_var.get()
         ):
-            cpu_per_sec = to_secs(self.cpusec_entry_var.get())
+            cpu_per_sec = from_secs(self.cpusec_entry_var.get())
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}"
                 f" <=  {epsilon}"
@@ -781,7 +781,7 @@ select 'node.id'.offerRowID
             self.dursec_entryframe.cbDurSecVar.get() == "maxdur"
             and self.durationsec_entry_var.get()
         ):
-            duration_per_sec = to_secs(self.durationsec_entry_var.get())
+            duration_per_sec = from_secs(self.durationsec_entry_var.get())
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.duration_sec "
                 f" - {duration_per_sec} < {epsilon}"

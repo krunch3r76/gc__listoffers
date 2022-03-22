@@ -114,6 +114,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     post: none
     """
     offers = []
+    result_list=[]
     try:
         debug.dlog("trying stats")
         try:
@@ -139,6 +140,8 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
                                 1,
                             )
                             result_list = json.loads(response.read().decode("utf-8"))
+                else:
+                    offers = ["error"]
     except Exception as e:
         offers = ["error"]
     else:
