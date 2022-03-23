@@ -21,7 +21,8 @@ class LocalConnection:  # later make subclass of abstract
         to the handler and send result signal back to view"""
         # print(f"[LocalConnection] handling signal {signal}")
         results_l = await self.signal_cb(
-            signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"]
+            signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"],
+            signal["msg"]["manual-probe"]
         )  # signal from view
 
         if results_l and len(results_l) > 0:

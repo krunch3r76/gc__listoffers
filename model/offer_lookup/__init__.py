@@ -27,7 +27,7 @@ class OfferLookup:
         self._session_id = "1"
         self._con = None
     # _-_-_-_- __call __ _-_-_-_-
-    async def __call__(self, id_, subnet_tag, sql):
+    async def __call__(self, id_, subnet_tag, sql, manual_probe):
         """find offers, recreate database, execute sql
         , return sqlite rows"""
         # print(f"[OfferLookup::__call__()] called with id {id_}")
@@ -36,7 +36,7 @@ class OfferLookup:
         if id_ != self._session_id:
             # scan offers anew
             try:
-                offers = await list_offers(subnet_tag)  # this is the one
+                offers = await list_offers(subnet_tag, manual_probe)  # this is the one
                 # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid

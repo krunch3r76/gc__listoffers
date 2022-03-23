@@ -74,7 +74,8 @@ dialog5 = {
     "script": "uh oh! it looks like your API key is unset or invalid."
     " please exit to double check it, then restart."
     " the environment variable to set is YAGNA_APPKEY."
-    " if you don't know what to do, please refer to the README on github.",
+    " if you don't know what to do, please refer to the README on github."
+    " Also, make sure yagna (or golemsp) is running.",
     "substitutions": {"uh oh!": ["oh gosh!", "oh-my-gosh!", "oh bother."]},
 }
 dialogs.append(dialog5)
@@ -121,6 +122,13 @@ dialog9 = {
 dialogs.append(dialog9)
 
 
+dialog10 = {
+    "script": "i am now collecting offers directly from"
+    " the network. this may take awhile",
+    "substitutions": {"now": ["currently", "presently"], "take awhile":
+        ["take some time", "be awhile", "a few minutes at first"]},
+}
+dialogs.append(dialog10)
 def yes_or_no():
     """randomly return T or F"""
     flip = random.getrandbits(1)

@@ -3,8 +3,8 @@ import multiprocessing
 from multiprocessing import Process, Queue
 import itertools
 from pprint import pprint, pformat  # debugging
+import importlib
 
-g_blah = "blah"
 
 try:
     from tkinter import *
@@ -360,7 +360,9 @@ class AppView:
             padding=(0, 0, 50, 0),
             variable=self.cbv_manual_probe,
         )
-        self.manual_probe_cb["state"] = "disabled"
+        yapapi_loader = importlib.util.find_spec("yapapi")
+        if yapapi_loader == None:
+            self.manual_probe_cb["state"] = "disabled"
         self.manual_probe_cb.grid(row=0, column=3, sticky="")
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
@@ -451,6 +453,7 @@ class AppView:
                 self.dursec_entryframe.disable()
                 self.feature_entryframe.disable()
                 self.version_cb.state(["disabled"])
+                self.manual_probe_cb["state"] = "disabled"
                 disabled = True
             else:
                 refreshFrame.refreshButton.state(["!disabled"])
@@ -464,6 +467,7 @@ class AppView:
                 self.dursec_entryframe.enable()
                 self.feature_entryframe.enable()
                 self.version_cb.state(["!disabled"])
+                self.manual_probe_cb["state"] = "!disabled"
 
                 disabled = False
 
@@ -834,8 +838,10 @@ select 'node.id'.offerRowID
         self.cursorOfferRowID = None
 
         # describe what's happening to client in console area
-        self._rewrite_to_console(fetch_new_dialog(1))
-
+        if not self.cbv_manual_probe.get():
+            self._rewrite_to_console(fetch_new_dialog(1))
+        else:
+            self._rewrite_to_console(fetch_new_dialog(9))
         # disable controls
         self.refreshFrame._toggle_refresh_controls()
 
@@ -857,7 +863,8 @@ select 'node.id'.offerRowID
         # ask controller to query model for results
         msg_out = {
             "id": self.session_id,
-            "msg": {"subnet-tag": self.subnet_var.get(), "sql": ss},
+            "msg": {"subnet-tag": self.subnet_var.get(), "sql": ss,
+                "manual-probe": self.cbv_manual_probe.get() },
         }
         self.q_out.put_nowait(msg_out)
 
@@ -874,20 +881,20 @@ select 'node.id'.offerRowID
             if refresh:
                 if self.ssp == None:
                     pass
-                    # TODO add sound when probing for offers locally
-                    # if platform.system()=='Windows':
-                    #     self.ssp=Process(target=winsound.PlaySound
-                    # , args=('.\\gs\\transformers.wav'
-                    # , winsound.SND_FILENAME), daemon=True)
-                    #     self.ssp.start()
-                    # elif platform.system()=='Linux':
-                    #     self.ssp=subprocess.Popen(['aplay'
-                    # , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
-                    # stderr=subprocess.DEVNULL)
-                    # elif platform.system()=='Darwin':
-                    #     self.ssp=subprocess.Popen(['afplay'
-                    # , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
-                    # stderr=subprocess.DEVNULL)
+                    if self.cbv_manual_probe.get():
+                        if platform.system()=='Windows':
+                            self.ssp=Process(target=winsound.PlaySound
+                        , args=('.\\gs\\transformers.wav'
+                        , winsound.SND_FILENAME), daemon=True)
+                            self.ssp.start()
+                        elif platform.system()=='Linux':
+                            self.ssp=subprocess.Popen(['aplay'
+                        , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
+                        elif platform.system()=='Darwin':
+                            self.ssp=subprocess.Popen(['afplay'
+                        , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL)
                 else:
                     if isinstance(self.ssp, subprocess.Popen):
                         try:

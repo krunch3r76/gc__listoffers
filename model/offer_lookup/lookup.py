@@ -79,7 +79,7 @@ async def _list_offers(subnet_tag: str):
                     offer_d.clear()
                     try:
                         event = await asyncio.wait_for(
-                            ai.__anext__(), timeout=10
+                            ai.__anext__(), timeout=8
                         )  # <class 'yapapi.rest.market.OfferProposal'>
                         offer_d["offer-id"] = event.id
                         if offer_d["offer-id"] not in offer_ids_seen:
@@ -168,7 +168,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     send_end.send(offers)
 
 
-async def list_offers(subnet_tag: str):
+async def list_offers(subnet_tag: str, manual_probing=False):
     """query stats api otherwise scan yagna for offers then
     debug.dlog("listoffers called")
     return offers as a list of dictionary objects"""
@@ -184,10 +184,8 @@ async def list_offers(subnet_tag: str):
     """
     offers = None
     fallback = False
-    debugfallback = False # debug
 
-    debug.dlog(f"debugfallback: {debugfallback}",1)
-    if not debugfallback:
+    if not manual_probing:
         # launch non-asynchronous routine for https to stats
         recv_end, send_end = multiprocessing.Pipe(False)
         p = multiprocessing.Process(
@@ -199,17 +197,18 @@ async def list_offers(subnet_tag: str):
         while not recv_end.poll():
             await asyncio.sleep(0.01)
         offers = recv_end.recv()
-    else:
-        offers=['error']
+    # else:
+    #     offers=['error']
 
-    if len(offers) > 0 and offers[0] == "error":  # review TODO
-        fallback = True
+        if len(offers) > 0 and offers[0] == "error":  # review TODO
+            fallback = True
 
-    if fallback and yapapi_loader:
+    if (fallback or manual_probing) and yapapi_loader:
         offers=[]
-        print("there was a problem connecting to stats, falling back to probing."
-                " this might take awhile")
-        debug.dlog("falling back to offer probe")
+        if fallback:
+            print("there was a problem connecting to stats, falling back to probing."
+                    " this might take awhile")
+            debug.dlog("falling back to offer probe")
         try:
             offers = await _list_offers(subnet_tag)
         except yapapi.rest.configuration.MissingConfiguration as e:
