@@ -5,6 +5,7 @@ import itertools
 from pprint import pprint, pformat  # debugging
 import importlib
 
+yapapi_loader = importlib.util.find_spec("yapapi")
 
 try:
     from tkinter import *
@@ -360,7 +361,6 @@ class AppView:
             padding=(0, 0, 50, 0),
             variable=self.cbv_manual_probe,
         )
-        yapapi_loader = importlib.util.find_spec("yapapi")
         if yapapi_loader == None:
             self.manual_probe_cb["state"] = "disabled"
         self.manual_probe_cb.grid(row=0, column=3, sticky="")
@@ -467,7 +467,9 @@ class AppView:
                 self.dursec_entryframe.enable()
                 self.feature_entryframe.enable()
                 self.version_cb.state(["!disabled"])
-                self.manual_probe_cb["state"] = "!disabled"
+
+                if yapapi_loader != None:
+                    self.manual_probe_cb["state"] = "!disabled"
 
                 disabled = False
 
