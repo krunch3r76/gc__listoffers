@@ -16,8 +16,8 @@ head over to releases and download the zip or tar file from the latest release. 
 
 https://user-images.githubusercontent.com/46289600/160338409-5b0456fd-4ad7-4613-8900-e9f71c987bb3.mp4
 
+this video demos basic functionality
 
-this video demonstrates how gc__listoffers is intended to be used by requestors to have better control. it illustrates functionality utilizing two other projects of mine: gc__filterms and entropythief. please see my pinned repositories for details.
 
 https://user-images.githubusercontent.com/46289600/155652172-654b37b5-7669-4f1c-bb18-b47fe8bc4053.mp4
 
