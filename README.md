@@ -54,7 +54,7 @@ $ cd gc__listoffers
 ```
 On Windows:
 ```cmd
-REM clone as above
+REM clone as above (or double click from explorer)
 .\gc__listoffers> python gc__listoffers.py
 ```
 
@@ -62,8 +62,6 @@ REM clone as above
 if name or address headings are clicked on, sorting is strictly on either of these. however, if you click any of the other columns, sorting occurs from left to right, first sorting on the far left, then next level on the right, and so on.
 
 # requirements
-
-yapapi must be installed
 
 for systems that do not allow https outbound connection, either yagna or golemsp must be running and the app-key should be in the environment (see section on app-key for details)
 
