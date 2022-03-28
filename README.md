@@ -86,7 +86,7 @@ see offer details via the contextual menu system!
 
 
 # advanced
-### starting for remote interaction (for systems without internet connectivity besides golem)
+### starting for remote interaction (for systems without internet connectivity besides containerized golem)
 ```bash
 # on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
 $ export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
