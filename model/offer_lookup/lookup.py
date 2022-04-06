@@ -33,8 +33,6 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-
-
 async def _list_offers(subnet_tag: str):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
@@ -88,14 +86,16 @@ async def _list_offers(subnet_tag: str):
                             offer_d["issuer-address"] = event.issuer
                             offer_d["props"] = event.props  # dict
                             offers.append(dict(offer_d))
-                            print(f"unfiltered offers collected so far on all {subnet_tag}:"
-                                    f" {len(offers)}", end="\r")
+                            print(
+                                f"unfiltered offers collected so far on all {subnet_tag}:"
+                                f" {len(offers)}",
+                                end="\r",
+                            )
                             # a dict copy, i.e. with a unique handle
                         else:
                             dupcount += 1
                             debug.dlog(f"duplicate count: {dupcount}")
                     except TimeoutError as e:
-                        debug.dlog(f"TimeoutError in lookup.py. {e}")
                         timed_out = True
                     except Exception as e:
                         print(f"unhandled exception in lookup.py, marked timeout: {e}")
@@ -118,12 +118,26 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     post: none
     """
     offers = []
-    result_list=[]
+    result_list = []
     try:
         debug.dlog("trying stats")
         try:
+            with urllib.request.urlopen(
+                "https://api.stats.golem.network/v1/network/online"
+            ) as response:
+                debug.dlog(
+                    f"stats http response status: {response.status}"
+                    + f" with reason phrase: {response.msg}",
+                    1,
+                )
+                result_list = json.loads(response.read().decode("utf-8"))
+        except urllib.error.URLError as e:
+            if "CERTIFICATE_VERIFY_FAILED" in e.__str__():
+                import ssl
+
+                ssl._create_default_https_context = ssl._create_unverified_context
                 with urllib.request.urlopen(
-                    "https://api.stats.golem.network/v1/network/online"
+                    "https://api.stats.golem.network/v1/network/online",
                 ) as response:
                     debug.dlog(
                         f"stats http response status: {response.status}"
@@ -131,21 +145,8 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
                         1,
                     )
                     result_list = json.loads(response.read().decode("utf-8"))
-        except urllib.error.URLError as e: 
-                if 'CERTIFICATE_VERIFY_FAILED' in e.__str__():
-                        import ssl
-                        ssl._create_default_https_context = ssl._create_unverified_context
-                        with urllib.request.urlopen(
-                            "https://api.stats.golem.network/v1/network/online",
-                        ) as response:
-                            debug.dlog(
-                                f"stats http response status: {response.status}"
-                                + f" with reason phrase: {response.msg}",
-                                1,
-                            )
-                            result_list = json.loads(response.read().decode("utf-8"))
-                else:
-                    offers = ["error"]
+            else:
+                offers = ["error"]
     except Exception as e:
         offers = ["error"]
     else:
@@ -201,17 +202,19 @@ async def list_offers(subnet_tag: str, manual_probing=False):
         while not recv_end.poll():
             await asyncio.sleep(0.01)
         offers = recv_end.recv()
-    # else:
-    #     offers=['error']
+        # else:
+        #     offers=['error']
 
         if len(offers) > 0 and offers[0] == "error":  # review TODO
             fallback = True
 
     if (fallback or manual_probing) and yapapi_loader:
-        offers=[]
+        offers = []
         if fallback:
-            print("there was a problem connecting to stats, falling back to probing."
-                    " this might take awhile")
+            print(
+                "there was a problem connecting to stats, falling back to probing."
+                " this might take awhile"
+            )
             debug.dlog("falling back to offer probe")
         try:
             offers = await _list_offers(subnet_tag)
@@ -227,9 +230,11 @@ async def list_offers(subnet_tag: str, manual_probing=False):
             debug.dlog(type(e))
             debug.dlog(e.__class__.__name__)
     elif fallback:
-        print("there was a problem connecting to stats and fallback was not"
-                " available! make sure you are connected"
-                " to the internet. if so, stats may be unavailable."
-                " you can try running yagna to perform a manual probe.")
-        offers=[]
+        print(
+            "there was a problem connecting to stats and fallback was not"
+            " available! make sure you are connected"
+            " to the internet. if so, stats may be unavailable."
+            " you can try running yagna to perform a manual probe."
+        )
+        offers = []
     return offers

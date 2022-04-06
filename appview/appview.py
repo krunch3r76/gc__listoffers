@@ -1006,7 +1006,6 @@ select 'node.id'.offerRowID
             self.root.after(2, lambda: self.handle_incoming_result(refresh))
         else:
             results = msg_in["msg"]
-            print(f"results! {results}")
 
             if len(results) > 1 and results[0] == "error":
                 __on_error(self, results)
