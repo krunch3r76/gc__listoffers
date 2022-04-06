@@ -94,7 +94,11 @@ async def _list_offers(subnet_tag: str):
                         else:
                             dupcount += 1
                             debug.dlog(f"duplicate count: {dupcount}")
-                    except TimeoutError:
+                    except TimeoutError as e:
+                        debug.dlog(f"TimeoutError in lookup.py. {e}")
+                        timed_out = True
+                    except Exception as e:
+                        print(f"unhandled exception in lookup.py, marked timeout: {e}")
                         timed_out = True
             print("")
             debug.dlog(f"number of offer_ids_seen: {len(offer_ids_seen)}")

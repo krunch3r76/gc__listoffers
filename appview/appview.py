@@ -967,7 +967,7 @@ select 'node.id'.offerRowID
                     stderr=subprocess.DEVNULL,
                 )
 
-        def __on_error(selfresults):
+        def __on_error(self, results):
             debug.dlog(f"error results: {results}")
             if results[1] == "invalid api key":
                 self._rewrite_to_console(fetch_new_dialog(4))
@@ -988,8 +988,9 @@ select 'node.id'.offerRowID
         except multiprocessing.queues.Empty:
             # msg_in = None
             if refresh:
-                if self.ssp == None and self.cbv_manual_probe.get():
-                    __play_sound(self)
+                if self.ssp == None:
+                    if self.cbv_manual_probe.get():
+                        __play_sound(self)
                 elif self.ssp != None:
                     if isinstance(self.ssp, subprocess.Popen):
                         try:
@@ -1002,9 +1003,10 @@ select 'node.id'.offerRowID
                         if not self.ssp.is_alive():
                             self.ssp = None
 
-            self.root.after(1, lambda: self.handle_incoming_result(refresh))
+            self.root.after(2, lambda: self.handle_incoming_result(refresh))
         else:
             results = msg_in["msg"]
+            print(f"results! {results}")
 
             if len(results) > 1 and results[0] == "error":
                 __on_error(self, results)
