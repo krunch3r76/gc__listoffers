@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>60</x>
+      <y>50</y>
+      <w>680</w>
+      <h>1250</h>
+    </coordinates>
+    <panel_attributes>AppView</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>110</x>
+      <y>90</y>
+      <w>280</w>
+      <h>480</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;properties&gt;&gt;
+--
+cancel_current_displayed_message
+message_being_displayed
+refreshFrame
+session_id
+order_by_last
+root
+DARKMODE
+fe_image_ico
+cpusec_entry_var
+durationsec_entry_var
+featureEntryVar
+subnet_var
+other_entry_var
+session_resultcount
+lastresultcount
+cursorOfferRowID
+rawwin
+ssp
+cbv_lastversion
+cbv_manual_probe
+_states
+whetherUpdating
+cursorOfferRowID()
+count_selected()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>440</x>
+      <y>150</y>
+      <w>220</w>
+      <h>430</h>
+    </coordinates>
+    <panel_attributes>tk
+&lt;&lt;properties&gt;&gt;
+--
+treeframe
+tree
+selection_tree
+optionframe
+numSummaryFrame
+baseframe
+l_baseframe
+refreshFrame
+version_cb
+count_frame
+console
+subbaseframe
+label_selectioncount
+select_count_frame
+filterframe
+dursec_entryframe
+feature_entryframe
+stub :Label
+stubframe
+manual_probe_cb
+filtermswin
+rawwin</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>170</x>
+      <y>590</y>
+      <w>470</w>
+      <h>630</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;methods&gt;&gt;
+--
+init(...)
+__call__(...)
+add_text_over_time(...)
+_rewrite_to_console(...)
+
+_stateRefreshing(...)
+_update(...) # via handle_incoming_result(...)
+_refresh_cmd(...)
+_toggle_refresh_controls_closure(...)
+_update_cmd(...)
+_update_or_refresh_sql(...)
+
+on_escape_event(...)
+_on_offer_text_selection(...)
+_on_other_entry_change(...)
+_on_other_entry_focusout(...)
+_on_other_entry_click(...)
+_on_other_radio(...)
+on_select(...)
+on_none_selected(...)
+
+_show_raw(...)
+open_stats_page_under_cursor(...)
+_send_message_to_model(...)
+handle_incoming_result(...)
+handle_incoming_result_extra(...)
+
+_cb_feature_checkbutton(...)
+_cb_cpusec_checkbutton(...)
+_cb_durationsec_checkbutton(...)
+
+do_popup(...)
+_start_filterms_dialog(...)
+_build_menus(...)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
