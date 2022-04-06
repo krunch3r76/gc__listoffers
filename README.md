@@ -18,12 +18,6 @@ https://user-images.githubusercontent.com/46289600/160338409-5b0456fd-4ad7-4613-
 
 this video demos basic functionality
 
-
-https://user-images.githubusercontent.com/46289600/155652172-654b37b5-7669-4f1c-bb18-b47fe8bc4053.mp4
-
-this video demonstrates interop with gc_spyu to add model information
-
-
 # check for new / latest release tag
 ```bash
 (gc_listoffers)$ git fetch
