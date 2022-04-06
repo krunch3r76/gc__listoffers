@@ -9,10 +9,12 @@ import statistics
 import bisect
 from dataclasses import dataclass
 from decimal import Decimal
+from functools import reduce
 
-PricingData = namedtuple('PricingData', ['cpu', 'env', 'start'])
-PricingQuintiles = namedtuple('PricingQuintiles', ['cpu', 'env', 'start'])
-PricingSummaries = namedtuple('PricingStats', ['cpu', 'env', 'start'])
+PricingData = namedtuple("PricingData", ["cpu", "env", "start"])
+PricingQuintiles = namedtuple("PricingQuintiles", ["cpu", "env", "start"])
+PricingSummaries = namedtuple("PricingStats", ["cpu", "env", "start"])
+
 
 @dataclass
 class Pricing:
@@ -28,38 +30,39 @@ class Pricing:
 
     def __init__(self, pricing):
         self.pricing = pricing
-        self.cpu = [ price.cpu for price in self.pricing ]
+        self.cpu = [price.cpu for price in self.pricing]
         self.cpu.sort()
-        self.env = [ price.env for price in self.pricing ]
+        self.env = [price.env for price in self.pricing]
         self.env.sort()
-        self.start = [ price.start for price in self.pricing ]
+        self.start = [price.start for price in self.pricing]
         self.start.sort()
-        self.count=len(pricing)
-
+        self.count = len(pricing)
 
         def find_counts(prices):
             def find_le(a, x):
                 # https://docs.python.org/3/library/bisect.html#searching-sorted-lists
-                'Find rightmost value less than or equal to x'
+                "Find rightmost value less than or equal to x"
                 i = bisect.bisect_right(a, x)
                 if i:
-                    return a[i-1]
+                    return a[i - 1]
                 raise ValueError
 
             try:
-                quintiles = statistics.quantiles(
-                        prices,
-                        n=5,
-                        method='inclusive'
-                        )
+                quintiles = statistics.quantiles(prices, n=5, method="inclusive")
 
-                quintet = list(map(lambda quintile: find_le(prices, quintile), quintiles))
+                quintet = list(
+                    map(lambda quintile: find_le(prices, quintile), quintiles)
+                )
                 counts = list(
-                        map(lambda _quintet_: sum(1 for price in prices if price <= _quintet_),
-                            quintet)
-                        )
+                    map(
+                        lambda _quintet_: sum(
+                            1 for price in prices if price <= _quintet_
+                        ),
+                        quintet,
+                    )
+                )
                 rv = tuple(zip(quintet, counts))
-            except statistics.StatisticsError: # < 2 data points
+            except statistics.StatisticsError:  # < 2 data points
                 rv = None
 
             return rv
@@ -77,6 +80,7 @@ class Pricing:
     def __len__(self):
         return len(self.pricing)
 
+
 class CustomTreeview(ttk.Treeview):
     """
     CustomTreeview
@@ -85,6 +89,7 @@ class CustomTreeview(ttk.Treeview):
     ...
 
     """
+
     """notes:
     #2 refers to the first column, which is always name
     #3 refers to the second column, which is always address
@@ -108,7 +113,8 @@ class CustomTreeview(ttk.Treeview):
     class StateHolder:
         __swapping = False
         __drag_start_column_number = ""
-        __inserting=False
+        __inserting = False
+
         def __init__(self, owner):
             self._owner = owner
 
@@ -133,12 +139,15 @@ class CustomTreeview(ttk.Treeview):
 
         @inserting.setter
         def inserting(self, truth_value):
-            self.__inserting=truth_value
-            if self.__inserting==False:
+            self.__inserting = truth_value
+            if self.__inserting == False:
                 debug.dlog("insertion complete")
                 self._owner._pricingGlm = Pricing(self._owner._pricingGlmIntermediate)
                 self._owner._pricingTglm = Pricing(self._owner._pricingTglmIntermediate)
-            else: # new insertion started
+                if not self._owner.whether_at_least_one_model():
+                    # hide the modelinfo column
+                    self._owner._headings_invisible.add(self._owner.Field.model)
+            else:  # new insertion started
                 # del(self._owner._pricingGlm)
                 # del(self._owner._pricingTglm)
                 self._owner._pricingGlmIntermediate.clear()
@@ -157,17 +166,17 @@ class CustomTreeview(ttk.Treeview):
             self.__drag_start_column_number = colstr
 
     _kheadings = (
-        "offerRowID",   # 0
-        "name",         # 1
-        "address",      # 2
-        "cpu (/hr)",    # 3
+        "offerRowID",  # 0
+        "name",  # 1
+        "address",  # 2
+        "cpu (/hr)",  # 3
         "duration (/hr)",  # 4
-        "start",        # 5
-        "cores",        # 6
-        "threads",      # 7
-        "version",      # 8
-        "modelname",    # 9
-        "features",     # 10
+        "start",  # 5
+        "cores",  # 6
+        "threads",  # 7
+        "version",  # 8
+        "modelname",  # 9
+        "features",  # 10
     )
 
     _kheadings_sql_paths = (
@@ -190,8 +199,6 @@ class CustomTreeview(ttk.Treeview):
         [str(num) for num in range(len(_kheadings))]
     )  # e.g. ('0', '1', '2', ...)
 
-    _headings_invisible = {0, 8}
-
     #    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}
     # , {"sort_on": "'offers'.address"}, {}, {}
     _update_cmd_dict = {
@@ -204,7 +211,7 @@ class CustomTreeview(ttk.Treeview):
         "threads": {},
         "version": {},
         "modelname": {},
-        "features": {}
+        "features": {},
     }
 
     def change_visibility(self, colnum, whetherVisible):
@@ -214,9 +221,7 @@ class CustomTreeview(ttk.Treeview):
         else:
             self._headings_invisible.discard(colnum)
 
-    ####################################################################
-    #               CustomTreeView __init__                            #
-    ####################################################################
+    #               CustomTreeView __init__                                  <
     def __init__(self, ctx, *args, **kwargs):
         """constructor for CustomTreeView"""
         """post:
@@ -226,6 +231,7 @@ class CustomTreeview(ttk.Treeview):
             buttons bound
             column options set
         """
+        self._headings_invisible = {0, 8, self.Field.model}
         self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
         # initialize super with columns
@@ -257,12 +263,20 @@ class CustomTreeview(ttk.Treeview):
         self.s.grid(row=0, column=1, sticky="ns")
         self["yscrollcommand"] = self.s.set
         self.tag_configure("tglm", foreground="red")
-        self._pricingGlm = None # = [] # named tuples of cpu, env, start
-        self._pricingTglm = None # [] # named tuples of cpu, env, start
+        self._pricingGlm = None  # = [] # named tuples of cpu, env, start
+        self._pricingTglm = None  # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
         self._pricingTglmIntermediate = []
 
+    #               CustomTreeView __init__                                  >
 
+    def whether_at_least_one_model(self):
+        children = self.get_children()
+        last_model_info = reduce(
+            lambda a, b: a if a != "" else b,
+            [self.item(id)["values"][self.Field.model] for id in children],
+        )
+        return last_model_info != ""
 
     def list_selection_addresses(self):
         """extract the node address values from the selection and return
@@ -329,10 +343,10 @@ class CustomTreeview(ttk.Treeview):
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
-        feature_filter=''
+        feature_filter = ""
         debug.dlog(f"----->{self._ctx.feature_entryframe.cbFeatureEntryVar.get()}")
         if self._ctx.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-            feature_filter=self._ctx.featureEntryVar.get()
+            feature_filter = self._ctx.featureEntryVar.get()
             self.change_visibility(10, True)
         else:
             self.change_visibility(10, False)
@@ -341,7 +355,9 @@ class CustomTreeview(ttk.Treeview):
         self._ctx.treeframe.grid_remove()
         for offset, heading_index in enumerate(self._heading_map):
             heading_text = self._kheadings[heading_index]
-            stretch = YES if self._heading_map[offset] not in self._headings_invisible else NO
+            stretch = (
+                YES if self._heading_map[offset] not in self._headings_invisible else NO
+            )
             # debug.dlog(self._headings_invisible)
             if not stretch:
                 self.column(offset, stretch=NO, width=0)
@@ -507,36 +523,40 @@ class CustomTreeview(ttk.Treeview):
 
     def notify_insert_begin(self):
         """informs Tree to expect insertions"""
-        self._stateHolder.inserting=True
+        self._stateHolder.inserting = True
 
     def notify_insert_end(self):
         """informs Tree that all insertions have been completed"""
-        self._stateHolder.inserting=False
+        self._stateHolder.inserting = False
 
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
+        # inputs should be values, currency_unit
         value_list = list(kwargs["values"])
-        # if len(value_list[-2].strip()) == 0:
-        #     value_list[-2]='-'
         node_address = value_list[CustomTreeview.Field.address]
-        value_list[CustomTreeview.Field.address] = value_list[2][:9]
-        # currency_unit=value_list[-1]
+        value_list[CustomTreeview.Field.address] = value_list[
+            CustomTreeview.Field.address
+        ][:9]
         currency_unit = kwargs["currency_unit"]
+        pricingData = PricingData(
+            value_list[CustomTreeview.Field.cpu_per_hr],
+            value_list[CustomTreeview.Field.dur_per_hr],
+            value_list[CustomTreeview.Field.start],
+        )
         if currency_unit == "glm":
-            super().insert(
-                "", "end", values=self._values_reordered(value_list), iid=node_address
-            )
-            self._pricingGlmIntermediate.append(PricingData(value_list[3], value_list[4], value_list[5]))
+            self._pricingGlmIntermediate.append(pricingData)
+            tags = tuple()
         else:
-            super().insert(
-                "",
-                "end",
-                values=self._values_reordered(value_list),
-                iid=node_address,
-                tags=("tglm"),
-            )
-            self._pricingTglmIntermediate.append(PricingData(value_list[3], value_list[4], value_list[5]))
-        # super().insert('', 'end', values=self._values_reordered(kwargs['values']))
+            self._pricingTglmIntermediate.append(pricingData)
+            tags = ("tglm",)
+
+        super().insert(
+            "",
+            "end",
+            values=self._values_reordered(value_list),
+            iid=node_address,
+            tags=tags,
+        )
 
     def get_heading(self, index):
         """return the heading name currently at the specified index"""
@@ -549,21 +569,39 @@ class CustomTreeview(ttk.Treeview):
     def glmcounts(self, reverse=False):
         """return the number of rows corresponding to glm and tglm as a pair"""
         if not reverse:
-            return (len(self._pricingGlm), len(self._pricingTglm), )
+            return (
+                len(self._pricingGlm),
+                len(self._pricingTglm),
+            )
         else:
-            return (len(self._pricingTglm), len(self._pricingGlm), )
+            return (
+                len(self._pricingTglm),
+                len(self._pricingGlm),
+            )
 
     def numerical_summary(self, tglm=False):
         if not tglm:
-            pricing=self._pricingGlm
+            pricing = self._pricingGlm
         else:
-            pricing=self._pricingTglm
+            pricing = self._pricingTglm
         try:
-            pricingStats=PricingSummaries(
-                cpu=(min(pricing.cpu), *pricing.cpuQuintetCounts, max(pricing.cpu),),
-                env=(min(pricing.env), *pricing.envQuintetCounts, max(pricing.env),),
-                start=(min(pricing.start), *pricing.startQuintetCounts, max(pricing.start),)
-                )
+            pricingStats = PricingSummaries(
+                cpu=(
+                    min(pricing.cpu),
+                    *pricing.cpuQuintetCounts,
+                    max(pricing.cpu),
+                ),
+                env=(
+                    min(pricing.env),
+                    *pricing.envQuintetCounts,
+                    max(pricing.env),
+                ),
+                start=(
+                    min(pricing.start),
+                    *pricing.startQuintetCounts,
+                    max(pricing.start),
+                ),
+            )
         except:
-            pricingStats=None
+            pricingStats = None
         return pricingStats

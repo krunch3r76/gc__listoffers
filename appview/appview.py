@@ -4,6 +4,8 @@ from multiprocessing import Process, Queue
 import itertools
 from pprint import pprint, pformat  # debugging
 import importlib
+import sys
+from collections import namedtuple
 
 yapapi_loader = importlib.util.find_spec("yapapi")
 
@@ -103,37 +105,7 @@ class AppView:
     cancel_current_displayed_message = False  # review
     message_being_displayed = False  # review
 
-    def add_text_over_time(self, text, txt, length, current=0, time=25, newmsg=True):
-        """add text character by character to console"""
-        text["state"] = "normal"
-        if txt == "":
-            text.delete("1.0", "end")
-            return
-
-        if newmsg:
-            text.delete("1.0", "end")
-            newmsg = False
-        text.insert("end", txt[current])
-        current += 1
-        add_time = 0
-        if current != length:
-            if txt[current - 1] == ".":
-                add_time = time * 15
-            elif txt[current - 1] == ",":
-                add_time = time * 10
-            text["state"] = "disabled"
-            self.root.after(
-                time + add_time,
-                lambda: self.add_text_over_time(
-                    text, txt, length, current, time, newmsg
-                ),
-            )
-
-        text["state"] = "disabled"
-
-    ####################################################################
     #                       AppView __init__                           #
-    ####################################################################
     def __init__(self):
         # icon
 
@@ -152,11 +124,19 @@ class AppView:
             True if (datetime.now().hour > 19 or datetime.now().hour < 6) else False
         )
         if not self.DARKMODE:
-            self.root.tk.call("source", "./forest-ttk-theme/forest-light.tcl")
-            s.theme_use("forest-light")
+            if sys.platform == "win32":
+                self.root.tk.call("source", "./Sun-Valley-ttk-theme/sun-valley.tcl")
+                self.root.call("set_theme", "light")
+            else:
+                self.root.tk.call("source", "./forest-ttk-theme/forest-light.tcl")
+                s.theme_use("forest-light")
         else:
-            self.root.tk.call("source", "./forest-ttk-theme/forest-dark.tcl")
-            s.theme_use("forest-dark")
+            if sys.platform == "win32":
+                self.root.tk.call("source", "./Sun-Valley-ttk-theme/sun-valley.tcl")
+                self.root.call("set_theme", "dark")
+            else:
+                self.root.tk.call("source", "./forest-ttk-theme/forest-dark.tcl")
+                s.theme_use("forest-dark")
         current_datetime = datetime.now()
         root = self.root
         root.columnconfigure(0, weight=1)
@@ -379,6 +359,23 @@ class AppView:
         self.tree._update_headings()
         self.tree.grid(column=0, row=0, sticky="news")
 
+    #                           __call__                                     <
+    def __call__(self):
+        root = self.root
+
+        self._build_menus()
+
+        # root.bind('<ButtonRelease-3>', do_popup )
+        if root.tk.call("tk", "windowingsystem") == "aqua":
+            root.bind("<2>", self.do_popup)
+            root.bind("<Control-1>", self.do_popup)
+        else:
+            root.bind("<3>", self.do_popup)
+
+        root.mainloop()
+
+    #                           __call__                                     >
+
     @property
     def cursorOfferRowID(self):
         return self.__cursorOfferRowID
@@ -387,19 +384,6 @@ class AppView:
     def cursorOfferRowID(self, val):
         # debug.dlog(f"setter: setting cursorOfferRowID to {val}")
         self.__cursorOfferRowID = val
-
-    def on_escape_event(self, e):
-        mapped = list(
-            filter(
-                lambda menu: menu.winfo_ismapped() == 1, [self.menu, self.seltree_menu]
-            )
-        )
-        if len(mapped) > 0:
-            for menu in mapped:
-                menu.grab_release()
-                menu.unpost()
-        else:
-            self.root.destroy()
 
     @property
     def count_selected(self):
@@ -413,14 +397,51 @@ class AppView:
         else:
             self.label_selectioncount.grid_remove()
 
-    def open_stats_page_under_cursor(self, node_address):
-        """
-        pre:
-        """
-        debug.dlog(node_address)
-        url = f"https://stats.golem.network/network/provider/{node_address}"
-        webbrowser.open_new(url)
+    #                       add_text_over_time                               #
+    def add_text_over_time(self, text, txt, length, current=0, time=25, newmsg=True):
+        """add text character by character to console"""
+        text["state"] = "normal"
+        if txt == "":
+            text.delete("1.0", "end")
+            return
 
+        if newmsg:
+            text.delete("1.0", "end")
+            newmsg = False
+        text.insert("end", txt[current])
+        current += 1
+        add_time = 0
+        if current != length:
+            if txt[current - 1] == ".":
+                add_time = time * 15
+            elif txt[current - 1] == ",":
+                add_time = time * 10
+            text["state"] = "disabled"
+            self.root.after(
+                time + add_time,
+                lambda: self.add_text_over_time(
+                    text, txt, length, current, time, newmsg
+                ),
+            )
+
+        text["state"] = "disabled"
+
+    #                       _rewrite_to_console                              #
+    def _rewrite_to_console(self, msg):
+        """clear the console label and write a new message"""
+        self.console.grid_remove()
+        self.console = Text(self.l_baseframe, height=7, width=40)
+        self.console["state"] = "disabled"
+        self.console["wrap"] = "word"
+        self.console["borderwidth"] = 0
+        self.console.grid(row=0, column=0, sticky="nwes")
+
+        if msg:
+            self.add_text_over_time(self.console, msg, len(msg))
+        else:
+            self.add_text_over_time(self.console, "", 0)
+
+    #                       _stateRefreshing                                 #
     def _stateRefreshing(self, b=None):
         if b == True:
             self._states["refreshing"] = True
@@ -429,126 +450,7 @@ class AppView:
         elif b == None:
             return self._states.get("refreshing", False)
 
-    def _toggle_refresh_controls_closure(self):
-        disabled = False
-        other_entry_was_enabled = False
-        # maxcpu_was_enabled = False
-        # maxdur_was_enabled = False
-
-        def toggle():
-            nonlocal disabled
-            nonlocal other_entry_was_enabled
-            radio_frame = self.refreshFrame.radio_frame
-            refreshFrame = self.refreshFrame
-            if not disabled:
-                refreshFrame.refreshButton.state(["disabled"])
-                radio_frame.publicbeta_rb.state(["disabled"])
-                radio_frame.publicdevnet_rb.state(["disabled"])
-                if radio_frame.other_entry.instate(["!disabled"]):
-                    other_entry_was_enabled = True
-                radio_frame.other_rb.state(["disabled"])
-                radio_frame.other_entry.state(["disabled"])
-
-                self.cpusec_entryframe.disable()
-                self.dursec_entryframe.disable()
-                self.feature_entryframe.disable()
-                self.version_cb.state(["disabled"])
-                self.manual_probe_cb["state"] = "disabled"
-                disabled = True
-            else:
-                refreshFrame.refreshButton.state(["!disabled"])
-                radio_frame.publicbeta_rb.state(["!disabled"])
-                radio_frame.publicdevnet_rb.state(["!disabled"])
-                radio_frame.other_rb.state(["!disabled"])
-                if other_entry_was_enabled:
-                    radio_frame.other_entry.state(["!disabled"])
-
-                self.cpusec_entryframe.enable()
-                self.dursec_entryframe.enable()
-                self.feature_entryframe.enable()
-                self.version_cb.state(["!disabled"])
-
-                if yapapi_loader != None:
-                    self.manual_probe_cb["state"] = "!disabled"
-
-                disabled = False
-
-        return toggle
-
-    def _on_offer_text_selection(self, *args):
-        e = args[0]
-        selection_range = e.widget.tag_ranges("sel")
-        if selection_range:
-            selection = e.widget.get(*selection_range)
-            self.root.clipboard_clear()
-            self.root.clipboard_append(selection)
-
-    def _on_other_entry_change(self, *args):
-        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
-        self.subnet_var.set(self.other_entry_var.get())
-
-    def _on_other_entry_focusout(self, *args):
-        subnet = self.subnet_var.get()
-        if subnet != "public-beta" and subnet != "devnet-beta":
-            self.refreshFrame.radio_frame.other_entry.state(["disabled"])
-
-    def _on_other_entry_click(self, *args):
-        radio_frame = self.refreshFrame.radio_frame
-        if radio_frame.other_rb.instate(["!disabled"]):
-            subnet = self.subnet_var.get()
-            if subnet != "public-beta" and subnet != "devnet-beta":
-                self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
-
-    def _on_other_radio(self, *args):
-        self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
-        # debug.dlog(self.other_entry_var.get() )
-        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
-        self.subnet_var.set(self.other_entry_var.get())
-
-    def _show_raw(self, *args):
-        ss = f"select json from extra WHERE offerRowID " f"= {self.cursorOfferRowID}"
-        # review the need to pass subnet-tag on update TODO
-        self.q_out.put_nowait(
-            {
-                "id": self.session_id,
-                "msg": {"subnet-tag": self.subnet_var.get(), "sql": ss},
-            }
-        )
-
-        results = None
-        msg_in = None
-        self.root.after(10, lambda: self.handle_incoming_result_extra())
-
-    def handle_incoming_result_extra(self):
-        try:
-            msg_in = self.q_in.get_nowait()
-        except multiprocessing.queues.Empty:
-            msg_in = None
-            self.root.after(10, lambda: self.handle_incoming_result_extra())
-        else:
-            # print(f"[AppView] got msg!")
-            results = msg_in["msg"]
-            # print(msg_in["id"])
-
-            results_json = json.loads(results[0][0])
-            # props=results_json["props"]
-            props = results_json  # full results including props
-            props_s = json.dumps(props, indent=5)
-            # create/replace a new window
-            self.rawwin = Toplevel(self.root)
-            self.rawwin.columnconfigure(0, weight=1)
-            self.rawwin.rowconfigure(0, weight=1)
-
-            f = ttk.Frame(self.rawwin)
-            f.grid(column=0, row=0, sticky="news")
-            f.columnconfigure(0, weight=1)
-            f.rowconfigure(0, weight=1)
-            txt = Text(f)
-            txt.grid(column=0, row=0, sticky="news")
-            txt.insert("1.0", props_s)
-            txt.configure(state="disabled")
-            txt.bind("<<Selection>>", self._on_offer_text_selection)
-
+    #                       _update                                          #
     def _update(self, results, refresh=True):
         """update gui with the input results
         called by: handle_incoming_result
@@ -561,21 +463,43 @@ class AppView:
             result = list(result)
             currency_unit = result[13].split("-")[-1]
             # one of { 'tglm', 'glm' }
+            ResultsNT = namedtuple(
+                "resultsNT",
+                [
+                    "offerRowID",
+                    "name",
+                    "address",
+                    "cpu_sec",
+                    "duration_sec",
+                    "fixed",
+                    "cores",
+                    "threads",
+                    "version",
+                    "max_timestamp",
+                    "maxversion",
+                    "modelname",
+                    "modelfreq",
+                    "platform_kind",
+                    "filtered_features",
+                ],
+            )
+            resultsNT = ResultsNT(*result)
+
             self.tree.insert(
                 "",
                 "end",
                 values=(
-                    result[0],
-                    result[1],
-                    result[2],
-                    Decimal(result[3]) * Decimal(3600.0),
-                    Decimal(result[4]) * Decimal(3600.0),
-                    result[5],
-                    result[6],
-                    result[7],
-                    result[8],
-                    result[11],
-                    result[14],
+                    resultsNT.offerRowID,
+                    resultsNT.name,
+                    resultsNT.address,
+                    Decimal(resultsNT.cpu_sec) * Decimal(3600.0),
+                    Decimal(resultsNT.duration_sec) * Decimal(3600.0),
+                    resultsNT.fixed,
+                    resultsNT.cores,
+                    resultsNT.threads,
+                    resultsNT.version,
+                    resultsNT.modelname,  # result[11],
+                    resultsNT.filtered_features,  # result[14],
                 ),
                 currency_unit=currency_unit,
             )
@@ -642,26 +566,102 @@ class AppView:
             self.tree.on_select()
             # self.on_none_selected()
 
-    def on_select(self):
-        """update selectionList tree with the current selection
-        called by tree.on_select"""
-        self.selection_tree.update(self.tree.list_selection_addresses())
-        self.selection_tree.regrid()
+    #                           _refresh_cmd                                 <
+    def _refresh_cmd(self, *args):
+        """create a new session and query model before handing off
+        control to self.handle_incoming_result"""
+        self._stateRefreshing(True)
+        self.cursorOfferRowID = None
 
-    def on_none_selected(self):
-        """remove the selected list from the view
-        called by tree.on_select
-        """
-        self.selection_tree.clearit()
-        self.selection_tree.degrid()
-        self.tree.last_cleared_selection.clear()
+        # describe what's happening to client in console area
+        if not self.cbv_manual_probe.get():
+            self._rewrite_to_console(fetch_new_dialog(1))
+        else:
+            self._rewrite_to_console(fetch_new_dialog(9))
+        # disable controls
+        self.refreshFrame._toggle_refresh_controls()
 
-    def _send_message_to_model(self, msg):
-        """creates a message containing the session id and the input
-        msg and places it into the queue out to the model"""
-        d = {"id": self.session_id, "msg": msg}
-        self.q_out.put_nowait(d)
+        # reset widgets to be refreshed
+        # self.count_frame.resultcount_var.set("")
+        self.numSummaryFrame.clear()
+        self.count_frame.clear_counts()
+        # self.resultdiffcount_var.set("")
+        self.tree.clearit()
+        # self.tree.delete(*self.tree.get_children())
+        self.tree.update_idletasks()
 
+        # build sql statement
+        ss = self._update_or_refresh_sql()
+
+        # create new session id (current time)
+        self.session_id = str(datetime.now().timestamp())
+
+        # ask controller to query model for results
+        msg_out = {
+            "id": self.session_id,
+            "msg": {
+                "subnet-tag": self.subnet_var.get(),
+                "sql": ss,
+                "manual-probe": self.cbv_manual_probe.get(),
+            },
+        }
+        self.q_out.put_nowait(msg_out)
+
+        # wait on reply
+        self.root.after(5, self.handle_incoming_result)
+
+    #                       _refresh_cmd                                     >
+
+    #                       _toggle_refresh_constrols_closure                <
+    def _toggle_refresh_controls_closure(self):
+        disabled = False
+        other_entry_was_enabled = False
+        # maxcpu_was_enabled = False
+        # maxdur_was_enabled = False
+
+        def toggle():
+            nonlocal disabled
+            nonlocal other_entry_was_enabled
+            radio_frame = self.refreshFrame.radio_frame
+            refreshFrame = self.refreshFrame
+            if not disabled:
+                refreshFrame.refreshButton.state(["disabled"])
+                radio_frame.publicbeta_rb.state(["disabled"])
+                radio_frame.publicdevnet_rb.state(["disabled"])
+                if radio_frame.other_entry.instate(["!disabled"]):
+                    other_entry_was_enabled = True
+                radio_frame.other_rb.state(["disabled"])
+                radio_frame.other_entry.state(["disabled"])
+
+                self.cpusec_entryframe.disable()
+                self.dursec_entryframe.disable()
+                self.feature_entryframe.disable()
+                self.version_cb.state(["disabled"])
+                self.manual_probe_cb["state"] = "disabled"
+                disabled = True
+            else:
+                refreshFrame.refreshButton.state(["!disabled"])
+                radio_frame.publicbeta_rb.state(["!disabled"])
+                radio_frame.publicdevnet_rb.state(["!disabled"])
+                radio_frame.other_rb.state(["!disabled"])
+                if other_entry_was_enabled:
+                    radio_frame.other_entry.state(["!disabled"])
+
+                self.cpusec_entryframe.enable()
+                self.dursec_entryframe.enable()
+                self.feature_entryframe.enable()
+                self.version_cb.state(["!disabled"])
+
+                if yapapi_loader != None:
+                    self.manual_probe_cb["state"] = "!disabled"
+
+                disabled = False
+
+        return toggle
+
+    #                       _toggle_refresh_constrols_closure                >
+
+    #                               _update_cmd                              <
     def _update_cmd(self, more_d=None):
         """query model for rows on current session_id before handing off
         control to self.handle_incoming_result"""
@@ -713,7 +713,9 @@ class AppView:
         msg_in = None
         self.handle_incoming_result(refresh=False)
 
-    ########################################
+    #                               _update_cmd                              >
+
+    #                   _update_or_refresh_sql                               <
     # called from  _update_cmd, _refresh_cmd
     def _update_or_refresh_sql(self):
         """build a sql select statement when either update or refreshing
@@ -819,85 +821,176 @@ select 'node.id'.offerRowID
 
         return ss
 
-    def _rewrite_to_console(self, msg):
-        """clear the console label and write a new message"""
-        self.console.grid_remove()
-        self.console = Text(self.l_baseframe, height=7, width=40)
-        self.console["state"] = "disabled"
-        self.console["wrap"] = "word"
-        self.console["borderwidth"] = 0
-        self.console.grid(row=0, column=0, sticky="nwes")
+    #                   _update_or_refresh_sql                               >
 
-        if msg:
-            self.add_text_over_time(self.console, msg, len(msg))
+    #                               on_escape_event                          <
+    def on_escape_event(self, e):
+        mapped = list(
+            filter(
+                lambda menu: menu.winfo_ismapped() == 1, [self.menu, self.seltree_menu]
+            )
+        )
+        if len(mapped) > 0:
+            for menu in mapped:
+                menu.grab_release()
+                menu.unpost()
         else:
-            self.add_text_over_time(self.console, "", 0)
+            self.root.destroy()
 
-    def _refresh_cmd(self, *args):
-        """create a new session and query model before handing off
-        control to self.handle_incoming_result"""
-        self._stateRefreshing(True)
-        self.cursorOfferRowID = None
+    #                               on_escape_event                          <
 
-        # describe what's happening to client in console area
-        if not self.cbv_manual_probe.get():
-            self._rewrite_to_console(fetch_new_dialog(1))
-        else:
-            self._rewrite_to_console(fetch_new_dialog(9))
-        # disable controls
-        self.refreshFrame._toggle_refresh_controls()
+    #                       _on_offer_text_selection                         <
+    def _on_offer_text_selection(self, *args):
+        e = args[0]
+        selection_range = e.widget.tag_ranges("sel")
+        if selection_range:
+            selection = e.widget.get(*selection_range)
+            self.root.clipboard_clear()
+            self.root.clipboard_append(selection)
 
-        # reset widgets to be refreshed
-        # self.count_frame.resultcount_var.set("")
-        self.numSummaryFrame.clear()
-        self.count_frame.clear_counts()
-        # self.resultdiffcount_var.set("")
-        self.tree.clearit()
-        # self.tree.delete(*self.tree.get_children())
-        self.tree.update_idletasks()
+    #                       _on_offer_text_selection                         >
 
-        # build sql statement
-        ss = self._update_or_refresh_sql()
+    #                   _on_other_entry_change                               <
+    def _on_other_entry_change(self, *args):
+        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
+        self.subnet_var.set(self.other_entry_var.get())
 
-        # create new session id (current time)
-        self.session_id = str(datetime.now().timestamp())
+    #                   _on_other_entry_change                               >
 
-        # ask controller to query model for results
-        msg_out = {
-            "id": self.session_id,
-            "msg": {"subnet-tag": self.subnet_var.get(), "sql": ss,
-                "manual-probe": self.cbv_manual_probe.get() },
-        }
-        self.q_out.put_nowait(msg_out)
+    #                   _on_other_entry_focusout                             <
+    def _on_other_entry_focusout(self, *args):
+        subnet = self.subnet_var.get()
+        if subnet != "public-beta" and subnet != "devnet-beta":
+            self.refreshFrame.radio_frame.other_entry.state(["disabled"])
 
-        # wait on reply
-        self.root.after(5, self.handle_incoming_result)
+    #                   _on_other_entry_focusout                             >
 
+    #                   _on_other_entry_click                                <
+    def _on_other_entry_click(self, *args):
+        radio_frame = self.refreshFrame.radio_frame
+        if radio_frame.other_rb.instate(["!disabled"]):
+            subnet = self.subnet_var.get()
+            if subnet != "public-beta" and subnet != "devnet-beta":
+                self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+
+    #                   _on_other_entry_click                                >
+
+    #                   _on_other_radio                                      <
+    def _on_other_radio(self, *args):
+        self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+        # debug.dlog(self.other_entry_var.get() )
+        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
+        self.subnet_var.set(self.other_entry_var.get())
+
+    #                   _on_other_radio                                      >
+
+    #                       on_select                                        <
+    def on_select(self):
+        """update selectionList tree with the current selection
+        called by tree.on_select"""
+        self.selection_tree.update(self.tree.list_selection_addresses())
+        self.selection_tree.regrid()
+
+    #                       on_select                                        >
+
+    #                       on_none_selected                                 <
+    def on_none_selected(self):
+        """remove the selected list from the view
+        called by tree.on_select
+        """
+        self.selection_tree.clearit()
+        self.selection_tree.degrid()
+        self.tree.last_cleared_selection.clear()
+
+    #                       on_none_selected                                 >
+
+    #                           _show_raw                                    <
+    def _show_raw(self, *args):
+        ss = f"select json from extra WHERE offerRowID " f"= {self.cursorOfferRowID}"
+        # review the need to pass subnet-tag on update TODO
+        self.q_out.put_nowait(
+            {
+                "id": self.session_id,
+                "msg": {"subnet-tag": self.subnet_var.get(), "sql": ss},
+            }
+        )
+
+        results = None
+        msg_in = None
+        self.root.after(10, lambda: self.handle_incoming_result_extra())
+
+    #                           _show_raw                                    >
+
+    #                       open_stats_page_under_cursor                     <
+    def open_stats_page_under_cursor(self, node_address):
+        """
+        pre:
+        """
+        debug.dlog(node_address)
+        url = f"https://stats.golem.network/network/provider/{node_address}"
+        webbrowser.open_new(url)
+
+    #                       open_stats_page_under_cursor                     >
+
+    #                       _send_message_to_model                           <
+    def _send_message_to_model(self, msg):
+        """creates a message containing the session id and the input
+        msg and places it into the queue out to the model"""
+        d = {"id": self.session_id, "msg": msg}
+        self.q_out.put_nowait(d)
+
+    #                       _send_message_to_model                           >
+
+    #                       handle_incoming_result                           <
     def handle_incoming_result(self, refresh=True):
         """wait for results from model before passing control over to
         self._update"""
+
+        def __play_sound(self):
+            if platform.system() == "Windows":
+                self.ssp = Process(
+                    target=winsound.PlaySound,
+                    args=(".\\gs\\transformers.wav", winsound.SND_FILENAME),
+                    daemon=True,
+                )
+                self.ssp.start()
+            elif platform.system() == "Linux":
+                self.ssp = subprocess.Popen(
+                    ["aplay", "gs/transformers.wav"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+            elif platform.system() == "Darwin":
+                self.ssp = subprocess.Popen(
+                    ["afplay", "gs/transformers.wav"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+
+        def __on_error(selfresults):
+            debug.dlog(f"error results: {results}")
+            if results[1] == "invalid api key":
+                self._rewrite_to_console(fetch_new_dialog(4))
+            elif results[1] == "invalid api key server side":
+                self._rewrite_to_console(fetch_new_dialog(6))
+            elif results[1] == "connection refused":
+                self._rewrite_to_console(fetch_new_dialog(7))
+            elif results[1] == "cannot connect to yagna":
+                self._rewrite_to_console(fetch_new_dialog(8))
+            else:
+                self._rewrite_to_console(fetch_new_dialog(5))
+            if refresh:
+                self.refreshFrame._toggle_refresh_controls()
+            # may need to call _update with 0 results...
+
         try:
             msg_in = self.q_in.get_nowait()
         except multiprocessing.queues.Empty:
             # msg_in = None
             if refresh:
-                if self.ssp == None:
-                    pass
-                    if self.cbv_manual_probe.get():
-                        if platform.system()=='Windows':
-                            self.ssp=Process(target=winsound.PlaySound
-                        , args=('.\\gs\\transformers.wav'
-                        , winsound.SND_FILENAME), daemon=True)
-                            self.ssp.start()
-                        elif platform.system()=='Linux':
-                            self.ssp=subprocess.Popen(['aplay'
-                        , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
-                        elif platform.system()=='Darwin':
-                            self.ssp=subprocess.Popen(['afplay'
-                        , 'gs/transformers.wav'], stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL)
-                else:
+                if self.ssp == None and self.cbv_manual_probe.get():
+                    __play_sound(self)
+                elif self.ssp != None:
                     if isinstance(self.ssp, subprocess.Popen):
                         try:
                             self.ssp.wait(0.01)
@@ -910,30 +1003,51 @@ select 'node.id'.offerRowID
                             self.ssp = None
 
             self.root.after(1, lambda: self.handle_incoming_result(refresh))
-
         else:
             results = msg_in["msg"]
+
             if len(results) > 1 and results[0] == "error":
-                debug.dlog(f"error results: {results}")
-                if results[1] == "invalid api key":
-                    self._rewrite_to_console(fetch_new_dialog(4))
-                elif results[1] == "invalid api key server side":
-                    self._rewrite_to_console(fetch_new_dialog(6))
-                elif results[1] == "connection refused":
-                    self._rewrite_to_console(fetch_new_dialog(7))
-                elif results[1] == "cannot connect to yagna":
-                    self._rewrite_to_console(fetch_new_dialog(8))
-                else:
-                    self._rewrite_to_console(fetch_new_dialog(5))
-                if refresh:
-                    self.refreshFrame._toggle_refresh_controls()
-                # may need to call _update with 0 results...
+                __on_error(self, results)
             else:
                 debug.dlog(f"model results (first): {results[0]}\n", 10)
                 self._update(results, refresh)
                 # toggle_refresh_controls down the line
 
+    #                       handle_incoming_result                           >
+
+    #                       handle_incoming_result_extra                     <
+    def handle_incoming_result_extra(self):
+        # wait on a response from the model then extract the raw props (extra)
+        try:
+            msg_in = self.q_in.get_nowait()
+        except multiprocessing.queues.Empty:
+            msg_in = None
+            self.root.after(10, lambda: self.handle_incoming_result_extra())
+        else:
+            results = msg_in["msg"]
+
+            results_json = json.loads(results[0][0])
+            props = results_json  # full results including props
+            props_s = json.dumps(props, indent=5)
+            # create/replace a new window
+            self.rawwin = Toplevel(self.root)
+            self.rawwin.columnconfigure(0, weight=1)
+            self.rawwin.rowconfigure(0, weight=1)
+
+            f = ttk.Frame(self.rawwin)
+            f.grid(column=0, row=0, sticky="news")
+            f.columnconfigure(0, weight=1)
+            f.rowconfigure(0, weight=1)
+            txt = Text(f)
+            txt.grid(column=0, row=0, sticky="news")
+            txt.insert("1.0", props_s)
+            txt.configure(state="disabled")
+            txt.bind("<<Selection>>", self._on_offer_text_selection)
+
+    #                       handle_incoming_result_extra                     >
+
     # TODO abstract and consolidate common code
+    #                           _cb_feature_checkbutton                      <
     def _cb_feature_checkbutton(self):
         if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
             self.feature_entryframe.feature_entry.state(["!disabled"])
@@ -941,6 +1055,9 @@ select 'node.id'.offerRowID
             self.feature_entryframe.feature_entry.state(["disabled"])
             self._update_cmd()
 
+    #                           _cb_feature_checkbutton                      >
+
+    #                           _cb_cpusec_checkbutton                       <
     def _cb_cpusec_checkbutton(self):
         if self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu":
             self.cpusec_entryframe.cpusec_entry.state(["!disabled"])
@@ -948,6 +1065,9 @@ select 'node.id'.offerRowID
             self.cpusec_entryframe.cpusec_entry.state(["disabled"])
             self._update_cmd()
 
+    #                           _cb_cpusec_checkbutton                       >
+
+    #                           _cb_durationsec_checkbutton                  <
     def _cb_durationsec_checkbutton(self, *args):
         if self.dursec_entryframe.cbDurSecVar.get() == "maxdur":
             self.dursec_entryframe.durationsec_entry.state(["!disabled"])
@@ -955,6 +1075,9 @@ select 'node.id'.offerRowID
             self.dursec_entryframe.durationsec_entry.state(["disabled"])
             self._update_cmd()
 
+    #                           _cb_durationsec_checkbutton                  >
+
+    #                           do_popup                                     <
     def do_popup(self, event):
         tree = self.tree
         try:
@@ -992,6 +1115,9 @@ select 'node.id'.offerRowID
             # todo, ensure grab_set called
             self.menu.grab_release()
 
+    #                           do_popup                                     >
+
+    #                           _start_filterms_dialog                       <
     def _start_filterms_dialog(self):
         """
         pre: selection_tree has at least 1 row, grab_set must be
@@ -1005,6 +1131,9 @@ select 'node.id'.offerRowID
             self.filtermswin.set_content(self.selection_tree.get_rows())
         self.filtermswin.grab_release()
 
+    #                           _start_filterms_dialog                       >
+
+    #                           _build_menus                                 <
     def _build_menus(self):
         """build (popup) menu skeletons and store in self context
         post: self.menu, self.seltree_menu
@@ -1023,16 +1152,4 @@ select 'node.id'.offerRowID
         # popup menu for selection tree (any area)
         self.seltree_menu = SelTreeMenu(root, self._start_filterms_dialog)
 
-    def __call__(self):
-        root = self.root
-
-        self._build_menus()
-
-        # root.bind('<ButtonRelease-3>', do_popup )
-        if root.tk.call("tk", "windowingsystem") == "aqua":
-            root.bind("<2>", self.do_popup)
-            root.bind("<Control-1>", self.do_popup)
-        else:
-            root.bind("<3>", self.do_popup)
-
-        root.mainloop()
+    #                           _build_menus                                 >
