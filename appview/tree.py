@@ -18,15 +18,15 @@ PricingSummaries = namedtuple("PricingStats", ["cpu", "env", "start"])
 
 @dataclass
 class Pricing:
-    pricing: list[PricingData]
-    cpu: list[Decimal]
-    env: list[Decimal]
-    start: list[Decimal]
+    pricing: list#[PricingData]
+    cpu: list#[Decimal]
+    env: list#[Decimal]
+    start: list#[Decimal]
     count: int
 
-    cpuQuintetCounts: list[Decimal]
-    envQuintetCounts: list[Decimal]
-    startQuintetCounts: list[Decimal]
+    cpuQuintetCounts: list#[Decimal]
+    envQuintetCounts: list#[Decimal]
+    startQuintetCounts: list#[Decimal]
 
     def __init__(self, pricing):
         self.pricing = pricing
