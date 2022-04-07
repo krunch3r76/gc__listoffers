@@ -611,6 +611,7 @@ class AppView:
             refreshFrame = self.refreshFrame
             if not disabled:
                 refreshFrame.refreshButton.state(["disabled"])
+                refreshFrame.updateButton.state(["disabled"])
                 radio_frame.publicbeta_rb.state(["disabled"])
                 radio_frame.publicdevnet_rb.state(["disabled"])
                 if radio_frame.other_entry.instate(["!disabled"]):
@@ -627,6 +628,7 @@ class AppView:
                 disabled = True
             else:
                 refreshFrame.refreshButton.state(["!disabled"])
+                refreshFrame.updateButton.state(["!disabled"])
                 radio_frame.publicbeta_rb.state(["!disabled"])
                 radio_frame.publicdevnet_rb.state(["!disabled"])
                 radio_frame.other_rb.state(["!disabled"])
