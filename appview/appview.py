@@ -151,15 +151,10 @@ class AppView:
         self.root.iconphoto(True, self.fe_image_ico)
 
         # setup widgets and their linked variables
-        self.cpusec_entry_var = StringVar(value="0.1")
-        self.durationsec_entry_var = StringVar(value="0.02")
         self.featureEntryVar = StringVar(value="")
         self.subnet_var = StringVar()
         self.other_entry_var = StringVar()
         # countlabel
-        # self.resultcount_var = StringVar(value="0")
-        # countdifflabel
-        # self.resultdiffcount_var = StringVar(value="")
         self.session_resultcount = 0  # number of rows currently on the table
         self.lastresultcount = 0  # temporary to store displayed
         # result number count before refresh
@@ -206,24 +201,10 @@ class AppView:
         self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
         #################################################
-        # optionframe                                   #
+        # numSummaryFrame                               #
         #################################################
-        optionframe = ttk.Frame(root)
-        optionframe.columnconfigure(0, weight=1)
-        optionframe.rowconfigure(0, weight=1)
-        # self.cbv_lastversion = BooleanVar()
-        # self.cbv_lastversion.set(True)
-        # self.version_cb = ttk.Checkbutton(
-        #     optionframe,
-        #     text="latest version only",
-        #     padding=(10, 0, 10, 0),
-        #     variable=self.cbv_lastversion,
-        #     command=self._update_cmd,
-        # )
-        # self.version_cb.grid(row=0, column=0, sticky="w")
-        self.numSummaryFrame = NumSummaryFrame(self)
+        self.numSummaryFrame = NumSummaryFrame(self, root)
         self.numSummaryFrame.w.grid()
-        optionframe.grid(row=1, column=0, sticky="w")
 
         #################################################
         # baseframe                                     #
@@ -243,6 +224,12 @@ class AppView:
         self.l_baseframe.grid(column=0, row=0, sticky="wns")
         self.l_baseframe["borderwidth"] = 2
         # self.l_baseframe['relief']='solid'
+
+        # l_baseframe++console
+        self.console = Text(self.l_baseframe, height=7, width=40)
+        self.console["state"] = "disabled"
+        self.console["wrap"] = "word"
+        self.console["borderwidth"] = 0
 
         # baseframe--refreshframe
         self.refreshFrame = RefreshFrame(
@@ -267,12 +254,6 @@ class AppView:
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)
         self.count_frame.w.grid(column=2, row=0, sticky="")
-
-        # l_baseframe++console
-        self.console = Text(self.l_baseframe, height=7, width=40)
-        self.console["state"] = "disabled"
-        self.console["wrap"] = "word"
-        self.console["borderwidth"] = 0
 
         # self.l_baseframe['borderwidth']=2
         # self.l_baseframe['relief']='solid'
@@ -310,14 +291,19 @@ class AppView:
         filterframe.columnconfigure(1, weight=1)
         filterframe.columnconfigure(2, weight=1)
         # subbaseframe++cpusec_entryframe
+        # self.cpusec_entryframe = CPUSecFrame(self, filterframe)
+        # self.cpusec_entryframe.w.grid(column=0, row=0, sticky="e")
         self.cpusec_entryframe = CPUSecFrame(self, filterframe)
-        self.cpusec_entryframe.w.grid(column=0, row=0, sticky="e")
+        self.cpusec_entryframe.grid(column=0, row=0, sticky="w")
         # subbaseframe++dursec_entryframe
         self.dursec_entryframe = DurSecFrame(self, filterframe)
-        self.dursec_entryframe.w.grid(column=1, row=0, sticky="w")
-
+        self.dursec_entryframe.grid(column=1, row=0, sticky="w")
+        # subbaseframe++start_entryframe
+        self.start_entryframe = StartFrame(self, filterframe)
+        self.start_entryframe.grid(column=2, row=0, sticky="w")
+        # subbaseframe++feature_entryframe
         self.feature_entryframe = FeatureEntryFrame(self, filterframe)
-        self.feature_entryframe.w.grid(column=2, row=0, sticky="e")
+        self.feature_entryframe.grid(column=3, row=0, sticky="e")
 
         filterframe["borderwidth"] = 2
         # filterframe['relief']='ridge'
@@ -343,7 +329,7 @@ class AppView:
         )
         if yapapi_loader == None:
             self.manual_probe_cb["state"] = "disabled"
-        self.manual_probe_cb.grid(row=0, column=3, sticky="")
+        self.manual_probe_cb.grid(row=0, column=4, sticky="")
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
 
@@ -635,6 +621,7 @@ class AppView:
 
                 self.cpusec_entryframe.disable()
                 self.dursec_entryframe.disable()
+                self.start_entryframe.disable()
                 self.feature_entryframe.disable()
                 self.version_cb.state(["disabled"])
                 self.manual_probe_cb["state"] = "disabled"
@@ -649,6 +636,7 @@ class AppView:
 
                 self.cpusec_entryframe.enable()
                 self.dursec_entryframe.enable()
+                self.start_entryframe.enable()
                 self.feature_entryframe.enable()
                 self.version_cb.state(["!disabled"])
 
@@ -721,8 +709,8 @@ class AppView:
         """build a sql select statement when either update or refreshing
         and return text"""
         feature_filter = ""
-        if self.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-            feature_filter = self.featureEntryVar.get()
+        if self.feature_entryframe.whether_checked:
+            feature_filter = self.feature_entryframe.entryVar.get()
         ss = """
 select 'node.id'.offerRowID
 , 'node.id'.name
@@ -774,10 +762,10 @@ select 'node.id'.offerRowID
             return epsilonized
 
         if (
-            self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu"
-            and self.cpusec_entry_var.get()
+            self.cpusec_entryframe.whether_checked
+            and self.cpusec_entryframe.entryVar.get()
         ):
-            cpu_per_sec = from_secs(self.cpusec_entry_var.get())
+            cpu_per_sec = from_secs(self.cpusec_entryframe.entryVar.get())
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.cpu_sec - {cpu_per_sec}"
                 f" <=  {epsilon}"
@@ -786,17 +774,25 @@ select 'node.id'.offerRowID
             # ss += f" AND 'com.pricing.model.linear.coeffs'.cpu_sec <= " f"'{cpu_per_sec}'"
 
         if (
-            self.dursec_entryframe.cbDurSecVar.get() == "maxdur"
-            and self.durationsec_entry_var.get()
+            self.dursec_entryframe.whether_checked
+            and self.dursec_entryframe.entryVar.get()
         ):
-            duration_per_sec = from_secs(self.durationsec_entry_var.get())
+            duration_per_sec = from_secs(self.dursec_entryframe.entryVar.get())
             ss += (
                 f" AND 'com.pricing.model.linear.coeffs'.duration_sec "
                 f" - {duration_per_sec} < {epsilon}"
             )
+
         if (
-            self.feature_entryframe.cbFeatureEntryVar.get() == "feature"
-            and self.featureEntryVar.get()
+            self.start_entryframe.whether_checked
+            and self.start_entryframe.entryVar.get()
+        ):
+            start_fee_max = float(self.start_entryframe.entryVar.get())
+            ss += f" AND 'com.pricing.model.linear.coeffs'.fixed <= {start_fee_max}"
+
+        if (
+            self.feature_entryframe.whether_checked
+            and self.feature_entryframe.entryVar.get()
         ):
             ss += ""
             ss += f"""
@@ -1057,26 +1053,6 @@ select 'node.id'.offerRowID
             self._update_cmd()
 
     #                           _cb_feature_checkbutton                      >
-
-    #                           _cb_cpusec_checkbutton                       <
-    def _cb_cpusec_checkbutton(self):
-        if self.cpusec_entryframe.cbMaxCpuVar.get() == "maxcpu":
-            self.cpusec_entryframe.cpusec_entry.state(["!disabled"])
-        else:
-            self.cpusec_entryframe.cpusec_entry.state(["disabled"])
-            self._update_cmd()
-
-    #                           _cb_cpusec_checkbutton                       >
-
-    #                           _cb_durationsec_checkbutton                  <
-    def _cb_durationsec_checkbutton(self, *args):
-        if self.dursec_entryframe.cbDurSecVar.get() == "maxdur":
-            self.dursec_entryframe.durationsec_entry.state(["!disabled"])
-        else:
-            self.dursec_entryframe.durationsec_entry.state(["disabled"])
-            self._update_cmd()
-
-    #                           _cb_durationsec_checkbutton                  >
 
     #                           do_popup                                     <
     def do_popup(self, event):

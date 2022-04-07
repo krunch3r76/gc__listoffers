@@ -18,15 +18,15 @@ PricingSummaries = namedtuple("PricingStats", ["cpu", "env", "start"])
 
 @dataclass
 class Pricing:
-    pricing: list#[PricingData]
-    cpu: list#[Decimal]
-    env: list#[Decimal]
-    start: list#[Decimal]
+    pricing: list  # [PricingData]
+    cpu: list  # [Decimal]
+    env: list  # [Decimal]
+    start: list  # [Decimal]
     count: int
 
-    cpuQuintetCounts: list#[Decimal]
-    envQuintetCounts: list#[Decimal]
-    startQuintetCounts: list#[Decimal]
+    cpuQuintetCounts: list  # [Decimal]
+    envQuintetCounts: list  # [Decimal]
+    startQuintetCounts: list  # [Decimal]
 
     def __init__(self, pricing):
         self.pricing = pricing
@@ -344,12 +344,10 @@ class CustomTreeview(ttk.Treeview):
         _heading_map     map heading fr _kheadings
         """
         feature_filter = ""
-        debug.dlog(f"----->{self._ctx.feature_entryframe.cbFeatureEntryVar.get()}")
-        if self._ctx.feature_entryframe.cbFeatureEntryVar.get() == "feature":
-            feature_filter = self._ctx.featureEntryVar.get()
-            self.change_visibility(10, True)
+        if self._ctx.feature_entryframe.whether_checked:
+            self.change_visibility(self.Field.features, True)
         else:
-            self.change_visibility(10, False)
+            self.change_visibility(self.Field.features, False)
 
         self.grid_remove()
         self._ctx.treeframe.grid_remove()
@@ -363,13 +361,13 @@ class CustomTreeview(ttk.Treeview):
                 self.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
-                    self.column(offset, stretch=YES, minwidth=190)
+                    self.column(offset, stretch=YES, width=30, minwidth=190)
                 elif self._heading_map[offset] == int(self.Field.name):
-                    self.column(offset, stretch=YES, minwidth=75)
+                    self.column(offset, stretch=YES, width=30, minwidth=75)
                 elif self._heading_map[offset] == int(self.Field.features):
-                    self.column(offset, stretch=YES, minwidth=150)
+                    self.column(offset, stretch=YES, width=30, minwidth=150)
                 else:
-                    self.column(offset, stretch=YES, minwidth=30)
+                    self.column(offset, stretch=YES, width=30, minwidth=30)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")
         self._ctx.treeframe.grid()
         self.grid()

@@ -156,104 +156,100 @@ class CountFrame:
         self.glmcount2_var.set("")
 
 
-class CPUSecFrame:
-    """
-    Groups the widgets for enabling and specifying max cpu/hr
-    master: parent object (Appview)
-    w:  widget (Frame)
-    cbMaxCpuVar:    state of checkbutton {maxcpu, nomaxcpu}
-    cb: checkbutton callback
-    cpusec_entry:   Entry widget next to checkbutton
-    """
+class FilterFrame(ttk.Frame):
+    """base class for filter frames"""
 
-    def __init__(self, master, *args, **kwargs):
-        self.master = master
-        self.w = ttk.Frame(*args, **kwargs)
-        self.w["padding"] = (0, 0, 50, 0)
-
-        self.cbMaxCpuVar = StringVar()
+    def __init__(self, master, widgetRoot, text, cmd, entryDefault=None):
+        if entryDefault == None:
+            entryDefault = ""
+        self._master = master
+        super().__init__(widgetRoot)
+        self._cbVar = BooleanVar()
+        self.entryVar = StringVar()
+        self.entryVar.set(entryDefault)
         self.cb = ttk.Checkbutton(
-            self.w,
-            text="max cpu(/hr)",
-            command=self.master._cb_cpusec_checkbutton,
-            onvalue="maxcpu",
-            offvalue="nomaxcpu",
-            variable=self.cbMaxCpuVar,
+            self,
+            text=text,
             padding=(0, 0, 5, 0),
+            variable=self._cbVar,
+            command=cmd,
+            onvalue=True,
+            offvalue=False,
         )
-
-        self.cpusec_entry = ttk.Entry(
-            self.w, textvariable=self.master.cpusec_entry_var, width=12
-        )
-        self.cpusec_entry.state(["disabled"])
-        self.cpusec_entry.bind("<FocusOut>", lambda e: self.master._update_cmd())
-        self.cpusec_entry.bind("<Return>", lambda e: self.master.root.focus_set())
-        # self.cpusec_entry.bind('<Return>', lambda e: self.master._update_cmd())
-
+        # self.cb.state(["!alternate", "!selected"])
+        self.entry = ttk.Entry(self, textvariable=self.entryVar, width=12)
+        self.entry.state(["disabled"])
         self.cb.grid(column=0, row=0, sticky="w")
-        self.cpusec_entry.grid(column=1, row=0, stick="w")
+        self.entry.grid(column=1, row=0, sticky="w")
 
-    def refresh_entry_state(self):
-        if self.cbMaxCpuVar.get() == "maxcpu":
-            self.cpusec_entry.state(["!disabled"])
-        else:
-            self.cpusec_entry.state(["disabled"])
+        self.entry.bind("<FocusOut>", lambda e: self._master._update_cmd())
+        self.entry.bind("<Return>", lambda e: self._master.root.focus_set())
 
     def disable(self):
         self.cb.state(["disabled"])
-        # self.refresh_entry_state()
-        self.cpusec_entry.state(["disabled"])
+        self.refresh_entry_state()
 
     def enable(self):
         self.cb.state(["!disabled"])
         self.refresh_entry_state()
-        # self.cpusec_entry.state(['!disabled'])
 
-
-class DurSecFrame:
-    def __init__(self, master, *args, **kwargs):
-        self.master = master
-        self.w = ttk.Frame(*args, **kwargs)
-
-        self.cbDurSecVar = StringVar()
-        self.cb = ttk.Checkbutton(
-            self.w,
-            text="max duration(/hr)",
-            command=self.master._cb_durationsec_checkbutton,
-            onvalue="maxdur",
-            offvalue="nomaxdur",
-            variable=self.cbDurSecVar,
-            padding=(0, 0, 5, 0),
-        )
-        #     ...entry
-        self.durationsec_entry = ttk.Entry(
-            self.w, textvariable=self.master.durationsec_entry_var, width=12
-        )
-        self.durationsec_entry.state(["disabled"])
-        self.durationsec_entry.bind("<FocusOut>", lambda e: self.master._update_cmd())
-        self.durationsec_entry.bind("<Return>", lambda e: self.master.root.focus_set())
-        # self.durationsec_entry.bind('<Return>', lambda e: self.master._update_cmd())
-
-        self.cb.grid(column=0, row=0, sticky="w")
-        self.durationsec_entry.grid(column=1, row=0, stick="w")
-
-    def _refresh_entry_state(self):
-        if self.cbDurSecVar.get() == "maxdur":
-            self.durationsec_entry.state(["!disabled"])
+    def refresh_entry_state(self):
+        if self.cb.instate(["!disabled"]):
+            self.entry.state(["!disabled"])
         else:
-            self.durationsec_entry.state(["disabled"])
+            self.entry.state(["disabled"])
 
-    def disable(self):
-        self.cb.state(["disabled"])
-        self.durationsec_entry.state(["disabled"])
+    def _cmd(self):
+        if self.whether_checked:
+            self.entry.state(["!disabled"])
+        else:
+            self.entry.state(["disabled"])
+            self._master._update_cmd()
 
-    def enable(self):
-        self.cb.state(["!disabled"])
-        self._refresh_entry_state()
-        # self.durationsec_entry.state(['!disabled'])
+    @property
+    def whether_checked(self):
+        return self._cbVar.get()
 
 
-class FeatureEntryFrame:
+class StartFrame(FilterFrame):
+    def __init__(self, master, widgetRoot):
+        super().__init__(master, widgetRoot, text="start amount", cmd=super()._cmd)
+
+
+class CPUSecFrame(FilterFrame):
+    def __init__(self, master, widgetRoot):
+        super().__init__(
+            master,
+            widgetRoot,
+            text="max cpu(/hr)",
+            cmd=super()._cmd,
+            entryDefault="0.1",
+        )
+
+
+class DurSecFrame(FilterFrame):
+    def __init__(self, master, widgetRoot):
+        super().__init__(
+            master,
+            widgetRoot,
+            text="max dur(/hr)",
+            cmd=self._cmd,
+            entryDefault="0.02",
+        )
+
+
+class FeatureEntryFrame(FilterFrame):
+    def __init__(self, master, widgetRoot):
+        super().__init__(
+            master,
+            widgetRoot,
+            text="feature",
+            cmd=self._cmd,
+            entryDefault="",
+        )
+
+
+class FeatureEntryFrame_deprecated:
     def __init__(self, master, *args, **kwargs):
         self.master = master
         self.w = ttk.Frame(*args, **kwargs)
