@@ -151,7 +151,6 @@ class AppView:
         self.root.iconphoto(True, self.fe_image_ico)
 
         # setup widgets and their linked variables
-        self.featureEntryVar = StringVar(value="")
         self.subnet_var = StringVar()
         self.other_entry_var = StringVar()
         # countlabel
