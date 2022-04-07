@@ -237,7 +237,7 @@ class AppView:
         self.refreshFrame.w["padding"] = (0, 0, 0, 0)
         self.refreshFrame.w.grid(column=1, row=0, sticky="wnes")
         self.refreshFrame.w["borderwidth"] = 2
-        # self.refreshFrame.w['relief']='solid'
+        self.refreshFrame.w["relief"] = "solid"
 
         self.cbv_lastversion = BooleanVar()
         self.cbv_lastversion.set(True)
@@ -248,7 +248,7 @@ class AppView:
             variable=self.cbv_lastversion,
             command=self._update_cmd,
         )
-        self.version_cb.grid(row=0, column=1, sticky="w")
+        self.version_cb.grid(row=0, column=2, sticky="w")
 
         # baseframe--count_frame
         self.count_frame = CountFrame(self, baseframe)

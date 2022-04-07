@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<diagram program="umlet" version="14.3.0">
+<diagram program="umlet" version="13.3">
   <zoom_level>10</zoom_level>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>60</x>
+      <x>20</x>
       <y>50</y>
-      <w>680</w>
-      <h>1250</h>
+      <w>720</w>
+      <h>1380</h>
     </coordinates>
     <panel_attributes>AppView</panel_attributes>
     <additional_attributes/>
@@ -30,18 +30,17 @@ order_by_last
 root
 DARKMODE
 fe_image_ico
-cpusec_entry_var
-durationsec_entry_var
-featureEntryVar
+
 subnet_var
 other_entry_var
+cbv_lastversion
+cbv_manual_probe
+
 session_resultcount
 lastresultcount
 cursorOfferRowID
 rawwin
 ssp
-cbv_lastversion
-cbv_manual_probe
 _states
 whetherUpdating
 cursorOfferRowID()
@@ -55,7 +54,7 @@ count_selected()
       <x>440</x>
       <y>150</y>
       <w>220</w>
-      <h>430</h>
+      <h>800</h>
     </coordinates>
     <panel_attributes>tk
 &lt;&lt;properties&gt;&gt;
@@ -63,23 +62,27 @@ count_selected()
 treeframe
 tree
 selection_tree
-optionframe
+
 numSummaryFrame
+
 baseframe
 l_baseframe
+console
 refreshFrame
 version_cb
 count_frame
-console
+
 subbaseframe
 label_selectioncount
 select_count_frame
 filterframe
+cpusec_entryframe
 dursec_entryframe
 feature_entryframe
 stub :Label
 stubframe
 manual_probe_cb
+
 filtermswin
 rawwin</panel_attributes>
     <additional_attributes/>
@@ -87,9 +90,9 @@ rawwin</panel_attributes>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>170</x>
-      <y>590</y>
-      <w>470</w>
+      <x>60</x>
+      <y>690</y>
+      <w>340</w>
       <h>630</h>
     </coordinates>
     <panel_attributes>&lt;&lt;methods&gt;&gt;
