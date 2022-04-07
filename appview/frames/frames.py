@@ -94,7 +94,7 @@ class RefreshFrame:
 
         self.refreshButton.grid(column=0, row=0, sticky=(W))
         self.updateButton.grid(column=1, row=0, sticky=(W))
-        self.radio_frame.w.grid(column=0, row=1, sticky=(W, N))
+        self.radio_frame.w.grid(column=0, columnspan=2, row=1, sticky=(W, N))
 
 
 class CountFrame:

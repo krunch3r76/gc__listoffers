@@ -237,7 +237,7 @@ class AppView:
         self.refreshFrame.w["padding"] = (0, 0, 0, 0)
         self.refreshFrame.w.grid(column=1, row=0, sticky="wnes")
         self.refreshFrame.w["borderwidth"] = 2
-        self.refreshFrame.w["relief"] = "solid"
+        # self.refreshFrame.w["relief"] = "solid"
 
         self.cbv_lastversion = BooleanVar()
         self.cbv_lastversion.set(True)
