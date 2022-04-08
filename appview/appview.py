@@ -228,7 +228,7 @@ class AppView:
         self.console = Text(self.l_baseframe, height=7, width=40)
         self.console["state"] = "disabled"
         self.console["wrap"] = "word"
-        self.console["borderwidth"] = 0
+        # self.console["borderwidth"] = 0
 
         # baseframe--refreshframe
         self.refreshFrame = RefreshFrame(
@@ -293,16 +293,16 @@ class AppView:
         # self.cpusec_entryframe = CPUSecFrame(self, filterframe)
         # self.cpusec_entryframe.w.grid(column=0, row=0, sticky="e")
         self.cpusec_entryframe = CPUSecFrame(self, filterframe)
-        self.cpusec_entryframe.grid(column=0, row=0, sticky="w")
+        self.cpusec_entryframe.grid(column=0, row=0, sticky="w", padx=10)
         # subbaseframe++dursec_entryframe
         self.dursec_entryframe = DurSecFrame(self, filterframe)
-        self.dursec_entryframe.grid(column=1, row=0, sticky="w")
+        self.dursec_entryframe.grid(column=1, row=0, sticky="w", padx=10)
         # subbaseframe++start_entryframe
         self.start_entryframe = StartFrame(self, filterframe)
-        self.start_entryframe.grid(column=2, row=0, sticky="w")
+        self.start_entryframe.grid(column=2, row=0, sticky="w", padx=10)
         # subbaseframe++feature_entryframe
         self.feature_entryframe = FeatureEntryFrame(self, filterframe)
-        self.feature_entryframe.grid(column=3, row=0, sticky="e")
+        self.feature_entryframe.grid(column=3, row=0, sticky="e", padx=10)
 
         filterframe["borderwidth"] = 2
         # filterframe['relief']='ridge'
