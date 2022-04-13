@@ -1031,7 +1031,7 @@ select 'node.id'.offerRowID
             self.rawwin = Toplevel(self.root)
             self.rawwin.columnconfigure(0, weight=1)
             self.rawwin.rowconfigure(0, weight=1)
-
+            self.rawwin.title(props["props"]["golem.node.id.name"])
             f = ttk.Frame(self.rawwin)
             f.grid(column=0, row=0, sticky="news")
             f.columnconfigure(0, weight=1)
