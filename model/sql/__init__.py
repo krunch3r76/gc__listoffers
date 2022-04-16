@@ -228,6 +228,10 @@ def build_database(con, offers):
             props["golem.runtime.version"],
         )
 
+        _insert_record("inf.mem", "gib", props["golem.inf.mem.gib"])
+
+        _insert_record("inf.storage", "gib", props["golem.inf.storage.gib"])
+
         if props["golem.runtime.name"] == "vm":
             try:
                 con.execute(

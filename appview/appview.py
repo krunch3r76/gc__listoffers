@@ -466,6 +466,8 @@ class AppView:
                     "modelfreq",
                     "platform_kind",
                     "filtered_features",
+                    "mem",
+                    "storage",
                 ],
             )
             resultsNT = ResultsNT(*result)
@@ -485,6 +487,8 @@ class AppView:
                     resultsNT.version,
                     resultsNT.modelname,  # result[11],
                     resultsNT.filtered_features,  # result[14],
+                    resultsNT.mem,
+                    resultsNT.storage,
                 ),
                 currency_unit=currency_unit,
             )
@@ -743,6 +747,10 @@ select 'node.id'.offerRowID
                 ) AS filteredFeatures
         """
 
+        ss += f"""
+, ROUND('inf.mem'.gib,2)
+, ROUND('inf.storage'.gib,2)
+"""
         ss = (
             ss + " FROM 'node.id'"
             " JOIN 'offers' USING (offerRowID)"
@@ -750,6 +758,8 @@ select 'node.id'.offerRowID
             " JOIN 'runtime'  USING (offerRowID)"
             " JOIN 'inf.cpu' USING (offerRowID)"
             " JOIN 'com.payment.platform' USING (offerRowID)"
+            " JOIN 'inf.mem' USING (offerRowID)"
+            " JOIN 'inf.storage' USING (offerRowID)"
             " WHERE 'runtime'.name = 'vm'"
         )
 

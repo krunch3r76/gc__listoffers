@@ -109,6 +109,8 @@ class CustomTreeview(ttk.Treeview):
         version = 8
         model = 9
         features = 10
+        mem = 11
+        storage = 12
 
     class StateHolder:
         __swapping = False
@@ -177,6 +179,8 @@ class CustomTreeview(ttk.Treeview):
         "version",  # 8
         "modelname",  # 9
         "features",  # 10
+        "mem",  # 11
+        "storage",  # 12
     )
 
     _kheadings_sql_paths = (
@@ -191,6 +195,8 @@ class CustomTreeview(ttk.Treeview):
         "'runtime'.version",
         "modelname",
         "filteredFeatures",
+        "'inf.mem'.gib",
+        "'inf.storage'.gib",
     )
 
     _heading_map = [num for num in range(len(_kheadings))]
@@ -212,6 +218,8 @@ class CustomTreeview(ttk.Treeview):
         "version": {},
         "modelname": {},
         "features": {},
+        "mem": {},
+        "storage": {},
     }
 
     def change_visibility(self, colnum, whetherVisible):
@@ -376,10 +384,6 @@ class CustomTreeview(ttk.Treeview):
 
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
-        # if len(self.list_selection_addresses()) > 0:
-        #     debug.dlog(f"replacing {self.last_cleared_selection}" \
-        # + " with {self.list_selection_addresses()}")
-        #     self.last_cleared_selection = self.list_selection_addresses()
         self.last_cleared_selection = self.list_selection_addresses()
 
         widget = event.widget
@@ -426,9 +430,6 @@ class CustomTreeview(ttk.Treeview):
                     "#2",
                     "#3",
                 ) and self._stateHolder.drag_start_column_number not in ("#2", "#3"):
-                    # debug.dlog(f"start: "
-                    # f"{self._stateHolder.drag_start_column_number}"
-                    # f"; hover_col: {hover_col}")
                     if self._stateHolder.drag_start_column_number != hover_col:
                         self._swap_numbered_columns(
                             self._stateHolder.drag_start_column_number, hover_col

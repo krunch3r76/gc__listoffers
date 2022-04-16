@@ -6,6 +6,7 @@ import debug
 
 
 import importlib
+
 yapapi_loader = importlib.util.find_spec("yapapi")
 if yapapi_loader:
     import aiohttp
@@ -26,6 +27,7 @@ class OfferLookup:
     def __init__(self):
         self._session_id = "1"
         self._con = None
+
     # _-_-_-_- __call __ _-_-_-_-
     async def __call__(self, id_, subnet_tag, sql, manual_probe):
         """find offers, recreate database, execute sql
