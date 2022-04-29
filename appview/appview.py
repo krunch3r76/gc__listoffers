@@ -6,8 +6,10 @@ from pprint import pprint, pformat  # debugging
 import importlib
 import sys
 from collections import namedtuple
+from pathlib import Path
 
 yapapi_loader = importlib.util.find_spec("yapapi")
+projectdir = Path(__file__).parent.parent
 
 try:
     from tkinter import *
@@ -123,19 +125,30 @@ class AppView:
         self.DARKMODE = (
             True if (datetime.now().hour > 19 or datetime.now().hour < 6) else False
         )
+
         if not self.DARKMODE:
             if sys.platform == "win32":
-                self.root.tk.call("source", "./Sun-Valley-ttk-theme/sun-valley.tcl")
+                self.root.tk.call(
+                    "source",
+                    str(projectdir / "Sun-Valley-ttk-theme/sun-valley.tcl"),
+                )
                 self.root.call("set_theme", "light")
             else:
-                self.root.tk.call("source", "./forest-ttk-theme/forest-light.tcl")
+                self.root.tk.call(
+                    "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
+                )
                 s.theme_use("forest-light")
         else:
             if sys.platform == "win32":
-                self.root.tk.call("source", "./Sun-Valley-ttk-theme/sun-valley.tcl")
+                self.root.tk.call(
+                    "source",
+                    str(projectdir / "Sun-Valley-ttk-theme/sun-valley.tcl"),
+                )
                 self.root.call("set_theme", "dark")
             else:
-                self.root.tk.call("source", "./forest-ttk-theme/forest-dark.tcl")
+                self.root.tk.call(
+                    "source", str(projectdir / "forest-ttk-theme/forest-dark.tcl")
+                )
                 s.theme_use("forest-dark")
         current_datetime = datetime.now()
         root = self.root
@@ -146,7 +159,11 @@ class AppView:
         root.rowconfigure(3, weight=0)
 
         self.fe_image_ico = PhotoImage(
-            file="gs/" "the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48" ".png"
+            file=str(
+                projectdir / "gs/"
+                "the_empire_spaceship_and_sun_by_tempest790_db0ww24_48x48"
+                ".png"
+            )
         )
         self.root.iconphoto(True, self.fe_image_ico)
 
@@ -952,24 +969,28 @@ select 'node.id'.offerRowID
     def handle_incoming_result(self, refresh=True):
         """wait for results from model before passing control over to
         self._update"""
+        path_to_sound_file = Path(projectdir / "gs/transformers.wav")
 
         def __play_sound(self):
             if platform.system() == "Windows":
                 self.ssp = Process(
                     target=winsound.PlaySound,
-                    args=(".\\gs\\transformers.wav", winsound.SND_FILENAME),
+                    # args=(".\\gs\\transformers.wav", winsound.SND_FILENAME),
+                    args=(str(path_to_sound_file), winsound.SND_FILENAME),
                     daemon=True,
                 )
                 self.ssp.start()
             elif platform.system() == "Linux":
                 self.ssp = subprocess.Popen(
-                    ["aplay", "gs/transformers.wav"],
+                    ["aplay", str(path_to_sound_file)],
+                    # ["aplay", "gs/transformers.wav"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
             elif platform.system() == "Darwin":
                 self.ssp = subprocess.Popen(
-                    ["afplay", "gs/transformers.wav"],
+                    ["afplay", str(path_to_sound_file)],
+                    # ["afplay", "gs/transformers.wav"],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
