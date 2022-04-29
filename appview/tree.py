@@ -357,8 +357,8 @@ class CustomTreeview(ttk.Treeview):
         else:
             self.change_visibility(self.Field.features, False)
 
-        self.grid_remove()
-        self._ctx.treeframe.grid_remove()
+        # self.grid_remove()
+        # self._ctx.treeframe.grid_remove()
         for offset, heading_index in enumerate(self._heading_map):
             heading_text = self._kheadings[heading_index]
             stretch = (
@@ -371,14 +371,14 @@ class CustomTreeview(ttk.Treeview):
                 if self._heading_map[offset] == int(self.Field.model):
                     self.column(offset, stretch=YES, minwidth=190)
                 elif self._heading_map[offset] == int(self.Field.name):
-                    self.column(offset, stretch=YES, minwidth=75)
+                    self.column(offset, stretch=YES, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
-                    self.column(offset, stretch=YES, minwidth=150)
+                    self.column(offset, stretch=YES, minwidth=170)
                 else:
                     self.column(offset, stretch=YES, minwidth=30)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")
-        self._ctx.treeframe.grid()
-        self.grid()
+        # self._ctx.treeframe.grid()
+        # self.grid()
         self.update_idletasks()
         # self._ctx.selection_tree.pseudogrid()  # breaks view on mac os x
 
