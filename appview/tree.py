@@ -369,18 +369,18 @@ class CustomTreeview(ttk.Treeview):
                 self.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
-                    self.column(offset, stretch=YES, width=30, minwidth=190)
+                    self.column(offset, stretch=YES, minwidth=190)
                 elif self._heading_map[offset] == int(self.Field.name):
-                    self.column(offset, stretch=YES, width=30, minwidth=75)
+                    self.column(offset, stretch=YES, minwidth=75)
                 elif self._heading_map[offset] == int(self.Field.features):
-                    self.column(offset, stretch=YES, width=30, minwidth=150)
+                    self.column(offset, stretch=YES, minwidth=150)
                 else:
-                    self.column(offset, stretch=YES, width=30, minwidth=30)
+                    self.column(offset, stretch=YES, minwidth=30)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")
         self._ctx.treeframe.grid()
         self.grid()
         self.update_idletasks()
-        self._ctx.selection_tree.pseudogrid()  # breaks columns on mac os x w/o
+        # self._ctx.selection_tree.pseudogrid()  # breaks view on mac os x
 
     def on_drag_start(self, event):
         # update the retained list on pre-emptively kludge TODO review
