@@ -265,7 +265,6 @@ class CustomTreeview(ttk.Treeview):
         # debug.dlog(f"internal columns: {self['columns']}")
         self.last_cleared_selection = list()
 
-        # self._update_headings()
 
         self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
         self.s.grid(row=0, column=1, sticky="ns")
@@ -275,7 +274,7 @@ class CustomTreeview(ttk.Treeview):
         self._pricingTglm = None  # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
         self._pricingTglmIntermediate = []
-
+        self._update_headings()
     #               CustomTreeView __init__                                  >
 
     def whether_at_least_one_model(self):
@@ -352,31 +351,38 @@ class CustomTreeview(ttk.Treeview):
         _heading_map     map heading fr _kheadings
         """
         feature_filter = ""
-        if self._ctx.feature_entryframe.whether_checked:
-            self.change_visibility(self.Field.features, True)
-        else:
+        try:
+            if self._ctx.feature_entryframe.whether_checked:
+                self.change_visibility(self.Field.features, True)
+            else:
+                self.change_visibility(self.Field.features, False)
+        except: #kludge
             self.change_visibility(self.Field.features, False)
 
-        # self.grid_remove()
-        # self._ctx.treeframe.grid_remove()
-        for offset, heading_index in enumerate(self._heading_map):
+        def map_heading_from_kheadings(offset, heading_index):
             heading_text = self._kheadings[heading_index]
             stretch = (
-                YES if self._heading_map[offset] not in self._headings_invisible else NO
-            )
+                    YES if self._heading_map[offset] not in self._headings_invisible else NO
+                    )
             # debug.dlog(self._headings_invisible)
             if not stretch:
                 self.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
-                    self.column(offset, stretch=YES, minwidth=190)
-                elif self._heading_map[offset] == int(self.Field.name):
-                    self.column(offset, stretch=YES, minwidth=170)
+                    self.column(offset, stretch=YES, width=190, minwidth=190)
+                elif self._heading_map[offset] in [ int(self.Field.name) ]:
+                    self.column(offset, stretch=YES, width=190, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
-                    self.column(offset, stretch=YES, minwidth=170)
+                    self.column(offset, stretch=YES, width=190, minwidth=190)
                 else:
-                    self.column(offset, stretch=YES, minwidth=30)
+                    self.column(offset, stretch=YES, width=100, minwidth=100)
             self.heading(offset, text=self._kheadings[heading_index], anchor="w")
+
+        # deprecated kludge, need to redraw headings to enforce initial widths...
+        # self.grid_remove()
+        # self._ctx.treeframe.grid_remove()
+        for offset, heading_index in enumerate(self._heading_map):
+            map_heading_from_kheadings(offset, heading_index)
         # self._ctx.treeframe.grid()
         # self.grid()
         self.update_idletasks()
