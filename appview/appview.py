@@ -1097,7 +1097,7 @@ select 'node.id'.offerRowID
 
             if (
                 self.treeframe.tree.instate(["hover"])
-                and tree.identify_region(event.x, event.y) == "cell"
+                and self.treeframe.tree.identify_region(event.x, event.y) == "cell"
             ):
                 id_ = self.treeframe.tree.identify_row(event.y)
                 self.menu.popup(
