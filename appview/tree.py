@@ -241,8 +241,8 @@ class TreeFrame(ttk.Frame):
         """
         super().__init__(root, *args, **kwargs)
         self.root = root
-        kwargs["columns"] = self._kheadings_init
-        self.tree = ttk.Treeview(self, **kwargs)
+#        kwargs["columns"] = self._kheadings_init
+#        self.tree = ttk.Treeview(self, **kwargs)
         self._headings_invisible = {0, 8, self.Field.model}
         self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
@@ -250,33 +250,18 @@ class TreeFrame(ttk.Frame):
         self._ctx = ctx
         # self._update_cmd_dict = self.__build__update_cmd()
         # set mouse button bindings
-        self.tree.bind("<Button-1>", self.on_drag_start)
-        self.tree.bind("<B1-Motion>", self.on_drag_motion)
-        self.tree.bind("<ButtonRelease-1>", self.on_drag_release)
-        self.tree.bind("<Motion>", self.on_motion)
-        self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
-        # hide node, offerRowID columns
-        self.tree.column("#0", width=0, stretch=NO)
-        self.tree.column("0", width=0, stretch=NO)  # offerRowID
-        # setup visible columns
-        self.tree.column(1, width=0, anchor="w")
-        self.tree.column(2, width=0)
-        for index in range(3, len(self._kheadings_init)):
-            self.tree.column(index, width=0, anchor="w")
         # debug.dlog(f"internal columns: {self.tree['columns']}")
         self.last_cleared_selection = list()
 
 
-        self.s = ttk.Scrollbar(self, orient=VERTICAL, command=self.tree.yview)
-        self.s.grid(row=0, column=1, sticky="ns")
-        self.tree["yscrollcommand"] = self.s.set
-        self.tree.tag_configure("tglm", foreground="red")
+
         self._pricingGlm = None  # = [] # named tuples of cpu, env, start
         self._pricingTglm = None  # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
         self._pricingTglmIntermediate = []
-        self.tree.grid(column=0, row=0, sticky="news")
+
+        self._make_tree()
         self._update_headings()
     #               CustomTreeView __init__                                  >
 
@@ -346,15 +331,41 @@ class TreeFrame(ttk.Frame):
             # debug.dlog(t)
         return t
 
+    def _make_tree(self):
+        try:
+            self.tree.destroy()
+        except:
+            pass
+        self.tree = ttk.Treeview(self, columns=self._kheadings_init)
+        self.tree.bind("<Button-1>", self.on_drag_start)
+        self.tree.bind("<B1-Motion>", self.on_drag_motion)
+        self.tree.bind("<ButtonRelease-1>", self.on_drag_release)
+        self.tree.bind("<Motion>", self.on_motion)
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
+
+        # hide node, offerRowID columns
+        self.tree.column("#0", width=0, stretch=NO)
+        self.tree.column("0", width=0, stretch=NO)  # offerRowID
+
+        # setup visible columns
+        self.tree.column(1, width=0, anchor="w")
+        self.tree.column(2, width=0)
+        for index in range(3, len(self._kheadings_init)):
+            self.tree.column(index, width=0, anchor="w")
+
+        self.tree.tag_configure("tglm", foreground="red")
+        self.tree.grid(column=0, row=0, sticky="news")
+
+        self.s = ttk.Scrollbar(self, orient=VERTICAL, command=self.tree.yview)
+        self.s.grid(row=0, column=1, sticky="ns")
+        self.tree["yscrollcommand"] = self.s.set
+
     def _update_headings(self):
         """
         inputs           process                             output
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
-        self.tree.destroy()
-        kwargs["columns"] = self._kheadings_init
-        self.tree = ttk.Treeview(self, **kwargs)
         feature_filter = ""
         try:
             if self._ctx.feature_entryframe.whether_checked:
