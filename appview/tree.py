@@ -81,9 +81,9 @@ class Pricing:
         return len(self.pricing)
 
 
-class CustomTreeview(ttk.Treeview):
+class TreeFrame(ttk.Frame):
     """
-    CustomTreeview
+    TreeFrame
     --------------
     +glmcounts()
     ...
@@ -230,7 +230,7 @@ class CustomTreeview(ttk.Treeview):
             self._headings_invisible.discard(colnum)
 
     #               CustomTreeView __init__                                  <
-    def __init__(self, ctx, *args, **kwargs):
+    def __init__(self, ctx, root, *args, **kwargs):
         """constructor for CustomTreeView"""
         """post:
             _ctx                :   AppView contextual parent
@@ -239,49 +239,51 @@ class CustomTreeview(ttk.Treeview):
             buttons bound
             column options set
         """
+        super().__init__(root, *args, **kwargs)
+        kwargs["columns"] = self._kheadings_init
+        self.tree = ttk.Treeview(self, **kwargs)
         self._headings_invisible = {0, 8, self.Field.model}
         self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
         # initialize super with columns
-        kwargs["columns"] = self._kheadings_init
-        super().__init__(*args, **kwargs)
         self._ctx = ctx
         # self._update_cmd_dict = self.__build__update_cmd()
         # set mouse button bindings
-        self.bind("<Button-1>", self.on_drag_start)
-        self.bind("<B1-Motion>", self.on_drag_motion)
-        self.bind("<ButtonRelease-1>", self.on_drag_release)
-        self.bind("<Motion>", self.on_motion)
-        self.bind("<<TreeviewSelect>>", self.on_select)
+        self.tree.bind("<Button-1>", self.on_drag_start)
+        self.tree.bind("<B1-Motion>", self.on_drag_motion)
+        self.tree.bind("<ButtonRelease-1>", self.on_drag_release)
+        self.tree.bind("<Motion>", self.on_motion)
+        self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
         # hide node, offerRowID columns
-        self.column("#0", width=0, stretch=NO)
-        self.column("0", width=0, stretch=NO)  # offerRowID
+        self.tree.column("#0", width=0, stretch=NO)
+        self.tree.column("0", width=0, stretch=NO)  # offerRowID
         # setup visible columns
-        self.column(1, width=0, anchor="w")
-        self.column(2, width=0)
+        self.tree.column(1, width=0, anchor="w")
+        self.tree.column(2, width=0)
         for index in range(3, len(self._kheadings_init)):
-            self.column(index, width=0, anchor="w")
-        # debug.dlog(f"internal columns: {self['columns']}")
+            self.tree.column(index, width=0, anchor="w")
+        # debug.dlog(f"internal columns: {self.tree['columns']}")
         self.last_cleared_selection = list()
 
 
-        self.s = ttk.Scrollbar(self._ctx.treeframe, orient=VERTICAL, command=self.yview)
+        self.s = ttk.Scrollbar(self, orient=VERTICAL, command=self.tree.yview)
         self.s.grid(row=0, column=1, sticky="ns")
-        self["yscrollcommand"] = self.s.set
-        self.tag_configure("tglm", foreground="red")
+        self.tree["yscrollcommand"] = self.s.set
+        self.tree.tag_configure("tglm", foreground="red")
         self._pricingGlm = None  # = [] # named tuples of cpu, env, start
         self._pricingTglm = None  # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
         self._pricingTglmIntermediate = []
+        self.tree.grid(column=0, row=0, sticky="news")
         self._update_headings()
     #               CustomTreeView __init__                                  >
 
     def whether_at_least_one_model(self):
-        children = self.get_children()
+        children = self.tree.get_children()
         last_model_info = reduce(
             lambda a, b: a if a != "" else b,
-            [self.item(id)["values"][self.Field.model] for id in children],
+            [self.tree.item(id)["values"][self.Field.model] for id in children],
         )
         return last_model_info != ""
 
@@ -289,30 +291,29 @@ class CustomTreeview(ttk.Treeview):
         """extract the node address values from the selection and return
         as a list or empty list"""
         thelist = []
-        for item_id in self.selection():
+        for item_id in self.tree.selection():
             thelist.append(
                 (
-                    self.item(item_id)["values"][CustomTreeview.Field.offerRowID],
-                    self.item(item_id)["values"][CustomTreeview.Field.address],
-                    self.item(item_id)["values"][CustomTreeview.Field.name],
+                    self.tree.item(item_id)["values"][TreeFrame.Field.offerRowID],
+                    self.tree.item(item_id)["values"][TreeFrame.Field.address],
+                    self.tree.item(item_id)["values"][TreeFrame.Field.name],
                 )
             )
-            # print(self.item(item_id)['values'])
         return thelist
 
     def get_selected_rowid(self):
         """return the rowid for a singly selected row or None"""
         rowid = None
-        sel = self.selection()
+        sel = self.tree.selection()
         if len(sel) == 1:
-            rowid = self.item(sel)["values"][CustomTreeview.Field.offerRowID]
+            rowid = self.tree.item(sel)["values"][TreeFrame.Field.offerRowID]
         return rowid
 
     def on_select(self, e=None):
         """update the count selected linked variable unless tree is
         swapping or updating"""
         if not self._stateHolder.whether_swapping() and not self._ctx.whetherUpdating:
-            count_selected = len(self.selection())
+            count_selected = len(self.tree.selection())
             if count_selected == 1:
                 self._ctx.cursorOfferRowID = self.get_selected_rowid()
             else:
@@ -366,17 +367,17 @@ class CustomTreeview(ttk.Treeview):
                     )
             # debug.dlog(self._headings_invisible)
             if not stretch:
-                self.column(offset, stretch=NO, width=0)
+                self.tree.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
-                    self.column(offset, stretch=YES, width=190, minwidth=190)
+                    self.tree.column(offset, stretch=YES, width=190, minwidth=190)
                 elif self._heading_map[offset] in [ int(self.Field.name) ]:
-                    self.column(offset, stretch=YES, width=190, minwidth=170)
+                    self.tree.column(offset, stretch=YES, width=190, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
-                    self.column(offset, stretch=YES, width=190, minwidth=190)
+                    self.tree.column(offset, stretch=YES, width=190, minwidth=190)
                 else:
-                    self.column(offset, stretch=YES, width=100, minwidth=100)
-            self.heading(offset, text=self._kheadings[heading_index], anchor="w")
+                    self.tree.column(offset, stretch=YES, width=100, minwidth=100)
+            self.tree.heading(offset, text=self._kheadings[heading_index], anchor="w")
 
         # deprecated kludge, need to redraw headings to enforce initial widths...
         # self.grid_remove()
@@ -385,7 +386,7 @@ class CustomTreeview(ttk.Treeview):
             map_heading_from_kheadings(offset, heading_index)
         # self._ctx.treeframe.grid()
         # self.grid()
-        self.update_idletasks()
+        self.tree.update_idletasks()
         # self._ctx.selection_tree.pseudogrid()  # breaks view on mac os x
 
     def on_drag_start(self, event):
@@ -488,9 +489,9 @@ class CustomTreeview(ttk.Treeview):
             if len(self.list_selection_addresses()) > 0:  # assume update needed
                 self.last_cleared_selection = self.list_selection_addresses()
 
-        children = self.get_children()
+        children = self.tree.get_children()
         if len(children) > 0:
-            self.delete(*children)
+            self.tree.delete(*children)
 
     def _values_reordered(self, values):
         """convert the standard values sequence into the internal sequence and return"""
@@ -538,15 +539,15 @@ class CustomTreeview(ttk.Treeview):
         """map ordering of results to internal ordering"""
         # inputs should be values, currency_unit
         value_list = list(kwargs["values"])
-        node_address = value_list[CustomTreeview.Field.address]
-        value_list[CustomTreeview.Field.address] = value_list[
-            CustomTreeview.Field.address
+        node_address = value_list[TreeFrame.Field.address]
+        value_list[TreeFrame.Field.address] = value_list[
+            TreeFrame.Field.address
         ][:9]
         currency_unit = kwargs["currency_unit"]
         pricingData = PricingData(
-            value_list[CustomTreeview.Field.cpu_per_hr],
-            value_list[CustomTreeview.Field.dur_per_hr],
-            value_list[CustomTreeview.Field.start],
+            value_list[TreeFrame.Field.cpu_per_hr],
+            value_list[TreeFrame.Field.dur_per_hr],
+            value_list[TreeFrame.Field.start],
         )
         if currency_unit == "glm":
             self._pricingGlmIntermediate.append(pricingData)
@@ -555,7 +556,7 @@ class CustomTreeview(ttk.Treeview):
             self._pricingTglmIntermediate.append(pricingData)
             tags = ("tglm",)
 
-        super().insert(
+        self.tree.insert(
             "",
             "end",
             values=self._values_reordered(value_list),
@@ -566,10 +567,10 @@ class CustomTreeview(ttk.Treeview):
     def get_heading(self, index):
         """return the heading name currently at the specified index"""
         # for now just using self.heading(index)['text']
-        return self.heading(index)["text"]
+        return self.tree.heading(index)["text"]
 
     def clear(self):
-        self.delete(*self.get_children())
+        self.tree.delete(*self.tree.get_children())
 
     def glmcounts(self, reverse=False):
         """return the number of rows corresponding to glm and tglm as a pair"""
