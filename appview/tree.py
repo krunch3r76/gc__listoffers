@@ -366,6 +366,7 @@ class TreeFrame(ttk.Frame):
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
+        self._make_tree()
         feature_filter = ""
         try:
             if self._ctx.feature_entryframe.whether_checked:
