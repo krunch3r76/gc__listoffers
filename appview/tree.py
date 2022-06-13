@@ -240,6 +240,7 @@ class TreeFrame(ttk.Frame):
             column options set
         """
         super().__init__(root, *args, **kwargs)
+        self.root = root
         kwargs["columns"] = self._kheadings_init
         self.tree = ttk.Treeview(self, **kwargs)
         self._headings_invisible = {0, 8, self.Field.model}
@@ -351,6 +352,9 @@ class TreeFrame(ttk.Frame):
         _kheadings       each _heading_map offset+1          gui headings
         _heading_map     map heading fr _kheadings
         """
+        self.tree.destroy()
+        kwargs["columns"] = self._kheadings_init
+        self.tree = ttk.Treeview(self, **kwargs)
         feature_filter = ""
         try:
             if self._ctx.feature_entryframe.whether_checked:
