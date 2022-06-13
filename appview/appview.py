@@ -78,7 +78,7 @@ class TreeMenu(Menu):
         self.entryconfigure(0, label=name)
         self.post(x_root, y_root)
 
-        self.id_ = _ctx.tree.identify_row(y)
+        self.id_ = _ctx.treeframe.tree.identify_row(y)
 
 
 class SelTreeMenu(Menu):
@@ -200,17 +200,13 @@ class AppView:
         treeframe["padding"] = (0, 0, 0, 10)
 
         # treeframe--tree
-        self.tree = self.treeframe.tree
-        self.tree.configure(padding=(0, 0, 0, 15))
+        self.treeframe.tree.configure(padding=(0, 0, 0, 15))
         # treeframe--selection_tree
         self.selection_tree = SelectionTreeview(self, treeframe)
 
         self.selection_tree.pseudogrid(column=2, row=0, sticky="nwes")
         treeframe.grid(column=0, row=0, sticky="news")
         # /treeframe
-
-        #        self.tree.columnconfigure(0, weight=1)
-        #        self.tree.rowconfigure(0, weight=1)
 
         self.subnet_var.set("public-beta")
         self.other_entry_var.set("devnet-beta.2")
@@ -257,13 +253,13 @@ class AppView:
         # self.refreshFrame.w["relief"] = "solid"
 
         self.cbv_lastversion = BooleanVar()
-        self.cbv_lastversion.set(True)
+        self.cbv_lastversion.set(False)
         self.version_cb = ttk.Checkbutton(
             self.refreshFrame.w,
             text="latest version only",
             padding=(10, 0, 10, 0),
             variable=self.cbv_lastversion,
-            command=self._update_cmd,
+            command=lambda: self._update_cmd({"cmd": "check version"}),
         )
         self.version_cb.grid(row=0, column=2, sticky="w")
 
@@ -356,10 +352,6 @@ class AppView:
         self.filtermswin = None
         self._states = dict()
         self.whetherUpdating = False
-
-        # kludge, postpone update headings until all sub frames made
-        self.treeframe._update_headings()
-        self.treeframe.grid(column=0, row=0, sticky="news")
 
     #                           __call__                                     <
     def __call__(self):
@@ -594,7 +586,7 @@ class AppView:
         # self.resultdiffcount_var.set("")
         self.treeframe.clearit()
         # self.tree.delete(*self.tree.get_children())
-        self.tree.update_idletasks()
+        self.treeframe.tree.update_idletasks()
 
         # build sql statement
         ss = self._update_or_refresh_sql()
@@ -677,11 +669,18 @@ class AppView:
         control to self.handle_incoming_result"""
         """more_d is an optional dictionary with additonal instructions
         tied to specific keys, so far 'sort_on'"""
+        if more_d == None:
+            more_d = dict()
+        if more_d.get("cmd", None) == "check version":
+            self.treeframe.change_visibility(
+                self.treeframe.Field.version, not self.cbv_lastversion.get()
+            )
+            self.treeframe._update_headings()
+
         if not self.session_id:
             return
 
         self.whetherUpdating = True
-        self.treeframe._update_headings()
         if self.cursorOfferRowID == None:
             self.cursorOfferRowID = self.treeframe.get_selected_rowid()
 
@@ -1088,20 +1087,23 @@ select 'node.id'.offerRowID
 
     #                           do_popup                                     <
     def do_popup(self, event):
-        tree = self.tree
         try:
             # identify the coordinates of tree
             # print(tree.state())
-            if tree.instate(["!hover"]) and self.selection_tree.instate(["!hover"]):
+            if self.treeframe.tree.instate(["!hover"]) and self.selection_tree.instate(
+                ["!hover"]
+            ):
                 return
 
             if (
-                tree.instate(["hover"])
+                self.treeframe.tree.instate(["hover"])
                 and tree.identify_region(event.x, event.y) == "cell"
             ):
-                id_ = tree.identify_row(event.y)
+                id_ = self.treeframe.tree.identify_row(event.y)
                 self.menu.popup(
-                    self.tree.item(tree.identify_row(event.y))["values"][1],
+                    self.treeframe.tree.item(self.treeframe.tree.identify_row(event.y))[
+                        "values"
+                    ][1],
                     event.x,
                     event.y,
                     event.x_root,
@@ -1110,9 +1112,9 @@ select 'node.id'.offerRowID
 
                 # update context of what row corresponded to the context
                 # menu click
-                self.cursorOfferRowID = tree.item(tree.identify_row(event.y))["values"][
-                    0
-                ]
+                self.cursorOfferRowID = self.treeframe.tree.item(
+                    self.treeframe.tree.identify_row(event.y)
+                )["values"][0]
 
             elif self.selection_tree.instate(["hover"]):
                 self.seltree_menu.popup(event.x, event.y, event.x_root, event.y_root)

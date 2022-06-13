@@ -241,9 +241,10 @@ class TreeFrame(ttk.Frame):
         """
         super().__init__(root, *args, **kwargs)
         self.root = root
-#        kwargs["columns"] = self._kheadings_init
-#        self.tree = ttk.Treeview(self, **kwargs)
-        self._headings_invisible = {0, 8, self.Field.model}
+        #        kwargs["columns"] = self._kheadings_init
+        #        self.tree = ttk.Treeview(self, **kwargs)
+        # self._headings_invisible = {0, 8, self.Field.model}
+        self._headings_invisible = {0, self.Field.model}
         self._separatorDragging = False
         self._stateHolder = self.StateHolder(self)
         # initialize super with columns
@@ -254,8 +255,6 @@ class TreeFrame(ttk.Frame):
         # debug.dlog(f"internal columns: {self.tree['columns']}")
         self.last_cleared_selection = list()
 
-
-
         self._pricingGlm = None  # = [] # named tuples of cpu, env, start
         self._pricingTglm = None  # [] # named tuples of cpu, env, start
         self._pricingGlmIntermediate = []
@@ -263,6 +262,7 @@ class TreeFrame(ttk.Frame):
 
         self._make_tree()
         self._update_headings()
+
     #               CustomTreeView __init__                                  >
 
     def whether_at_least_one_model(self):
@@ -373,21 +373,21 @@ class TreeFrame(ttk.Frame):
                 self.change_visibility(self.Field.features, True)
             else:
                 self.change_visibility(self.Field.features, False)
-        except: #kludge
+        except:  # kludge
             self.change_visibility(self.Field.features, False)
 
         def map_heading_from_kheadings(offset, heading_index):
             heading_text = self._kheadings[heading_index]
             stretch = (
-                    YES if self._heading_map[offset] not in self._headings_invisible else NO
-                    )
+                YES if self._heading_map[offset] not in self._headings_invisible else NO
+            )
             # debug.dlog(self._headings_invisible)
             if not stretch:
                 self.tree.column(offset, stretch=NO, width=0)
             else:
                 if self._heading_map[offset] == int(self.Field.model):
                     self.tree.column(offset, stretch=YES, width=190, minwidth=190)
-                elif self._heading_map[offset] in [ int(self.Field.name) ]:
+                elif self._heading_map[offset] in [int(self.Field.name)]:
                     self.tree.column(offset, stretch=YES, width=190, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
                     self.tree.column(offset, stretch=YES, width=190, minwidth=190)
@@ -556,9 +556,7 @@ class TreeFrame(ttk.Frame):
         # inputs should be values, currency_unit
         value_list = list(kwargs["values"])
         node_address = value_list[TreeFrame.Field.address]
-        value_list[TreeFrame.Field.address] = value_list[
-            TreeFrame.Field.address
-        ][:9]
+        value_list[TreeFrame.Field.address] = value_list[TreeFrame.Field.address][:9]
         currency_unit = kwargs["currency_unit"]
         pricingData = PricingData(
             value_list[TreeFrame.Field.cpu_per_hr],
