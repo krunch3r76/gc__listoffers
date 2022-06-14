@@ -205,7 +205,7 @@ class TreeFrame(ttk.Frame):
     )
 
     _heading_map = [num for num in range(len(_kheadings))]
-    _heading_map = (0,1,2,3,4,5,6,7,13,8,9,10,11,12,)
+    _heading_map = [0,1,2,3,4,5,6,7,13,8,9,10,11,12,]
     # e.g. (0, 1, 2, ...)
     _kheadings_init = tuple(
         [str(num) for num in range(len(_kheadings))]
