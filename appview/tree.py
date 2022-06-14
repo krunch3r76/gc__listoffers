@@ -394,7 +394,7 @@ class TreeFrame(ttk.Frame):
                 if self._heading_map[offset] == int(self.Field.model):
                     self.tree.column(offset, stretch=YES, width=190, minwidth=190)
                 elif self._heading_map[offset] in [int(self.Field.name)]:
-                    self.tree.column(offset, stretch=YES, width=190, minwidth=170)
+                    self.tree.column(offset, stretch=YES, width=170, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
                     self.tree.column(offset, stretch=YES, width=190, minwidth=190)
                 else:
@@ -404,6 +404,9 @@ class TreeFrame(ttk.Frame):
         # deprecated kludge, need to redraw headings to enforce initial widths...
         # self.grid_remove()
         # self._ctx.treeframe.grid_remove()
+        #self.tree.tag_configure('ci', image=self.cpuimg)
+        #self.tree.column("#0", tags=('ci'))
+        self.tree.heading("#0", image=self.cpuimg)
         for offset, heading_index in enumerate(self._heading_map):
             map_heading_from_kheadings(offset, heading_index)
         # self._ctx.treeframe.grid()
