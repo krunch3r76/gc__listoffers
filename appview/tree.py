@@ -15,6 +15,8 @@ PricingData = namedtuple("PricingData", ["cpu", "env", "start"])
 PricingQuintiles = namedtuple("PricingQuintiles", ["cpu", "env", "start"])
 PricingSummaries = namedtuple("PricingStats", ["cpu", "env", "start"])
 
+from pathlib import Path
+projectdir = Path(__file__).parent.parent
 
 @dataclass
 class Pricing:
@@ -111,6 +113,7 @@ class TreeFrame(ttk.Frame):
         features = 10
         mem = 11
         storage = 12
+        freq=13
 
     class StateHolder:
         __swapping = False
@@ -181,6 +184,7 @@ class TreeFrame(ttk.Frame):
         "features",  # 10
         "mem",  # 11
         "storage",  # 12
+        "frequency", #13
     )
 
     _kheadings_sql_paths = (
@@ -197,14 +201,15 @@ class TreeFrame(ttk.Frame):
         "filteredFeatures",
         "'inf.mem'.gib",
         "'inf.storage'.gib",
+        "freq"
     )
 
     _heading_map = [num for num in range(len(_kheadings))]
+    _heading_map = (0,1,2,3,4,5,6,7,13,8,9,10,11,12,)
     # e.g. (0, 1, 2, ...)
     _kheadings_init = tuple(
         [str(num) for num in range(len(_kheadings))]
     )  # e.g. ('0', '1', '2', ...)
-
     #    _kupdate_cmds=[ {}, {"sort_on": "'node.id'.name"}
     # , {"sort_on": "'offers'.address"}, {}, {}
     _update_cmd_dict = {
@@ -239,6 +244,7 @@ class TreeFrame(ttk.Frame):
             buttons bound
             column options set
         """
+        self.cpuimg = PhotoImage(file=f"{str(projectdir / 'gs/78874_cpu_z_icon.png')}")
         super().__init__(root, *args, **kwargs)
         self.root = root
         #        kwargs["columns"] = self._kheadings_init
@@ -344,7 +350,7 @@ class TreeFrame(ttk.Frame):
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
         # hide node, offerRowID columns
-        self.tree.column("#0", width=0, stretch=NO)
+        self.tree.column("#0", width=16, stretch=NO)
         self.tree.column("0", width=0, stretch=NO)  # offerRowID
 
         # setup visible columns
@@ -554,10 +560,17 @@ class TreeFrame(ttk.Frame):
     def insert(self, *args, **kwargs):
         """map ordering of results to internal ordering"""
         # inputs should be values, currency_unit
+        # currently the mapping is fixed from what appview has defined for kwargs['values']
+        # and it is assumed this will stay constant with TreeFrame.Field BROKEN COUPLING!
+        # TODO: consider retaining named tuple form as input
+        # or use TreeFrame.Field somehow from appview
         value_list = list(kwargs["values"])
-        node_address = value_list[TreeFrame.Field.address]
+        node_address = value_list[TreeFrame.Field.address] # warning, Field.address not fixed
         value_list[TreeFrame.Field.address] = value_list[TreeFrame.Field.address][:9]
         currency_unit = kwargs["currency_unit"]
+        modelname=value_list[9]
+        modelfreq=value_list[13]
+
         pricingData = PricingData(
             value_list[TreeFrame.Field.cpu_per_hr],
             value_list[TreeFrame.Field.dur_per_hr],
@@ -570,13 +583,18 @@ class TreeFrame(ttk.Frame):
             self._pricingTglmIntermediate.append(pricingData)
             tags = ("tglm",)
 
-        self.tree.insert(
+        inserted = self.tree.insert(
             "",
             "end",
             values=self._values_reordered(value_list),
             iid=node_address,
             tags=tags,
+            image='' if modelname == '' else self.cpuimg,
         )
+        # debug.dlog(kwargs)
+        # item_inserted = self.tree.item(inserted)
+        # item_inserted['image']=self.cpuimg
+
 
     def get_heading(self, index):
         """return the heading name currently at the specified index"""

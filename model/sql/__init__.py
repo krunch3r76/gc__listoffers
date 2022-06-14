@@ -88,7 +88,7 @@ def create_database():
             "architecture TEXT",
             'capabilities TEXT DEFAULT "[]"',
             "cores INTEGER",
-            'model TEXT DEFAULT ""',
+            'brand TEXT DEFAULT ""',
             "threads INTEGER",
             'vendor TEXT DEFAULT ""',
         ],
@@ -200,11 +200,11 @@ def build_database(con, offers):
         if props["golem.runtime.name"] == "vm":
             try:
                 con.execute(
-                    "UPDATE 'inf.cpu' SET ( 'capabilities', 'model',"
+                    "UPDATE 'inf.cpu' SET ( 'capabilities', 'brand',"
                     "'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?",
                     (
                         json.dumps(props["golem.inf.cpu.capabilities"]),
-                        props["golem.inf.cpu.model"],
+                        props["golem.inf.cpu.brand"],
                         props["golem.inf.cpu.vendor"],
                         lastrow,
                     ),

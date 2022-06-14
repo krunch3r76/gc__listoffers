@@ -485,19 +485,20 @@ class AppView:
                 "",
                 "end",
                 values=(
-                    resultsNT.offerRowID,
-                    resultsNT.name,
-                    resultsNT.address,
-                    Decimal(resultsNT.cpu_sec) * Decimal(3600.0),
-                    Decimal(resultsNT.duration_sec) * Decimal(3600.0),
-                    resultsNT.fixed,
-                    resultsNT.cores,
-                    resultsNT.threads,
-                    resultsNT.version,
-                    resultsNT.modelname,  # result[11],
-                    resultsNT.filtered_features,  # result[14],
-                    resultsNT.mem,
-                    resultsNT.storage,
+                    resultsNT.offerRowID,  # 0
+                    resultsNT.name,  # 1
+                    resultsNT.address,  # 2
+                    Decimal(resultsNT.cpu_sec) * Decimal(3600.0),  # 3
+                    Decimal(resultsNT.duration_sec) * Decimal(3600.0),  # 4
+                    resultsNT.fixed,  # 5 # TODO MAKE DECIMAL
+                    resultsNT.cores,  # 6
+                    resultsNT.threads,  # 7
+                    resultsNT.version,  # 8
+                    resultsNT.modelname,  # result[11], #9
+                    resultsNT.filtered_features,  # result[14], #10
+                    resultsNT.mem,  # 11
+                    resultsNT.storage,  # 12
+                    resultsNT.modelfreq,  # 13
                 ),
                 currency_unit=currency_unit,
             )
@@ -672,6 +673,7 @@ class AppView:
         if more_d == None:
             more_d = dict()
         if more_d.get("cmd", None) == "check version":
+            print(f"Checking version {self.cbv_lastversion.get()}")
             self.treeframe.change_visibility(
                 self.treeframe.Field.version, not self.cbv_lastversion.get()
             )
@@ -745,13 +747,8 @@ select 'node.id'.offerRowID
 , MAX('offers'.ts)
 , (select 'runtime'.version FROM 'runtime'
     ORDER BY 'runtime'.version DESC LIMIT 1) AS mv
-, ifnull( (SELECT modelname FROM spyu.provider
-   NATURAL JOIN spyu.nodeInfo
-    WHERE provider.addr = 'offers'.address), '') AS modelname
-, (SELECT grep_freq(modelname) FROM
-(SELECT modelname FROM spyu.provider
-   NATURAL JOIN spyu.nodeInfo
-    WHERE provider.addr = 'offers'.address) AS modelname
+, 'inf.cpu'.brand AS modelname
+, (SELECT grep_freq('inf.cpu'.brand)
 ) AS freq
 , 'com.payment.platform'.kind
         """
@@ -1037,7 +1034,7 @@ select 'node.id'.offerRowID
             if len(results) > 1 and results[0] == "error":
                 __on_error(self, results)
             else:
-                debug.dlog(f"model results (first): {results[0]}\n", 10)
+                debug.dlog(f"first of model results: {results[0]}\n", 10)
                 self._update(results, refresh)
                 # toggle_refresh_controls down the line
 
