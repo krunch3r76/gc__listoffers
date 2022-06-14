@@ -391,14 +391,14 @@ class TreeFrame(ttk.Frame):
             if not stretch:
                 self.tree.column(offset, stretch=NO, width=0)
             else:
-                if self._heading_map[offset] == int(self.Field.model):
-                    self.tree.column(offset, stretch=YES, width=190, minwidth=190)
+                if self._heading_map[offset] == int(self.Field.freq):
+                    self.tree.column(offset, stretch=YES, width=200, minwidth=200)
                 elif self._heading_map[offset] in [int(self.Field.name)]:
                     self.tree.column(offset, stretch=YES, width=170, minwidth=170)
                 elif self._heading_map[offset] == int(self.Field.features):
                     self.tree.column(offset, stretch=YES, width=190, minwidth=190)
                 else:
-                    self.tree.column(offset, stretch=YES, width=100, minwidth=100)
+                    self.tree.column(offset, stretch=YES, width=40, minwidth=40)
             self.tree.heading(offset, text=self._kheadings[heading_index], anchor="w")
 
         # deprecated kludge, need to redraw headings to enforce initial widths...
@@ -573,7 +573,13 @@ class TreeFrame(ttk.Frame):
         currency_unit = kwargs["currency_unit"]
         modelname=value_list[9]
         modelfreq=value_list[13]
-
+        map_new = []
+        for i, v in enumerate(value_list):
+            if i==13 and v=='':
+                map_new.append(value_list[9])
+            else:
+                map_new.append(v)
+        value_list = map_new
         pricingData = PricingData(
             value_list[TreeFrame.Field.cpu_per_hr],
             value_list[TreeFrame.Field.dur_per_hr],
