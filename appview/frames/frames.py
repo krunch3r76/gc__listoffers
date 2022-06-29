@@ -15,9 +15,37 @@ class RefreshFrame:
     #   radio_frame
 
     class RadioFrame:
+        class Callbacks:
+            def __init__(self, radioFrameCtx):
+                self.radioFrameCtx = radioFrameCtx
+                self.appView = self.radioFrameCtx.master
+            def on_other_entry_focusout(self, *args):
+                appView = self.appView
+
+                subnet = appView.subnet_var.get()
+                refreshFrame = self.appView.refreshFrame
+
+                if subnet != "public-beta" and subnet != "devnet-beta":
+                    refreshFrame.radio_frame.other_entry.state(["disabled"])
+
+            def on_other_entry_click(self, *args):
+                radio_frame = self.appView.refreshFrame.radio_frame
+                subnet = self.appView.subnet_var.get()
+
+                if radio_frame.other_rb.instate(["!disabled"]):
+                    subnet = self.appView.subnet_var.get()
+                    if subnet != "public-beta" and subnet != "devnet-beta":
+                        self.appView.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+
+        def _on_other_entry_change(self, *args):
+            self.appView.radioFrame.other_rb["value"] = self.other_entry_var.get()
+            self.appView.subnet_var.set(self.other_entry_var.get())
+
         def __init__(self, master, *args, **kwargs):
             self.w = ttk.Frame(*args, **kwargs)
             self.master = master
+            self.other_entry_var = StringVar()
+            self.callbacks = self.Callbacks(self)
 
             # create publicbeta_rb
             self.publicbeta_rb = ttk.Radiobutton(
@@ -48,12 +76,12 @@ class RefreshFrame:
 
             # create other_entry
             self.other_entry = ttk.Entry(
-                self.w, textvariable=self.master.other_entry_var
+                self.w, textvariable=self.other_entry_var
             )
             self.other_entry.state(["disabled"])
             self.other_entry.bind("<Return>", lambda e: self.master._refresh_cmd())
-            self.other_entry.bind("<FocusOut>", self.master._on_other_entry_focusout)
-            self.other_entry.bind("<Button-1>", self.master._on_other_entry_click)
+            self.other_entry.bind("<FocusOut>", self.callbacks.on_other_entry_focusout)
+            self.other_entry.bind("<Button-1>", self.callbacks.on_other_entry_click)
 
             self.w.rowconfigure(0, pad=5, weight=1)
             self.w.rowconfigure(1, weight=1)
@@ -66,6 +94,8 @@ class RefreshFrame:
             self.other_rb.grid(column=0, row=1, sticky="w")
             self.other_entry.grid(column=1, row=1, sticky="w")
 
+            self.other_entry_var.set("devnet-beta.2")
+            self.other_entry_var.trace_add("write", self._on_other_entry_change)
     # ----------------------------------------------------------------------- #
     #   RefreshFrame::  __init__
     # ----------------------------------------------------------------------- #

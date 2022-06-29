@@ -54,60 +54,129 @@ DIC544 = "#4D4D4D"
 
 
 class TreeMenu(Menu):
-    def __init__(self, ctx, callbacks, *args, **kwargs):
+    """
+    contextual menu for the main tree (vs selection tree) view
+    """
+
+    def __init__(self, ctx, *Menu_args, **Menu_kwargs):
         """set up menu skeleton"""
-        super().__init__(*args, **kwargs)
+        super().__init__(*Menu_args, **Menu_kwargs)
         self._ctx = ctx
         _ctx = self._ctx
 
-        self.add_command(label="<name>")
+        callbacks = {
+            "show-raw": ctx._show_raw,
+            "browse-stats": ctx.open_stats_page_under_cursor,
+        }
+
+        menu_items = [
+            {"label": "<name>"},  # < > signifies a placeholder
+            {"label": "view raw", "command": callbacks["show-raw"]},
+            {
+                "label": "browse to stats",
+                "command": lambda: callbacks["browse-stats"](self.id_),
+            },
+            {"label": "exit menu", "command": self.grab_release},
+        ]
+
+        def add_command_for(label):
+            self.add_command(
+                **next(
+                    (
+                        menu_item
+                        for menu_item in menu_items
+                        if menu_item["label"] == label
+                    )
+                )
+            )
+
+        add_command_for("<name>")
         self.entryconfigure(0, state=DISABLED)
         self.add_separator()
-        self.add_command(label="view raw", command=callbacks["show-raw"])
-        self.add_command(
-            label="browse to stats", command=lambda: callbacks["browse-stats"](self.id_)
-        )
-        self.add_command(label="exit menu", command=self.grab_release)
+        add_command_for("view raw")
+        add_command_for("browse to stats")
+        add_command_for("exit menu")
 
-    def popup(self, name, x, y, x_root, y_root):
-        """configure and post menu to display
-        in: name, event structure, *coordinates from event
-        post: _ctx.cursorOfferRowID
+    def popup(self, name, event):
+        """
+        show the contextual menu
+        :name: provider name to show at top
+        in: name, event structure (for coordinates)
+        post: _ctx.cursorOfferRowID, popup at absolute screen position
         """
         _ctx = self._ctx
         self.entryconfigure(0, label=name)
-        self.post(x_root, y_root)
+        self.post(event.x_root, event.y_root)  # absolute screen position
 
-        self.id_ = _ctx.treeframe.tree.identify_row(y)
+        self.id_ = _ctx.treeframe.tree.identify_row(event.y)  # widget relative
 
 
 class SelTreeMenu(Menu):
+    """
+    contextual menu for the selection tree (vs main tree) view
+    """
+
     def _add_addr_items(self, addr_text):
         """add a label to indicate which specific address is corresponding"""
         pass
 
-    def __init__(self, ctx, filterms_dialog_cb=None, *args, **kwargs):
-        """set up menu skeleton"""
-        super().__init__(*args, **kwargs)
-        self._ctx = ctx
-        _ctx = self._ctx
-
-        self.add_command(label="filterms", command=filterms_dialog_cb)
-        self.add_command(label="exit menu", command=self.grab_release)
-
-    def popup(self, x, y, x_root, y_root, name=None):
-        """configure and post menu to screen
-        in: *coordinates from event, name label to add if any
+    def __init__(self, ctx, *args, **kwargs):
+        """set up menu skeleton
+        in: ctx of AppView
         """
-        _ctx = self._ctx
-        self.post(x_root, y_root)
+        super().__init__(*args, **kwargs)
+        self.ctx = ctx
+        label_to_callback = {
+                "filterms": self.ctx._start_filterms_dialog,
+                "exit menu": self.grab_release,
+            }
+        menu_items = [
+            {"label": "filterms", "command": label_to_callback["filterms"]},
+            {"label": "exit menu", "command": label_to_callback["exit menu"]},
+        ]
+
+        def add_command_for(label):
+            self.add_command(
+                **next(
+                    (
+                        menu_item
+                        for menu_item in menu_items
+                        if menu_item["label"] == label
+                    )
+                )
+            )
+
+        add_command_for("filterms")
+        add_command_for("exit menu")
+
+    def popup(self, event):
+        """
+        show the contextual menu
+        in: event (for coordinated)
+        post: contextual menu posted to absolute position of mouse click
+        """
+        self.post(event.x_root, event.y_root)  # absolute
 
 
 class AppView:
     cancel_current_displayed_message = False  # review
     message_being_displayed = False  # review
 
+    class Callbacks:
+        def __init__(self, ctx):
+            self.ctx= ctx
+        def on_offer_text_selection(*args):
+            self.ctx._on_offer_text_selection(args)
+        def on_select():
+            self.ctx.on_select()
+        def on_none_selected():
+            self.ctx.on_none_selected()
     #                       AppView __init__                           #
+
+    @property
+    def radioFrame(self):
+        return self.refreshFrame.radio_frame
+
     def __init__(self):
         # icon
 
@@ -169,7 +238,7 @@ class AppView:
 
         # setup widgets and their linked variables
         self.subnet_var = StringVar()
-        self.other_entry_var = StringVar()
+        # self.other_entry_var = StringVar()
         # countlabel
         self.session_resultcount = 0  # number of rows currently on the table
         self.lastresultcount = 0  # temporary to store displayed
@@ -186,31 +255,6 @@ class AppView:
             style.configure("Treeview.Heading", foreground=DIC411)
 
         root.title("Provider View")
-
-        #################################################
-        # treeframe                                     #
-        #################################################
-        self.treeframe = TreeFrame(self, root)
-        treeframe = self.treeframe
-        treeframe.columnconfigure(0, weight=1)
-        treeframe.columnconfigure(1, weight=0)
-        treeframe.rowconfigure(0, weight=1)  # resize by same factor as
-        # root height
-        treeframe.columnconfigure(2, weight=0)
-        treeframe["padding"] = (0, 0, 0, 10)
-
-        # treeframe--tree
-        self.treeframe.tree.configure(padding=(0, 0, 0, 15))
-        # treeframe--selection_tree
-        self.selection_tree = SelectionTreeview(self, treeframe)
-
-        self.selection_tree.pseudogrid(column=2, row=0, sticky="nwes")
-        treeframe.grid(column=0, row=0, sticky="news")
-        # /treeframe
-
-        self.subnet_var.set("public-beta")
-        self.other_entry_var.set("devnet-beta.2")
-        self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
         #################################################
         # numSummaryFrame                               #
@@ -345,6 +389,29 @@ class AppView:
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
 
+        #################################################
+        # treeframe                                     #
+        #################################################
+        self.treeframe = TreeFrame(self, root)
+        treeframe = self.treeframe
+        treeframe.columnconfigure(0, weight=1)
+        treeframe.columnconfigure(1, weight=0)
+        treeframe.rowconfigure(0, weight=1)  # resize by same factor as
+        # root height
+        treeframe.columnconfigure(2, weight=0)
+        treeframe["padding"] = (0, 0, 0, 10)
+
+        # treeframe--tree
+        self.treeframe.tree.configure(padding=(0, 0, 0, 15))
+        # treeframe--selection_tree
+        self.selection_tree = SelectionTreeview(self, treeframe)
+
+        self.selection_tree.pseudogrid(column=2, row=0, sticky="nwes")
+        treeframe.grid(column=0, row=0, sticky="news")
+        # /treeframe
+
+        self.subnet_var.set("public-beta")
+
         root.bind("<Escape>", self.on_escape_event)
 
         self._rewrite_to_console(fetch_new_dialog(0))
@@ -360,6 +427,7 @@ class AppView:
         self._build_menus()
 
         # root.bind('<ButtonRelease-3>', do_popup )
+        # TODO move to __init__
         if root.tk.call("tk", "windowingsystem") == "aqua":
             root.bind("<2>", self.do_popup)
             root.bind("<Control-1>", self.do_popup)
@@ -621,7 +689,7 @@ class AppView:
         def toggle():
             nonlocal disabled
             nonlocal other_entry_was_enabled
-            radio_frame = self.refreshFrame.radio_frame
+            radio_frame = self.radioFrame
             refreshFrame = self.refreshFrame
             if not disabled:
                 refreshFrame.refreshButton.state(["disabled"])
@@ -870,37 +938,15 @@ select 'node.id'.offerRowID
 
     #                       _on_offer_text_selection                         >
 
-    #                   _on_other_entry_change                               <
-    def _on_other_entry_change(self, *args):
-        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
-        self.subnet_var.set(self.other_entry_var.get())
 
-    #                   _on_other_entry_change                               >
 
-    #                   _on_other_entry_focusout                             <
-    def _on_other_entry_focusout(self, *args):
-        subnet = self.subnet_var.get()
-        if subnet != "public-beta" and subnet != "devnet-beta":
-            self.refreshFrame.radio_frame.other_entry.state(["disabled"])
-
-    #                   _on_other_entry_focusout                             >
-
-    #                   _on_other_entry_click                                <
-    def _on_other_entry_click(self, *args):
-        radio_frame = self.refreshFrame.radio_frame
-        if radio_frame.other_rb.instate(["!disabled"]):
-            subnet = self.subnet_var.get()
-            if subnet != "public-beta" and subnet != "devnet-beta":
-                self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
-
-    #                   _on_other_entry_click                                >
 
     #                   _on_other_radio                                      <
     def _on_other_radio(self, *args):
-        self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+        self.radioFrame.other_entry.state(["!disabled"])
         # debug.dlog(self.other_entry_var.get() )
-        self.refreshFrame.radio_frame.other_rb["value"] = self.other_entry_var.get()
-        self.subnet_var.set(self.other_entry_var.get())
+        self.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
+        self.subnet_var.set(self.radioFrame.other_entry_var.get())
 
     #                   _on_other_radio                                      >
 
@@ -1101,10 +1147,7 @@ select 'node.id'.offerRowID
                     self.treeframe.tree.item(self.treeframe.tree.identify_row(event.y))[
                         "values"
                     ][1],
-                    event.x,
-                    event.y,
-                    event.x_root,
-                    event.y_root,
+                    event,
                 )
 
                 # update context of what row corresponded to the context
@@ -1114,7 +1157,7 @@ select 'node.id'.offerRowID
                 )["values"][0]
 
             elif self.selection_tree.instate(["hover"]):
-                self.seltree_menu.popup(event.x, event.y, event.x_root, event.y_root)
+                self.seltree_menu.popup(event)
 
         except IndexError:
             debug.dlog("index error")
@@ -1151,13 +1194,9 @@ select 'node.id'.offerRowID
         root.option_add("*tearOff", FALSE)
 
         # popup menu for main tree row item
-        callbacks = {
-            "show-raw": self._show_raw,
-            "browse-stats": self.open_stats_page_under_cursor,
-        }
-        self.menu = TreeMenu(self, callbacks)
+        self.menu = TreeMenu(self)
 
         # popup menu for selection tree (any area)
-        self.seltree_menu = SelTreeMenu(root, self._start_filterms_dialog)
+        self.seltree_menu = SelTreeMenu(self)
 
     #                           _build_menus                                 >
