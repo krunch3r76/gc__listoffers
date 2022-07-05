@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="15.0.0">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>130</x>
+      <y>170</y>
+      <w>240</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>TreeMenu
+--
+__init__(ctx: AppView)
+popup()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>130</x>
+      <y>250</y>
+      <w>240</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>SelTreeMenu
+--
+__init__(ctx)</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>130</x>
+      <y>340</y>
+      <w>610</w>
+      <h>960</h>
+    </coordinates>
+    <panel_attributes>AppView
+--
+__init__()
+__call__()
+add_text_over_time(text,txt,length,current=0,time=25,newmsg=True)
+_rewrite_to_console(msg)
+_stateRefreshing(b=None)
+_update(results,refresh)
+_refresh_cmd()
+_toggle_refresh_controls_closure()
+_update_cmd(more_d)
+_update_or_refresh_sql()
+on_escape_event(e)
+_on_offer_text_selection(*args)
+_on_other_entry_change(*args)
+_on_other_entry_focusout(*args)
+_on_other_entry_click(*args)
+_on_other_radio(*args)
+on_select()
+on_none_selected()
+_show_raw
+open_stats_page_under_cursor(node_address)
+_send_message_to_model(msg)
+handle_incoming_result(refresh=True)
+handle_incoming_result_extra()
+_cb_feature_checkbutton()
+do_popup(event)
+_start_filterms_dialog()
+_build_menus()
+--
+cursorOfferRowID {set,get}
+count_selected {set,get}
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
