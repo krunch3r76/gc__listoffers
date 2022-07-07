@@ -37,19 +37,21 @@ class RefreshFrame:
                     if subnet != "public-beta" and subnet != "devnet-beta":
                         self.appView.refreshFrame.radio_frame.other_entry.state(["!disabled"])
 
-        def _on_other_entry_change(self, *args):
-            self.appView.radioFrame.other_rb["value"] = self.other_entry_var.get()
-            self.appView.subnet_var.set(self.other_entry_var.get())
+            def on_other_entry_change(self, *args):
+                """ updates subnet variable """
+                # probably should just check the value on refresh
+                self.appView.radioFrame.other_rb["value"] = self.other_entry_var.get()
+                self.appView.subnet_var.set(self.other_entry_var.get())
 
 
-        #                   _on_other_radio                                      <
-        def _on_other_radio(self, *args):
-            self.appView.radioFrame.other_entry.state(["!disabled"])
-            # debug.dlog(self.other_entry_var.get() )
-            self.appView.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
-            self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
+            def on_other_radio(self, *args):
+                """ store text in other entry field into subnet variable """
+                # probably should just check the value on refresh or trigger refresh
+                self.appView.radioFrame.other_entry.state(["!disabled"])
+                # debug.dlog(self.other_entry_var.get() )
+                self.appView.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
+                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
 
-        #                   _on_other_radio                                      >
 
         def __init__(self, master, *args, **kwargs):
             self.w = ttk.Frame(*args, **kwargs)
@@ -81,7 +83,7 @@ class RefreshFrame:
                 text="other",
                 value="other",
                 variable=self.master.subnet_var,
-                command=self.master._on_other_radio,
+                command=self.callbacks.on_other_radio,
             )
 
             # create other_entry
@@ -105,7 +107,7 @@ class RefreshFrame:
             self.other_entry.grid(column=1, row=1, sticky="w")
 
             self.other_entry_var.set("devnet-beta.2")
-            self.other_entry_var.trace_add("write", self._on_other_entry_change)
+            self.other_entry_var.trace_add("write", self.callbacks.on_other_entry_change)
     # ----------------------------------------------------------------------- #
     #   RefreshFrame::  __init__
     # ----------------------------------------------------------------------- #
