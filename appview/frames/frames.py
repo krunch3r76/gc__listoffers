@@ -41,6 +41,16 @@ class RefreshFrame:
             self.appView.radioFrame.other_rb["value"] = self.other_entry_var.get()
             self.appView.subnet_var.set(self.other_entry_var.get())
 
+
+        #                   _on_other_radio                                      <
+        def _on_other_radio(self, *args):
+            self.appView.radioFrame.other_entry.state(["!disabled"])
+            # debug.dlog(self.other_entry_var.get() )
+            self.appView.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
+            self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
+
+        #                   _on_other_radio                                      >
+
         def __init__(self, master, *args, **kwargs):
             self.w = ttk.Frame(*args, **kwargs)
             self.master = master
