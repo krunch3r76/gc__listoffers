@@ -6,6 +6,100 @@ from pprint import pprint, pformat
 DIC411 = "#003366"
 DIC544 = "#4D4D4D"
 
+class RadioFrame:
+
+    def on_other_entry_focusout(self, *args):
+        subnet = self.appView.subnet_var.get()
+
+        if subnet != "public-beta" and subnet != "devnet-beta":
+            # self.refreshFrame.radio_frame.other_entry.state(["disabled"])
+            self.other_entry.state(["disabled"])
+
+    def on_other_entry_click(self, *args):
+        subnet = self.appView.subnet_var.get()
+
+        if self.other_rb.instate(["!disabled"]):
+            subnet = self.appView.subnet_var.get()
+            if subnet != "public-beta" and subnet != "devnet-beta":
+                # self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+                self.other_entry.state(["!disabled"])
+
+    def on_other_entry_change(self, *args):
+        """ updates subnet variable """
+        # probably should just check the value on refresh
+        self.other_rb["value"] = self.other_entry_var.get()
+        self.appView.subnet_var.set(self.other_entry_var.get())
+
+
+    def on_other_radio(self, *args):
+        """ store text in other entry field into subnet variable """
+        # probably should just check the value on refresh or trigger refresh
+        self.other_entry.state(["!disabled"])
+        # debug.dlog(self.other_entry_var.get() )
+        self.other_rb["value"] = self.other_entry_var.get()
+        self.appView.subnet_var.set(self.other_entry_var.get())
+
+
+    # RadioFrame __init__
+    # def __init__(self, master):
+
+    def __init__(self, appView, refreshFrame):
+        self.appView = appView
+        self.refreshFrame = refreshFrame
+        self.w = ttk.Frame(self.refreshFrame.w)
+        self.master = self.appView.refreshFrame
+        self.other_entry_var = StringVar()
+        # self.refreshFrame = refreshFrame
+
+        # create publicbeta_rb
+        self.publicbeta_rb = ttk.Radiobutton(
+            self.w,
+            text="public-beta",
+            variable=self.appView.subnet_var,
+            value="public-beta",
+            command=self.appView._refresh_cmd,
+        )
+
+        # create publicdevnet_rb
+        self.publicdevnet_rb = ttk.Radiobutton(
+            self.w,
+            text="devnet-beta",
+            variable=self.appView.subnet_var,
+            value="devnet-beta",
+            command=self.appView._refresh_cmd,
+        )
+
+        # create other_db
+        self.other_rb = ttk.Radiobutton(
+            self.w,
+            text="other",
+            value="other",
+            variable=self.appView.subnet_var,
+            command=self.on_other_radio,
+        )
+
+        # create other_entry
+        self.other_entry = ttk.Entry(
+            self.w, textvariable=self.other_entry_var
+        )
+        self.other_entry.state(["disabled"])
+        self.other_entry.bind("<Return>", lambda e: self.appView._refresh_cmd())
+        self.other_entry.bind("<FocusOut>", self.on_other_entry_focusout)
+        self.other_entry.bind("<Button-1>", self.on_other_entry_click)
+
+        self.w.rowconfigure(0, pad=5, weight=1)
+        self.w.rowconfigure(1, weight=1)
+        self.w.columnconfigure(0, weight=1)
+        self.w.columnconfigure(1, weight=1)
+
+        # grid components
+        self.publicbeta_rb.grid(column=0, row=0, sticky="w")
+        self.publicdevnet_rb.grid(column=1, row=0, sticky="w")
+        self.other_rb.grid(column=0, row=1, sticky="w")
+        self.other_entry.grid(column=1, row=1, sticky="w")
+
+        self.other_entry_var.set("devnet-beta.2")
+        self.other_entry_var.trace_add("write", self.on_other_entry_change)
 
 class RefreshFrame:
     #   _toggle_refresh_controls() {ref}
@@ -14,126 +108,28 @@ class RefreshFrame:
     #   refreshButton
     #   radio_frame
 
-    class RadioFrame:
-        class Callbacks:
-            def __init__(self, radioFrameCtx):
-                self.radioFrameCtx = radioFrameCtx
-                self.appView = self.radioFrameCtx.master
 
 
-            @property
-            def refreshFrame(self):
-                return self.appView.refreshFrame
-
-            @property
-            def radioFrame(self):
-                return self.appView.radioFrame
-
-            def on_other_entry_focusout(self, *args):
-
-                subnet = appView.subnet_var.get()
-
-                if subnet != "public-beta" and subnet != "devnet-beta":
-                    self.refreshFrame.radio_frame.other_entry.state(["disabled"])
-
-            def on_other_entry_click(self, *args):
-                subnet = self.appView.subnet_var.get()
-
-                if self.radio_frame.other_rb.instate(["!disabled"]):
-                    subnet = self.appView.subnet_var.get()
-                    if subnet != "public-beta" and subnet != "devnet-beta":
-                        self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
-
-            def on_other_entry_change(self, *args):
-                """ updates subnet variable """
-                # probably should just check the value on refresh
-                self.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
-                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
-
-
-            def on_other_radio(self, *args):
-                """ store text in other entry field into subnet variable """
-                # probably should just check the value on refresh or trigger refresh
-                self.radioFrame.other_entry.state(["!disabled"])
-                # debug.dlog(self.other_entry_var.get() )
-                self.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
-                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
-
-
-        def __init__(self, master, *args, **kwargs):
-            self.w = ttk.Frame(*args, **kwargs)
-            self.master = master
-            self.other_entry_var = StringVar()
-            self.callbacks = self.Callbacks(self)
-
-            # create publicbeta_rb
-            self.publicbeta_rb = ttk.Radiobutton(
-                self.w,
-                text="public-beta",
-                variable=self.master.subnet_var,
-                value="public-beta",
-                command=self.master._refresh_cmd,
-            )
-
-            # create publicdevnet_rb
-            self.publicdevnet_rb = ttk.Radiobutton(
-                self.w,
-                text="devnet-beta",
-                variable=self.master.subnet_var,
-                value="devnet-beta",
-                command=self.master._refresh_cmd,
-            )
-
-            # create other_db
-            self.other_rb = ttk.Radiobutton(
-                self.w,
-                text="other",
-                value="other",
-                variable=self.master.subnet_var,
-                command=self.callbacks.on_other_radio,
-            )
-
-            # create other_entry
-            self.other_entry = ttk.Entry(
-                self.w, textvariable=self.other_entry_var
-            )
-            self.other_entry.state(["disabled"])
-            self.other_entry.bind("<Return>", lambda e: self.master._refresh_cmd())
-            self.other_entry.bind("<FocusOut>", self.callbacks.on_other_entry_focusout)
-            self.other_entry.bind("<Button-1>", self.callbacks.on_other_entry_click)
-
-            self.w.rowconfigure(0, pad=5, weight=1)
-            self.w.rowconfigure(1, weight=1)
-            self.w.columnconfigure(0, weight=1)
-            self.w.columnconfigure(1, weight=1)
-
-            # grid components
-            self.publicbeta_rb.grid(column=0, row=0, sticky="w")
-            self.publicdevnet_rb.grid(column=1, row=0, sticky="w")
-            self.other_rb.grid(column=0, row=1, sticky="w")
-            self.other_entry.grid(column=1, row=1, sticky="w")
-
-            self.other_entry_var.set("devnet-beta.2")
-            self.other_entry_var.trace_add("write", self.callbacks.on_other_entry_change)
     # ----------------------------------------------------------------------- #
     #   RefreshFrame::  __init__
     # ----------------------------------------------------------------------- #
-    def __init__(self, master, toggle_refresh_controls, *args, **kwargs):
+    def __init__(self, appView, toggle_refresh_controls, *args, **kwargs):
         self.w = ttk.Frame(*args, **kwargs)
         self._toggle_refresh_controls = toggle_refresh_controls
-        self.master = master
+        self.appView = appView
 
         self.refreshButton = ttk.Button(
-            self.w, text="Refresh", command=self.master._refresh_cmd
+            self.w, text="Refresh", command=self.appView._refresh_cmd
         )
 
         self.updateButton = ttk.Button(
-            self.w, text="Update", command=self.master._update_cmd
+            self.w, text="Update", command=self.appView._update_cmd
         )
 
-        self.radio_frame = self.RadioFrame(self.master, self.w)
+        # self.radio_frame = self.appView.radioFrame
 
-        self.radio_frame.w["padding"] = (0, 5, 0, 5)
+        # self.radio_frame = self.RadioFrame(refreshFrame=self, appView=self.master)
+
 
         self.w.columnconfigure(0, weight=0)
         self.w.columnconfigure(1, weight=0)
@@ -143,7 +139,7 @@ class RefreshFrame:
 
         self.refreshButton.grid(column=0, row=0, sticky=(W))
         self.updateButton.grid(column=1, row=0, sticky=(W))
-        self.radio_frame.w.grid(column=0, columnspan=2, row=1, sticky=(W, N))
+
 
 
 class CountFrame:

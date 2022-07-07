@@ -127,9 +127,9 @@ class SelTreeMenu(Menu):
         super().__init__(*args, **kwargs)
         self.ctx = ctx
         label_to_callback = {
-                "filterms": self.ctx._start_filterms_dialog,
-                "exit menu": self.grab_release,
-            }
+            "filterms": self.ctx._start_filterms_dialog,
+            "exit menu": self.grab_release,
+        }
         menu_items = [
             {"label": "filterms", "command": label_to_callback["filterms"]},
             {"label": "exit menu", "command": label_to_callback["exit menu"]},
@@ -164,18 +164,19 @@ class AppView:
 
     class Callbacks:
         def __init__(self, ctx):
-            self.ctx= ctx
+            self.ctx = ctx
+
         def on_offer_text_selection(*args):
             self.ctx._on_offer_text_selection(args)
+
         def on_select():
             self.ctx.on_select()
+
         def on_none_selected():
             self.ctx.on_none_selected()
+
     #                       AppView __init__                           #
 
-    @property
-    def radioFrame(self):
-        return self.refreshFrame.radio_frame
 
     def __init__(self):
         # icon
@@ -295,6 +296,11 @@ class AppView:
         self.refreshFrame.w.grid(column=1, row=0, sticky="wnes")
         self.refreshFrame.w["borderwidth"] = 2
         # self.refreshFrame.w["relief"] = "solid"
+
+        # radioFrame
+        self.radioFrame = RadioFrame(appView=self, refreshFrame=self.refreshFrame)
+        self.radioFrame.w["padding"] = (0, 5, 0, 5)
+        self.radioFrame.w.grid(column=0, columnspan=2, row=1, sticky=(W, N))
 
         self.cbv_lastversion = BooleanVar()
         self.cbv_lastversion.set(False)
@@ -937,9 +943,6 @@ select 'node.id'.offerRowID
             self.root.clipboard_append(selection)
 
     #                       _on_offer_text_selection                         >
-
-
-
 
     #                   _on_other_radio                                      <
     def _on_other_radio(self, *args):
