@@ -40,8 +40,8 @@ class RefreshFrame:
             def on_other_entry_change(self, *args):
                 """ updates subnet variable """
                 # probably should just check the value on refresh
-                self.appView.radioFrame.other_rb["value"] = self.other_entry_var.get()
-                self.appView.subnet_var.set(self.other_entry_var.get())
+                self.appView.radioFrame.other_rb["value"] = self.appView.radioFrame.other_entry_var.get()
+                self.appView.subnet_var.set(self.appView.radioFrame.other_entry_var.get())
 
 
             def on_other_radio(self, *args):
@@ -49,8 +49,8 @@ class RefreshFrame:
                 # probably should just check the value on refresh or trigger refresh
                 self.appView.radioFrame.other_entry.state(["!disabled"])
                 # debug.dlog(self.other_entry_var.get() )
-                self.appView.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
-                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
+                self.appView.radioFrame.other_rb["value"] = self.appView.radioFrame.other_entry_var.get()
+                self.appView.subnet_var.set(self.appView.radioFrame.other_entry_var.get())
 
 
         def __init__(self, master, *args, **kwargs):
