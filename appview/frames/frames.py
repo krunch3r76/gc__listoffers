@@ -19,38 +19,45 @@ class RefreshFrame:
             def __init__(self, radioFrameCtx):
                 self.radioFrameCtx = radioFrameCtx
                 self.appView = self.radioFrameCtx.master
+
+
+            @property
+            def refreshFrame(self):
+                return self.appView.refreshFrame
+
+            @property
+            def radioFrame(self):
+                return self.appView.radioFrame
+
             def on_other_entry_focusout(self, *args):
-                appView = self.appView
 
                 subnet = appView.subnet_var.get()
-                refreshFrame = self.appView.refreshFrame
 
                 if subnet != "public-beta" and subnet != "devnet-beta":
-                    refreshFrame.radio_frame.other_entry.state(["disabled"])
+                    self.refreshFrame.radio_frame.other_entry.state(["disabled"])
 
             def on_other_entry_click(self, *args):
-                radio_frame = self.appView.refreshFrame.radio_frame
                 subnet = self.appView.subnet_var.get()
 
-                if radio_frame.other_rb.instate(["!disabled"]):
+                if self.radio_frame.other_rb.instate(["!disabled"]):
                     subnet = self.appView.subnet_var.get()
                     if subnet != "public-beta" and subnet != "devnet-beta":
-                        self.appView.refreshFrame.radio_frame.other_entry.state(["!disabled"])
+                        self.refreshFrame.radio_frame.other_entry.state(["!disabled"])
 
             def on_other_entry_change(self, *args):
                 """ updates subnet variable """
                 # probably should just check the value on refresh
-                self.appView.radioFrame.other_rb["value"] = self.appView.radioFrame.other_entry_var.get()
-                self.appView.subnet_var.set(self.appView.radioFrame.other_entry_var.get())
+                self.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
+                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
 
 
             def on_other_radio(self, *args):
                 """ store text in other entry field into subnet variable """
                 # probably should just check the value on refresh or trigger refresh
-                self.appView.radioFrame.other_entry.state(["!disabled"])
+                self.radioFrame.other_entry.state(["!disabled"])
                 # debug.dlog(self.other_entry_var.get() )
-                self.appView.radioFrame.other_rb["value"] = self.appView.radioFrame.other_entry_var.get()
-                self.appView.subnet_var.set(self.appView.radioFrame.other_entry_var.get())
+                self.radioFrame.other_rb["value"] = self.radioFrame.other_entry_var.get()
+                self.appView.subnet_var.set(self.radioFrame.other_entry_var.get())
 
 
         def __init__(self, master, *args, **kwargs):
