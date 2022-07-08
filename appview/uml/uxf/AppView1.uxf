@@ -35,7 +35,7 @@ __init__(ctx)</panel_attributes>
       <x>130</x>
       <y>340</y>
       <w>610</w>
-      <h>960</h>
+      <h>590</h>
     </coordinates>
     <panel_attributes>AppView
 --
@@ -69,7 +69,8 @@ _build_menus()
 --
 cursorOfferRowID {set,get}
 count_selected {set,get}
-</panel_attributes>
+radioFrame
+refreshFrame</panel_attributes>
     <additional_attributes/>
   </element>
 </diagram>
