@@ -21,6 +21,11 @@ class Console(tk.Text):
 
         self.configure(wrap="word")
 
+        if disable_var != None:
+            self.disable_var = disable_var
+            self.disable_var.trace_add('write', self._check_disable)
+
+
     def _write(self, txt, length, current=0, time=25, newmsg=True):
         self["state"] = tk.NORMAL
         self.insert("end", txt[current])
@@ -40,6 +45,16 @@ class Console(tk.Text):
         self.delete("1.0", "end")
         self._write(msg, len(msg))
 
+    def _check_disable(self, *_):
+        # write traced to self._check_disable
+        if not hasattr(self, 'disable_var'):
+            return
+
+        if self.disable_var.get():
+            self.variable.widget.configure(state=tk.DISABLED)
+            # self.error.set('')
+        else:
+            self.variable.widget.configure(state=tk.NORMAL)
 
 if __name__ == '__main__':
     # debugging
