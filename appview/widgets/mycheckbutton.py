@@ -11,6 +11,7 @@ class MyCheckbutton(ttk.Checkbutton):
             name='',
             disable_var=None,
             debug_var=None,
+            draw_disabled=False,
             **kwargs
             ):
         super().__init__(parent, **kwargs)
@@ -22,6 +23,9 @@ class MyCheckbutton(ttk.Checkbutton):
 
         self.variable = check_var
         self.variable.widget = self
+
+        if draw_disabled:
+            self.variable.widget.configure(state=tk.DISABLED)
 
         if disable_var != None:
             self.disable_var = disable_var

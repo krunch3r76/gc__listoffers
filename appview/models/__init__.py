@@ -18,5 +18,9 @@ class Variables(dict):
         self['filters']['feature_checkVar']=tk.BooleanVar(value=False)
         self['filters']['feature_entryVar']=tk.StringVar(value='')
         self['probe_checkVar']=tk.BooleanVar(value=False)
+        self['subnet_radioVar']=tk.StringVar(value='public-beta')
+        self['subnet_list_json']=tk.StringVar(value='[]')
+        self['subnet_radioVar']=tk.StringVar()
+        self['subnet_comboVar']=tk.StringVar()
 
 
