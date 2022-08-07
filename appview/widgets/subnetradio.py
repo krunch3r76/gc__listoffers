@@ -29,17 +29,30 @@ class SubnetRadio(ttk.Frame):
         #     list_variable_json = tk.StringVar(value="{}")
         self.list_variable_json = list_variable_json
         self.list_variable_json.trace_add('write', self._update_list_variable)
-
+        self.columnconfigure(10, weight=1)
+        self.columnconfigure(11, weight=1) 
+        self.rowconfigure(10, weight=1)
+        self.rowconfigure(11, weight=1)
         ttk.Radiobutton(self, variable=variable, text="public-beta",
-                        value="public-beta").pack(side=tk.LEFT, expand=True, fill='x')
+                        value="public-beta").grid(column=10, row=10, sticky="w")
         ttk.Radiobutton(self, variable=variable, text="devnet-beta", 
-                        value="devnet-beta").pack(side=tk.LEFT, expand=True, fill='x')
+                        value="devnet-beta").grid(column=11, row=10, sticky="we")
         ttk.Radiobutton(self, variable=variable, text="other",
-                        value="other").pack(side=tk.LEFT, expand=True, fill='x')
+                        value="other").grid(column=10, row=11, sticky="w")
         combobox = ttk.Combobox(self, textvariable=combo_var,
                      postcommand=self._update_list_variable, justify="left"
                      )
-        combobox.pack(side=tk.LEFT, expand=True, fill='x')
+        combobox.grid(column=11, row=11, sticky="we")
+        # ttk.Radiobutton(self, variable=variable, text="public-beta",
+        #                 value="public-beta").pack(side=tk.TOP, expand=True, fill='x')
+        # ttk.Radiobutton(self, variable=variable, text="devnet-beta", 
+        #                 value="devnet-beta").pack(side=tk.LEFT, expand=True, fill='x')
+        # ttk.Radiobutton(self, variable=variable, text="other",
+        #                 value="other").pack(expand=True, fill='x')
+        # combobox = ttk.Combobox(self, textvariable=combo_var,
+        #              postcommand=self._update_list_variable, justify="left"
+        #              )
+        # combobox.pack(side=tk.LEFT, expand=True, fill='x')
         combobox.bind("<<ComboboxSelected>>", self._debug_combobox_selected)
         self.variable = variable
         self.variable.widget = self

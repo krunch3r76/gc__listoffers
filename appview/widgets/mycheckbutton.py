@@ -2,11 +2,15 @@ import tkinter as tk
 from tkinter import ttk
 
 class MyCheckbutton(ttk.Checkbutton):
+    """
+        .variable := the on/off variable
+        .variable.widget := the MyCheckbutton instance
+    """
     def __init__(
             self,
             parent,
             label,
-            check_var,
+            check_var, # the on / off variables
             click_event,
             name='',
             disable_var=None,
@@ -20,9 +24,11 @@ class MyCheckbutton(ttk.Checkbutton):
         self['text']=label
         self['variable']=check_var
         self['command']=self.on_click
-
+        self['onvalue']=1
+        self['offvalue']=0
         self.variable = check_var
         self.variable.widget = self
+        self.variable.wtf = self
 
         if draw_disabled:
             self.variable.widget.configure(state=tk.DISABLED)
