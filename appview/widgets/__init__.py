@@ -163,6 +163,13 @@ if __name__ == '__main__':
             # </frame140 frame>
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
+            from pathlib import Path
+            projectdir = Path(__file__).parent.parent.parent
+            self.root.tk.call(
+                "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
+            )
+            s.theme_use("forest-light")
+
 
             self.title("testing widgets")
             for rc in range(100,101):

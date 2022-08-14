@@ -220,6 +220,11 @@ class AppView:
                     "source", str(projectdir / "forest-ttk-theme/forest-dark.tcl")
                 )
                 s.theme_use("forest-dark")
+        import tkinter.font as tkfont
+        default_font = tkfont.nametofont('TkDefaultFont')
+        default_font.configure(family="DejaVu Sans", size=9)
+        print(default_font.actual())
+
         current_datetime = datetime.now()
         root = self.root
         root.columnconfigure(0, weight=1)
