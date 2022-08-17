@@ -33,10 +33,9 @@ class Application(tk.Tk):
             , (select 'runtime'.version FROM 'runtime'
                 ORDER BY 'runtime'.version DESC LIMIT 1) AS mv
             , 'inf.cpu'.brand AS modelname
-            , (SELECT grep_freq('inf.cpu'.brand)
-            ) AS freq
+            , (SELECT grep_freq('inf.cpu'.brand)) AS freq
             , 'com.payment.platform'.kind
-            ,(
+            , (
                 SELECT json_group_array(value) FROM
                 ( SELECT value FROM json_each('inf.cpu'.[capabilities])
                 WHERE json_each.value LIKE '%{feature_filter}%'
@@ -44,7 +43,7 @@ class Application(tk.Tk):
              ) AS filteredFeatures
             , ROUND('inf.mem'.gib,2)
             , ROUND('inf.storage'.gib,2)
-            FROM 'node.id'"
+            FROM 'node.id'
             JOIN 'offers' USING (offerRowID)
             JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)
             JOIN 'runtime'  USING (offerRowID)
@@ -53,7 +52,6 @@ class Application(tk.Tk):
             JOIN 'inf.mem' USING (offerRowID)
             JOIN 'inf.storage' USING (offerRowID)
             WHERE 'runtime'.name = 'vm'
-        )
         """
 
         # check for lastversion
@@ -124,7 +122,7 @@ class Application(tk.Tk):
         #         ss += f"{path_tuple[i]}, "
         #     ss += f"{path_tuple[len(path_tuple)-1]}"
         #     ss += " COLLATE NOCASE"
-
+        print(ss)
         return ss
 
     def on_max_cpu_click(self, event):
@@ -150,11 +148,23 @@ class Application(tk.Tk):
         self.rowconfigure(0, weight=1)
         self.offerLookup = OfferLookup()
         self.pipe_parent, self.pipe_child = multiprocessing.Pipe()
-        self.localConnection = LocalConnection(self.pipe_parent, self.pipe_child, self.offerLookup)
-        localConnectionProcess = multiprocessing.Process(target=self.localConnection, daemon=True)
-        localConnectionProcess.start()
+        self.localConnection = LocalConnection(self.pipe_child, self.offerLookup)
+        self.localConnectionProcess = multiprocessing.Process(target=self.localConnection, daemon=False)
+        self.localConnectionProcess.start()
+        ss=self.select_rows()
+        pipemsg={ "id": "0", "msg": { "subnet-tag": "devnet-beta", "sql": ss } }
+        self.pipe_parent.send(pipemsg)
+        def _debug_get_rows():
+            if self.pipe_parent.poll():
+                recv = self.pipe_parent.recv()
+                print(recv)
+            else:
+                self.after(2, lambda: _debug_get_rows())
+                print(".", end="", flush=True)
 
-        # ss=self.select_rows()
+        _debug_get_rows()
+
+
         # result = self.offerLookup("1", "devnet-beta", ss, False)
         # print(f"debug ss\n{self.select_rows()}")
         # print(result)

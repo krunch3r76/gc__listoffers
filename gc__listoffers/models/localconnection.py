@@ -9,16 +9,22 @@ class LocalConnection:  # later make subclass of abstract
     """Class for connecting view to local model"""
 
     # _-_-_-_- __init__ _-_-_-_-
-    def __init__(self, pipe_parent, pipe_child, signal_cb):
+    def __init__(self, pipe_child, signal_cb):
         """set callback (i.e. offerLookup) for incoming signals etc"""
-        self.pipe_parent = pipe_parent  # out to view
+        # self.pipe_parent = pipe_parent  # out to view
         self.pipe_child = pipe_child  # in from view
         self.signal_cb = signal_cb
 
     # _-_-_-_- _on_signal _-_-_-_-
     async def _on_signal(self, signal):
         """relay next signal that came over the queue from view
-        to the handler and send result signal back to view"""
+        to the handler and send result signal back to view
+            id
+            msg
+                subnet-tag
+                sql
+
+        """
         # print(f"[LocalConnection] handling signal {signal}")
         results_l = await self.signal_cb(
             signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"],
@@ -29,11 +35,11 @@ class LocalConnection:  # later make subclass of abstract
             if results_l[0] == "error" and results_l[1] == 401:
                 msg = ["error", "invalid api key"]
                 msg_out = {"id": signal["id"], "msg": msg}
-                self.pipe_parent.send(msg_out)
+                self.pipe_child.send(msg_out)
             elif results_l[0] == "error" and results_l[1] == 111:
                 msg = ["error", "cannot connect to yagna"]
                 msg_out = {"id": signal["id"], "msg": msg}
-                self.pipe_parent.send(msg_out)
+                self.pipe_child.send(msg_out)
             else:
                 debug.dlog(
                     f"got a result back from the callback"
@@ -42,13 +48,13 @@ class LocalConnection:  # later make subclass of abstract
                 # revise callback, results should contain the id,
                 # as is the case with the remote server TODO
                 msg_out = {"id": signal["id"], "msg": results_l}
-                self.pipe_parent.send(msg_out)
+                self.pipe_child.send(msg_out)
         else:
             errormsg = "no results seen from callback"
             debug.dlog(errormsg, 1)
             msg = ["error", "no results"]
             msg_out = {"id": signal["id"], "msg": msg}
-            self.pipe_parent.send(msg_out)
+            self.pipe_child.send(msg_out)
             # raise "unhandled exception in \
             # LocalConnection.poll_loop" \
             #    "no results from callback"

@@ -60,9 +60,10 @@ class OfferLookup:
                         )
 
                     # recreate in memory database
-                    if self._con:
+                    if self._con != None:
                         self._con.close()
                     self._con = create_database()
+                    print("DB CREATED", flush=True)
                     build_database(self._con, offers)
                     self._session_id = id_
 
