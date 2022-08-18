@@ -21,6 +21,14 @@ if yapapi_loader:
 #
 
 
+from collections import namedtuple
+SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
+                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
+                    'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
+                    'mem_gib', 'storage_gib'
+                    ]
+SelectionRecord = namedtuple('SelectionRecord', SelectionColumns)
+
 class OfferLookup:
 
     # _-_-_-_- __init__ _-_-_-_-
@@ -74,4 +82,8 @@ class OfferLookup:
             rows = cur.execute(sql).fetchall()
 
         # rows = self._con.execute(sql).fetchall()
+                # nt = SelectionRecord(**recv)
+                # pprint(nt)
+        # rows_as_nts = [ SelectionRecord(**row) for row in rows ]
+        # return rows_as_nts
         return rows

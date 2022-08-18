@@ -47,7 +47,8 @@ class LocalConnection:  # later make subclass of abstract
                 )
                 # revise callback, results should contain the id,
                 # as is the case with the remote server TODO
-                msg_out = {"id": signal["id"], "msg": results_l}
+                results_ld = [ dict(result) for result in results_l ]
+                msg_out = {"id": signal["id"], "msg": results_ld}
                 self.pipe_child.send(msg_out)
         else:
             errormsg = "no results seen from callback"

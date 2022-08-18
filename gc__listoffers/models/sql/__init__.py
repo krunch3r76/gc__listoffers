@@ -12,7 +12,7 @@ import debug
 from .build_database_helpers import *
 from ..get_datadir import get_datadir
 from .spyu_model import *
-
+from .selectrows import select_rows
 
 # ++++++++++ create_database +++++++++++
 def create_database():
@@ -64,6 +64,7 @@ def create_database():
     con = sqlite3.connect(
         ":memory:", detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None, uri=True
     )
+    con.row_factory = sqlite3.Row
     attach_spyu(con)
     con.create_function("grep_freq", 1, grep_freq)
 
