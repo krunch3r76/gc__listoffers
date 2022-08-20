@@ -1,30 +1,20 @@
 """The application/controller class for gc__listoffers"""
 import tkinter as tk
 from tkinter import ttk
-from . models import Variables
+from . models import Variables, SelectionRecord
 from . views import ClassicView
 from . models import OfferLookup
 from . models.localconnection import LocalConnection
 import multiprocessing
 from . models.sql import select_rows
+
 """
 temporary notes:
 {'id': '0', 'msg': [{'offerRowID': 26, 'name': 'office_10_220', 'address': '0x700e83ffc421d43f95c340774d5816b985fcf804', 'cpu_sec': Decimal('0.0001'), 'duration_sec': Decimal('0.000050'), 'fixed': 0.0, 'cores': 4, 'threads': 1, 'version': '0.2.11', "MAX('offers'.ts)": '2022-08-18 02:13:52.325523+02:00', 'highest_version': '0.2.11', 'modelname': 'Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz', 'freq': '4.00GHz', 'kind': 'erc20-goerli-tglm', 'filteredFeatures': '[]', "ROUND('inf.mem'.gib,2)": 4.0, "ROUND('inf.storage'.gib,2)": 20.0}]}
-
-
 """
-
-from collections import namedtuple
-SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
-                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
-                    'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
-                    'mem_gib', 'storage_gib'
-                    ]
-SelectionRecord = namedtuple('SelectionRecord', SelectionColumns)
 
 class Application(tk.Tk):
     """Application root window"""
-
 
     def on_max_cpu_click(self, event):
         # event.widget.variable determines whether off or on
@@ -61,8 +51,8 @@ class Application(tk.Tk):
                 from pprint import pprint
                 pprint(recv['msg'])
                 sample=recv['msg'][0]
-                sampleNT = SelectionRecord(**dict(sample))
-                pprint(sampleNT)
+                sampleNT = SelectionRecord(**dict(sample)) # enforce model and controller agree
+                pprint(sampleNT._asdict()) # back to dictionary to send over to view, also will enforce
             else:
                 self.after(2, lambda: _debug_get_rows())
                 print(".", end="", flush=True)
