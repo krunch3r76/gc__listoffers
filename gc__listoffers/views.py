@@ -10,6 +10,7 @@ from . widgets import CountSummary
 from . widgets import InsertDict, ProviderTree
 from . widgets import Console
 
+
 class ClassicView(tk.Frame):
 
     def __init__frame110(self):

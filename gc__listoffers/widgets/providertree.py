@@ -2,6 +2,18 @@ import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
 
+from collections import namedtuple
+_InsertionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
+                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
+                    'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
+                    'mem_gib', 'storage_gib'
+                    ]
+# InsertionTuple used to enforce agreement with records added via controller
+InsertionTuple = namedtuple('SelectionRecord', _InsertionColumns)
+
+# TODO
+# create a dataclass that maps InsertionTuple._asdict() to columns on tree
+
 def _measure(text, window=None):
     s=ttk.Style()
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
@@ -51,6 +63,7 @@ class ProviderTree(ttk.Frame):
         self.column_defs = {
             '#0': { },
             'rowId': { },
+            'paymentForm': { },
             'name': {  'minwidth': 200, 'stretch': True },
             'address': { 'minwidth': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
                          'width': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
@@ -58,6 +71,7 @@ class ProviderTree(ttk.Frame):
                         },
             'cpu (/hr)': { },
             'dur (/hr)': { },
+            'start': { },
             'cores': { },
             'threads': { },
             'frequency': { },
