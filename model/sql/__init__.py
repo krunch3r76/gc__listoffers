@@ -204,8 +204,8 @@ def build_database(con, offers):
                     "'vendor' ) = ( ?, ?, ? ) WHERE offerRowID = ?",
                     (
                         json.dumps(props["golem.inf.cpu.capabilities"]),
-                        props["golem.inf.cpu.brand"],
-                        props["golem.inf.cpu.vendor"],
+                        props.get("golem.inf.cpu.brand", ""),
+                        props.get("golem.inf.cpu.vendor", ""),
                         lastrow,
                     ),
                 )
