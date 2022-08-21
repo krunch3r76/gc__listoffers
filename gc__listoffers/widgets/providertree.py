@@ -24,15 +24,31 @@ def _measure(text, window=None):
     return font.measure(text)
 
 class InsertDict(UserDict):
-    def __init__(self, merge):
+    # notes, features will be used to compose a full list of unique features filterable
+    def __init__(self, merge: InsertionTuple):
+
         # representation of columns that may be inserted into the view, for export
         # to controller
+        self.features = merge.features # revise to use filtered, and make as list
         super().__init__({
                 'rowId': None, 'name': None, 'address': None, 'cpu (/hr)': None, 'dur (/hr)': None,
                 'cores': None, 'threads': None, 'frequency': None, 'version': None, 'mem': None,
-                'storage': None
+                'storage': None, 'features': None
                 })
-        self.update(merge)
+        self['rowId'] = merge.offerRowId
+        self['paymentForm'] = merge.token_kind
+        self['features'] = self.features # revise to curtail
+        self['name'] = merge.name
+        self['address'] = merge.address
+        self['cpu (/hr)'] = str(float(merge.cpu_sec)/3600.0)
+        self['dur (/hr)'] = str(float(merge.duration_sec)/3600.0)
+        self['start'] = merge.fixed
+        self['cores'] = merge.cores
+        self['threads'] = merge.threads
+        self['frequency'] = merge.freq
+        self['mem'] = merge.mem_gib
+        self['storage'] = merge.storage_gib
+        # self.update(merge)
 
 def insert_dict_from_tuple(insertionTuple):
     """
@@ -74,6 +90,7 @@ class ProviderTree(ttk.Frame):
             '#0': { },
             'rowId': { },
             'paymentForm': { },
+            'features': { }
             'name': {  'minwidth': 200, 'stretch': True },
             'address': { 'minwidth': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
                          'width': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
@@ -87,7 +104,7 @@ class ProviderTree(ttk.Frame):
             'frequency': { },
             'version': { },
             'mem': { },
-            'storage': { }
+            'storage': { },
             }
         column_defs_dict = dict(self.column_defs.items())
         column_defs_dict.pop('#0')
@@ -116,7 +133,9 @@ class ProviderTree(ttk.Frame):
             debug_var.trace_add('write', self._debug)
 
     def insert(self, rowvalues: InsertDict):
+        # pop features
         self.treeview.insert('', 'end', iid=rowvalues['rowId'], values=list(rowvalues.values()))
+        # sub insert features
 
     def _debug(self, *_):
         # primarily for debugging visual placement
