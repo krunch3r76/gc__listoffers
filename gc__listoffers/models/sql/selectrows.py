@@ -1,10 +1,4 @@
 from collections import namedtuple
-SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
-                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
-                    'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
-                    'mem_gib', 'storage_gib'
-                    ]
-SelectionRecord = namedtuple('SelectionRecord', SelectionColumns)
 
 
 def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
@@ -16,6 +10,46 @@ def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
     if False:
         feature_filter = self.feature_entryframe.entryVar.get()
     feature_filter = ""
+
+    # ss = f"""
+    #     select 'node.id'.offerRowID
+    #     , 'node.id'.name
+    #     , 'offers'.address
+    #     , 'com.pricing.model.linear.coeffs'.cpu_sec
+    #     , 'com.pricing.model.linear.coeffs'.duration_sec
+    #     , 'com.pricing.model.linear.coeffs'.fixed
+    #     , 'inf.cpu'.cores
+    #     , 'inf.cpu'.threads
+    #     , 'runtime'.version
+    #     , MAX('offers'.ts) AS most_recent_timestamp
+    #     , (select 'runtime'.version FROM 'runtime'
+    #         ORDER BY 'runtime'.version DESC LIMIT 1) AS highest_version
+    #     , 'inf.cpu'.brand AS modelname
+    #     , (SELECT grep_freq('inf.cpu'.brand)) AS freq
+    #     , 'com.payment.platform'.kind AS token_kind
+    #     , (
+    #         SELECT json_group_array(value) FROM
+    #         ( SELECT value FROM json_each('inf.cpu'.[capabilities]) )
+    #      ) AS features
+    #     , (
+    #         SELECT json_group_array(value) FROM
+    #         ( SELECT value FROM json_each('inf.cpu'.[capabilities])
+    #         WHERE json_each.value LIKE '%{feature_filter}%'
+    #         )
+    #      ) AS featuresFiltered
+    #     , ROUND('inf.mem'.gib,2) AS mem_gib
+    #     , ROUND('inf.storage'.gib,2) AS storage_gib
+    #     FROM 'node.id'
+    #     JOIN 'offers' USING (offerRowID)
+    #     JOIN 'com.pricing.model.linear.coeffs' USING (offerRowID)
+    #     JOIN 'runtime'  USING (offerRowID)
+    #     JOIN 'inf.cpu' USING (offerRowID)
+    #     JOIN 'com.payment.platform' USING (offerRowID)
+    #     JOIN 'inf.mem' USING (offerRowID)
+    #     JOIN 'inf.storage' USING (offerRowID)
+    #     WHERE 'runtime'.name = 'vm'
+    # """
+
     ss = f"""
         select 'node.id'.offerRowID
         , 'node.id'.name
@@ -26,15 +60,14 @@ def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
         , 'inf.cpu'.cores
         , 'inf.cpu'.threads
         , 'runtime'.version
+        , 'extra'.json
         , MAX('offers'.ts) AS most_recent_timestamp
-        , (select 'runtime'.version FROM 'runtime'
-            ORDER BY 'runtime'.version DESC LIMIT 1) AS highest_version
         , 'inf.cpu'.brand AS modelname
         , (SELECT grep_freq('inf.cpu'.brand)) AS freq
         , 'com.payment.platform'.kind AS token_kind
         , (
             SELECT json_group_array(value) FROM
-            ( SELECT value FROM json_each('inf.cpu'.[capabilities]) )
+            ( SELECT value FROM json_each('inf.cpu'.capabilities) )
          ) AS features
         , (
             SELECT json_group_array(value) FROM
@@ -52,7 +85,9 @@ def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
         JOIN 'com.payment.platform' USING (offerRowID)
         JOIN 'inf.mem' USING (offerRowID)
         JOIN 'inf.storage' USING (offerRowID)
+        JOIN 'extra' USING (offerRowID)
         WHERE 'runtime'.name = 'vm'
+        GROUP BY 'offers'.address
     """
 
     # check for lastversion

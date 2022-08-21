@@ -49,10 +49,12 @@ class Application(tk.Tk):
             if self.pipe_parent.poll():
                 recv = self.pipe_parent.recv()
                 from pprint import pprint
-                pprint(recv['msg'])
-                sample=recv['msg'][0]
-                sampleNT = SelectionRecord(**dict(sample)) # enforce model and controller agree
-                pprint(sampleNT._asdict()) # back to dictionary to send over to view, also will enforce
+                # pprint(recv['msg'])
+                # sample=recv['msg'][0]
+                for sample in recv['msg']:
+                    sampleNT = SelectionRecord(**dict(sample)) # enforce model and controller agree
+                    pprint(sampleNT._asdict()) # back to dictionary to send over to view, also will enforce
+                    input()
             else:
                 self.after(2, lambda: _debug_get_rows())
                 print(".", end="", flush=True)

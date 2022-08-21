@@ -4,7 +4,6 @@ import sys  # debug
 import json
 import debug
 
-
 import importlib
 
 yapapi_loader = importlib.util.find_spec("yapapi")
@@ -20,14 +19,6 @@ if yapapi_loader:
 
 #
 
-
-# from collections import namedtuple
-# SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
-#                     'threads', 'version', 'most_recent_timestamp', 'highest_version',
-#                     'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
-#                     'mem_gib', 'storage_gib'
-#                     ]
-# SelectionRecord = namedtuple('SelectionRecord', SelectionColumns)
 
 class OfferLookup:
 

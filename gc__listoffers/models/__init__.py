@@ -34,8 +34,8 @@ class Variables(dict):
 
 from collections import namedtuple
 _SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
-                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
+                    'threads', 'version', 'most_recent_timestamp',
                     'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
-                    'mem_gib', 'storage_gib'
+                    'mem_gib', 'storage_gib', 'json'
                     ]
 SelectionRecord = namedtuple('SelectionRecord', _SelectionColumns)

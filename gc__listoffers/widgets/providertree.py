@@ -1,26 +1,29 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
+from dataclasses import dataclass
+from collections import UserDict
 
 from collections import namedtuple
-_InsertionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
-                    'threads', 'version', 'most_recent_timestamp', 'highest_version',
-                    'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
-                    'mem_gib', 'storage_gib'
-                    ]
 # InsertionTuple used to enforce agreement with records added via controller
-InsertionTuple = namedtuple('SelectionRecord', _InsertionColumns)
+# irrelevant: most_recent_timestamp, highest_version
+InsertionTuple = namedtuple('SelectionRecord',
+                            ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
+                             'threads', 'version', 'most_recent_timestamp', 
+                             'modelname', 'freq', 'token_kind', 'features', 'featuresFiltered',
+                             'mem_gib', 'storage_gib'
+                             ])
 
-# TODO
-# create a dataclass that maps InsertionTuple._asdict() to columns on tree
 
+def manufacture_row(insertionTuple):
+    pass
 def _measure(text, window=None):
     s=ttk.Style()
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
     font=tkfont.nametofont(font_string, window)
     return font.measure(text)
 
-class InsertDict(dict):
+class InsertDict(UserDict):
     def __init__(self, merge):
         # representation of columns that may be inserted into the view, for export
         # to controller
@@ -30,6 +33,13 @@ class InsertDict(dict):
                 'storage': None
                 })
         self.update(merge)
+
+def insert_dict_from_tuple(insertionTuple):
+    """
+        create an insertion row sequence including computed properties from an insertion
+        tuple
+    """
+    pass
 
 debugInsertDict = InsertDict({
         'rowId': '1234', 'name': "supercalifragilistic expealidocious even tho the sound of it", 'address': '0x1234', 'cpu (/hr)': '1.2345', 'dur (/hr)': '5.4321',
@@ -116,6 +126,7 @@ class ProviderTree(ttk.Frame):
             self['relief']='solid'
         except:
             pass
+
 
 if __name__ == '__main__':
     root=tk.Tk()
