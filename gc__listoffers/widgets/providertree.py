@@ -20,7 +20,8 @@ def manufacture_row(insertionTuple):
 def _measure(text, window=None):
     s=ttk.Style()
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
-    font=tkfont.nametofont(font_string, window)
+    # font=tkfont.nametofont(font_string, window)
+    font=tkfont.nametofont(font_string)
     return font.measure(text)
 
 class InsertDict(UserDict):

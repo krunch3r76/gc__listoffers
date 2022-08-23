@@ -10,9 +10,9 @@ import sys
 import pathlib
 import debug
 
-import importlib
+import importlib.util as importutil
 
-yapapi_loader = importlib.util.find_spec("yapapi")
+yapapi_loader = importutil.find_spec("yapapi")
 
 if yapapi_loader:
     import ya_market
