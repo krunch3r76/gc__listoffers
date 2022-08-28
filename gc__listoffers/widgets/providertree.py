@@ -14,6 +14,23 @@ InsertionTuple = namedtuple('InsertionTuple',
                              'mem_gib', 'storage_gib', 'json'
                              ])
 
+def dict_as_arranged(fixed_dict, column_placements, replacement_dict=None):
+    """
+        fixed_dict     fixed ordered dict to which column_placements place refers
+        column_placements   offsets corresponding to column_defs
+        replacement_dict optional values to copy in place of fixed dict
+    """
+    newDict = dict()
+    # fixed_as_list = list(fixed_dict)[1:] # keys only
+    fixed_as_list = list(fixed_dict.keys())[1:]
+    if replacement_dict == None:
+        replacement_dict = fixed_dict
+    for offset in column_placements:
+        # add key:value pairs in newly arranged order
+        key_at_placement = fixed_as_list[offset]
+        newDict[key_at_placement] = replacement_dict[key_at_placement]
+    
+    return newDict
 
 def manufacture_row(insertionTuple):
     pass
@@ -69,14 +86,12 @@ class InsertDict(UserDict):
         tdict['version'] = merge.version
         tdict['mem'] = merge.mem_gib
         tdict['storage'] = merge.storage_gib
-        column_defs_as_list = list(column_defs)[1:]
-        print()
-        for offset in column_placements:
-            key_at_placement = column_defs_as_list[offset]
-            print(key_at_placement)
-            self[key_at_placement] = tdict[key_at_placement]
-        print()
-        print(column_defs_as_list)
+
+        self.update(dict_as_arranged(column_defs, column_placements, tdict))
+        # column_defs_as_list = list(column_defs)[1:]
+        # for offset in column_placements:
+        #     key_at_placement = column_defs_as_list[offset]
+        #     self[key_at_placement] = tdict[key_at_placement]
 
         
 #        self.update(merge)
@@ -98,7 +113,7 @@ def insert_dict_from_tuple(insertionTuple):
 
 class ProviderTree(ttk.Frame):
 
-    _percentExpand=0.25
+    _percentExpand=0.5
     defaults = {
             'anchor': 'w',
             'minwidth': 40, # this can be expanded to fit the label along with width
@@ -123,8 +138,8 @@ class ProviderTree(ttk.Frame):
             'paymentForm': { },
             'features': { },
             'name': {  'minwidth': 200, 'stretch': True },
-            'address': { 'minwidth': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
-                         'width': int(_measure("0x12345") + self._percentExpand*_measure("0x12345")),
+            'address': { 'minwidth': int(_measure("0x12345")),
+                         'width': int(_measure("0x12345")),
                          'stretch': False
                         },
             'cpu (/hr)': { },
@@ -148,13 +163,16 @@ class ProviderTree(ttk.Frame):
         for name, definition in self.column_defs.items():
             label = definition.get('label', '')
             anchor = definition.get('anchor', self.defaults['anchor'])
-            minwidth = definition.get('minwidth', _measure(label, window=self.treeview))
+            minwidth = definition.get('minwidth', _measure(label,
+                                                           window=self.treeview))
             minwidth += int(self._percentExpand * minwidth)
             width = definition.get('width', minwidth)
+            if minwidth > width:
+                width=minwidth
             stretch = definition.get('stretch', self.defaults['stretch'])
             self.treeview.heading(name, text=label, anchor=anchor)
-            self.treeview.column(name, anchor=anchor, minwidth=minwidth, width=width,
-                                 stretch=stretch)
+            self.treeview.column(name, anchor=anchor, minwidth=minwidth,
+                                 width=width, stretch=stretch)
 
         self.treeview.grid(sticky="news")
         # labels=[ value['label'] for value in self.column_defs.values() ][1:] 
@@ -169,19 +187,18 @@ class ProviderTree(ttk.Frame):
         """
             inputs                 process                         output
             rowdict                conform InsertionTuple 
-                                     +-> self.InsertionTuples
-                                   insert_dict_from_tuple()
-                                     +-> insertionDict
+                                   append
+                                   convert to InsertDict
                                    insert row
         """
+        ## conform InsertionTuple
         insertionTuple = InsertionTuple(**rowdict)
-        # print(insertionTuple)
+        ## append
         self.insertionTuples.append(insertionTuple)
+        ## convert to InsertDict
         insertionDict = InsertDict(insertionTuple, self.column_defs, self.column_placements) 
+        ## insert row
         self.treeview.insert('', 'end', iid=insertionDict['rowId'], values=list(insertionDict.data.values()))
-        # pop features
-        # self.treeview.insert('', 'end', iid=rowvalues['rowId'], values=list(rowvalues.values()))
-        # sub insert features
 
     def _debug(self, *_):
         # primarily for debugging visual placement
