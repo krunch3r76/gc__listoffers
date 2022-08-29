@@ -52,9 +52,15 @@ class Application(tk.Tk):
                 # pprint(recv['msg'])
                 # sample=recv['msg'][0]
                 for sample in recv['msg']:
-                    sampleNT = SelectionRecord(**dict(sample)) # enforce model and controller agree
-                    self.view.insert_provider_row(sampleNT._asdict())
+                    try:
+                        sampleNT = SelectionRecord(**dict(sample)) # enforce model and controller agree
+                    except:
+                        pass
+                    else:
+                        self.view.insert_provider_row(sampleNT._asdict())
                     # pprint(sampleNT._asdict()) # back to dictionary to send over to view, also will enforce
+                self.view.insert_provider_row(None, last=True)
+
             else:
                 self.after(2, lambda: _debug_get_rows())
                 print(".", end="", flush=True)

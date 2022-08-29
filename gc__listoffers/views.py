@@ -109,8 +109,8 @@ class ClassicView(tk.Frame):
 
         # </frame140 frame>
 
-    def insert_provider_row(self, rowdict):
-        self.providerTree.insert(rowdict)
+    def insert_provider_row(self, rowdict, last=False):
+        self.providerTree.insert(rowdict, last)
 
     def __init__(self, parent, variables, model=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
