@@ -32,8 +32,16 @@ def dict_as_arranged(fixed_dict, column_placements, replacement_dict=None):
     
     return newDict
 
+
+def swap_list_elements(offset1, offset2, list_):
+    # modifies input list such that values at offset1,2 are swapped
+    save_offset1 = list_[offset1]
+    list_[offset1] = list_[offset2]
+    list_[offset2] = save_offset1
+
 def manufacture_row(insertionTuple):
     pass
+
 def _measure(text, window=None):
     s=ttk.Style()
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
@@ -49,27 +57,6 @@ class InsertDict(UserDict):
         # to controller
         self.features = merge.features # revise to use filtered, and make as list
         super().__init__()
-        # {
-        #     'rowId' : merge.offerRowID,
-        #     'paymentForm' : merge.token_kind,
-        #     'features' : self.features,# revise to curtail
-        #     'name' : merge.name,
-        #     'address' : merge.address,
-        #     'cpu (/hr)' : str(float(merge.cpu_sec)*3600.0),
-        #     'dur (/hr)' : str(float(merge.duration_sec)*3600.0),
-        #     'start' : merge.fixed,
-        #     'cores' : merge.cores,
-        #     'threads' : merge.threads,
-        #     'frequency' : merge.freq,
-        #     'version' : merge.version,
-        #     'mem' : merge.mem_gib,
-        #     'storage' : merge.storage_gib
-        #         })
-        # super().__init__({
-        #         'rowId': None, 'name': None, 'address': None, 'cpu (/hr)': None, 'dur (/hr)': None,
-        #         'cores': None, 'threads': None, 'frequency': None, 'version': None, 'mem': None,
-        #         'storage': None, 'features': None
-        #         })
         def remove_exponent(d):
             return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
         getcontext().prec=8
@@ -90,13 +77,6 @@ class InsertDict(UserDict):
         tdict['storage'] = merge.storage_gib
 
         self.update(dict_as_arranged(column_defs, column_placements, tdict))
-        # column_defs_as_list = list(column_defs)[1:]
-        # for offset in column_placements:
-        #     key_at_placement = column_defs_as_list[offset]
-        #     self[key_at_placement] = tdict[key_at_placement]
-
-        
-#        self.update(merge)
 
 def insert_dict_from_tuple(insertionTuple):
     """
@@ -114,7 +94,12 @@ def insert_dict_from_tuple(insertionTuple):
 
 
 class ProviderTree(ttk.Frame):
-
+    """
+        .column_defs := fixed order of all possible columns and ttk
+                            configurations
+        .column_placements := offsets beginning with 1 to fixed columns
+                                as defined by .column_defs
+    """
     _percentExpand=0.5
     defaults = {
             'anchor': 'w',
@@ -134,11 +119,10 @@ class ProviderTree(ttk.Frame):
             ):
         super().__init__(parent, **kwargs)
         self.insertionTuples = list()
-        self.column_defs = {
+        self.column_defs = { 
             '#0': { 'width': 0, 'minwidth': 0, 'stretch': False },
             'rowId': { },
             'paymentForm': { },
-            'features': { },
             'name': {  'minwidth': _measure("name"), 'stretch': True },
             'address': { 'minwidth': _measure("0x12345"),
                          'width': _measure("0x12345"),
@@ -150,12 +134,12 @@ class ProviderTree(ttk.Frame):
             'cores': { },
             'threads': { },
             'frequency': { },
-            'version': { },
             'mem': { },
             'storage': { },
+            'version': { },
+            'features': { },
             }
         self.column_placements = [ i for i in range(1,len(list(self.column_defs))) ]
-                                
         column_defs_dict = dict(self.column_defs.items())
         column_defs_dict.pop('#0')
         for key, value in column_defs_dict.items():
@@ -199,11 +183,21 @@ class ProviderTree(ttk.Frame):
         
         # colDict.pop('#0')
         ## arrange dict
+        print(f"column placements: {self.column_placements}")
         arrDict = dict_as_arranged(colDict, self.column_placements)
         pprint(arrDict)
         ## set columns
         pprint(arrDict.keys())
         self.treeview['columns'] = list(arrDict.keys())
+
+        hidden_column_placements = [ 2 ]
+        hidden_column_placements.append(1)
+        display_columns = list()
+        for column_placement in self.column_placements:
+            if column_placement not in hidden_column_placements:
+                display_columns.append(column_placement - 1)
+        self.treeview['displaycolumns'] = display_columns
+
         ## define columns
         self.treeview.column('#0', **self.column_defs['#0'])
         for name, definition in arrDict.items():
@@ -222,6 +216,8 @@ class ProviderTree(ttk.Frame):
         longestName = self._insert_rows() 
         print(f"longestName:width = {longestName}:{len(longestName)}", flush=True)
         self.treeview.column('name', width=_measure(longestName))
+
+
         self.treeview.grid(sticky="news")
 
     def _insert_rows(self):
