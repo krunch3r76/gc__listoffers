@@ -44,3 +44,12 @@ def dlog(msg, debug_level=1, color=TEXT_COLOR_MAGENTA):
         for line in msg.splitlines():
             print(f">{color}{line}{TEXT_COLOR_DEFAULT}", file=sys.stderr)
         # print(f"\n[model.py] {utils.TEXT_COLOR_MAGENTA}{msg}{utils.TEXT_COLOR_DEFAULT}\n", file=sys.stderr)
+
+import logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+handler=logging.StreamHandler()
+formatter = logging.Formatter(style="{",fmt="[{filename}:{funcName}:{lineno}] {message}")
+handler.setFormatter(formatter)
+logger.addHandler(handler)

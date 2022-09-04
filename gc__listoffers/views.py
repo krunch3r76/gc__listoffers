@@ -11,6 +11,8 @@ from . widgets import CountSummary
 from . widgets import ProviderTree
 from . widgets import Console
 
+from debug import logger
+
 RecordTuple = namedtuple('RecordTuple',
                             ['offerRowID', 'name', 'address', 'cpu_sec',
                              'duration_sec', 'fixed', 'cores', 'threads',
@@ -45,7 +47,7 @@ class ProviderList(UserList):
 class ClassicView(tk.Frame):
 
     def _on_providerlist_update(self, event):
-        print("PROVIDER LIST UPDATED", flush=True)
+        logger.debug("PROVIDER LIST UPDATED")
         # update relevant areas of the view
         # this may include reselecting previously selected (by address)
         # , updating the counts

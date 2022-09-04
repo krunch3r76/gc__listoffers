@@ -3,7 +3,7 @@ from .lookup import list_offers
 import sys  # debug
 import json
 import debug
-
+from debug import logger
 import importlib
 
 yapapi_loader = importlib.util.find_spec("yapapi")
@@ -62,7 +62,7 @@ class OfferLookup:
                     if self._con != None:
                         self._con.close()
                     self._con = create_database()
-                    print("DB CREATED", flush=True)
+                    logger.debug("DB CREATED")
                     build_database(self._con, offers)
                     self._session_id = id_
 

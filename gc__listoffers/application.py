@@ -7,6 +7,7 @@ from . models import OfferLookup
 from . models.localconnection import LocalConnection
 import multiprocessing
 from . models.sql import select_rows
+from debug import logger
 
 """
 temporary notes:
@@ -48,6 +49,7 @@ class Application(tk.Tk):
         def _debug_get_rows():
             if self.pipe_parent.poll():
                 recv = self.pipe_parent.recv()
+                logger.debug("fetched!")
                 from pprint import pprint
                 # pprint(recv['msg'])
                 # sample=recv['msg'][0]
@@ -65,6 +67,7 @@ class Application(tk.Tk):
                 self.after(2, lambda: _debug_get_rows())
                 print(".", end="", flush=True)
 
+        logger.debug("fetching from stats")
         _debug_get_rows()
 
 

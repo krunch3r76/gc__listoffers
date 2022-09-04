@@ -6,6 +6,8 @@ from collections import UserDict
 from decimal import Decimal, getcontext
 from collections import namedtuple, UserList
 
+from debug import logger
+
 _percentExpand = 0.5
 
 # the ProviderTree widget also holds abstractions of the data
@@ -139,7 +141,12 @@ class ProviderTree(ttk.Frame):
             'version': { },
             'features': { },
             }
+        self._last_column_pressed = 0
+        # self._last_column_pressed_label = ''
+        self._state_dragging_column = False
+
         self.column_placements = [ i-1 for i in range(1,len(list(self.column_defs))) ]
+        logger.debug(f"column_placements: {self.column_placements}")
         column_defs_dict = dict(self.column_defs.items())
         column_defs_dict.pop('#0')
         for key, value in column_defs_dict.items():
@@ -149,6 +156,9 @@ class ProviderTree(ttk.Frame):
         self.treeview.grid(sticky="news")
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
+
+        self.treeview.bind("<Button-1>", self._on_drag_start)
+        self.treeview.bind("<ButtonRelease-1>", self._on_drag_release)
 
         if debug_var != None:
             debug_var.trace_add('write', self._debug)
@@ -170,6 +180,7 @@ class ProviderTree(ttk.Frame):
         # ex on name
         longest_name = 'name'
         children_ids = self.treeview.get_children()
+        logger.debug(f"children_ids type is {type(children_ids)}")
         if len(children_ids) > 0:
             indexPlacement = find_column_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
             for id_ in children_ids:
@@ -182,15 +193,65 @@ class ProviderTree(ttk.Frame):
 
         # todo, lookup fixed widths for other columns and enforce
 
+
+    def _swap_column_values(self, col1, col2):
+        logger.debug(f"swapping {col1} values with {col2} values")
+        col1_label = self.treeview.heading(col1)['text']
+        col2_label = self.treeview.heading(col2)['text']
+        logger.debug(f"swapping {col1_label} with {col2_label}")
+        children = self.treeview.get_children()
+        for iid in children:
+            full_set = self.treeview.set(iid)
+            #print(full_set)
+            col1_value = self.treeview.set(iid, col1)
+            # print(f"col1={col1}: {set_result}")
+            col2_value = self.treeview.set(iid, col2)
+            # print(f"col2={col2}: {set_result}\n")
+            self.treeview.set(iid, col1, col2_value)
+            self.treeview.set(iid, col2, col1_value)
+
+    def _on_drag_start(self, event):
+        widget = event.widget
+        region = widget.identify_region(event.x, event.y)
+        if region == "heading":
+            self._state_dragging_column = True
+            column = widget.identify_column(event.x)
+            self._last_column_pressed = column
+            # self._last_column_pressed_label = self.treeview.column(column)['id']
+            self._last_column_pressed_label = self.treeview.heading(column)['text']
+            logger.debug(f"button pressed on column: {self._last_column_pressed}: {self._last_column_pressed_label}")
+
+    def _on_drag_release(self, event):
+        # check that this is a drag release
+        if self._state_dragging_column == True:
+            self._state_dragging_column = False
+            widget = event.widget
+            column = widget.identify_column(event.x)
+            # column_label = self.treeview.column(column)['id']
+            column_label = self.treeview.heading(column)['text']
+            # self._swap_column_values(self._last_column_pressed, column)
+            column_label_last = self.treeview.heading(self._last_column_pressed)['text']
+            placement_column_last = find_column_offset(column_label_last, list(self.column_defs.keys())[1:], self.column_placements) # TODO make part of class so second argument not needed
+            placement_column = find_column_offset(column_label, list(self.column_defs.keys())[1:], self.column_placements)
+            logger.debug(self.column_placements)
+            swap_list_elements(placement_column_last, placement_column, self.column_placements)
+            logger.debug(self.column_placements)
+            self.treeview.heading(self._last_column_pressed, text=column_label)
+            self.treeview.heading(column, text=column_label_last)
+            self._swap_column_values(self._last_column_pressed, column)
+            self._update_column_header_widths() # temporary because name shall be fixed
+            # self._set_column_headers()
+
     def _set_column_headers(self):
+        self.treeview.grid_remove()
         ## convert to dict
         colDict = dict(self.column_defs.items())
         ## arrange dict
         arrDict = dict_as_arranged(colDict, self.column_placements)
         ## set columns
+        logger.debug(list(arrDict.keys()))
         self.treeview['columns'] = list(arrDict.keys())
         self.treeview['displaycolumns'] = self._displaycolumns()
-
         ## define columns
         self.treeview.column('#0', **self.column_defs['#0'])
         for name, definition in arrDict.items():
@@ -205,6 +266,8 @@ class ProviderTree(ttk.Frame):
             self.treeview.heading(name, text=label, anchor=anchor)
             self.treeview.column(name, anchor=anchor, minwidth=minwidth,
                                  width=width, stretch=stretch)
+        self._update_column_header_widths()
+        self.treeview.grid()
 
     def _insert_rows(self):
         """

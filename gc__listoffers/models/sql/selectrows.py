@@ -1,5 +1,5 @@
 from collections import namedtuple
-
+from debug import logger
 
 def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
     """build a sql select statement when either update or refreshing
@@ -145,5 +145,5 @@ def select_rows(max_cpu_hr=None, max_dur_hr=None, start_fee_max=None):
     #         ss += f"{path_tuple[i]}, "
     #     ss += f"{path_tuple[len(path_tuple)-1]}"
     #     ss += " COLLATE NOCASE"
-    print(ss)
+    logger.debug(ss)
     return ss
