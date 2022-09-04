@@ -20,6 +20,11 @@ InsertionTuple = namedtuple('InsertionTuple',
                              'mem_gib', 'storage_gib', 'json'
                              ])
 
+def find_column_offset(fieldname, fixed_field_list, column_placements):
+    indexFieldname = fixed_field_list.index(fieldname)
+    indexPlacement = column_placements.index(indexFieldname)
+    return indexPlacement
+
 def dict_as_arranged(fixed_dict, column_placements, replacement_dict=None):
     """
         fixed_dict     fixed ordered dict to which column_placements place refers
@@ -161,16 +166,12 @@ class ProviderTree(ttk.Frame):
 
     def _update_column_header_widths(self):
         # check children and reconfigure column widths as needed
-        def find_field_offset(fieldname, fixed_field_list, column_placements):
-            indexFieldname = fixed_field_list.index(fieldname)
-            indexPlacement = column_placements.index(indexFieldname)
-            return indexPlacement
 
         # ex on name
         longest_name = 'name'
         children_ids = self.treeview.get_children()
         if len(children_ids) > 0:
-            indexPlacement = find_field_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
+            indexPlacement = find_column_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
             for id_ in children_ids:
                 values = self.treeview.item(id_, option='values')
                 field_value = values[indexPlacement]
@@ -178,8 +179,10 @@ class ProviderTree(ttk.Frame):
                     longest_name = field_value
 
         self.treeview.column('name', width=_measure(longest_name)) 
+
+        # todo, lookup fixed widths for other columns and enforce
+
     def _set_column_headers(self):
-        # TODO adjust lengths?
         ## convert to dict
         colDict = dict(self.column_defs.items())
         ## arrange dict
@@ -202,59 +205,6 @@ class ProviderTree(ttk.Frame):
             self.treeview.heading(name, text=label, anchor=anchor)
             self.treeview.column(name, anchor=anchor, minwidth=minwidth,
                                  width=width, stretch=stretch)
-        # self.treeview.column('name', width=_measure(self.insertionTuples.longestname))
-
-        # self._insert_rows()
-        # self.treeview.grid(sticky="news")
-
-        
-    # def _draw(self):
-    #     try:
-    #         self.treeview.grid_forget()
-    #     except:
-    #         pass
-    #     self.treeview=ttk.Treeview(self, columns=list())
-    #     ## convert to dict
-    #     colDict = dict(self.column_defs.items())
-    #     from pprint import pprint
-    #     pprint(colDict)
-        
-    #     # colDict.pop('#0')
-    #     ## arrange dict
-    #     print(f"column placements: {self.column_placements}")
-    #     arrDict = dict_as_arranged(colDict, self.column_placements)
-    #     pprint(arrDict)
-    #     ## set columns
-    #     pprint(arrDict.keys())
-    #     self.treeview['columns'] = list(arrDict.keys())
-
-    #     # hidden_column_placements = [ 1 ]
-    #     # hidden_column_placements.append(0)
-    #     # display_columns = list()
-    #     # for column_placement in self.column_placements:
-    #     #     if column_placement not in hidden_column_placements:
-    #     #         display_columns.append(column_placement)
-    #     self.treeview['displaycolumns'] = self._displaycolumns()
-
-    #     ## define columns
-    #     self.treeview.column('#0', **self.column_defs['#0'])
-    #     for name, definition in arrDict.items():
-    #         label = definition.get('label', '')
-    #         anchor = definition.get('anchor', self.defaults['anchor'])
-    #         minwidth = definition.get('minwidth', _measure(label,
-    #                                                        window=self.treeview))
-    #         width = definition.get('width', minwidth)
-    #         if minwidth > width:
-    #             width=minwidth
-    #         stretch = definition.get('stretch', self.defaults['stretch'])
-    #         self.treeview.heading(name, text=label, anchor=anchor)
-    #         self.treeview.column(name, anchor=anchor, minwidth=minwidth,
-    #                              width=width, stretch=stretch)
-    #     print(f"longest name is: {self.insertionTuples.longestname}")
-    #     self.treeview.column('name', width=_measure(self.insertionTuples.longestname))
-
-    #     self._insert_rows()
-    #     self.treeview.grid(sticky="news")
 
     def _insert_rows(self):
         """
@@ -284,6 +234,7 @@ class ProviderTree(ttk.Frame):
             ## insert row
             # self.treeview.insert('', 'end', iid=insertionDict['rowId'], values=list(insertionDict.data.values()))
             self._update_column_header_widths()
+            self.event_generate("<<Providerlist Updated>>")
         else:
             raise ValueError
 

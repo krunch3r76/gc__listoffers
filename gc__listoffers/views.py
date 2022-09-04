@@ -44,6 +44,13 @@ class ProviderList(UserList):
 
 class ClassicView(tk.Frame):
 
+    def _on_providerlist_update(self, event):
+        print("PROVIDER LIST UPDATED", flush=True)
+        # update relevant areas of the view
+        # this may include reselecting previously selected (by address)
+        # , updating the counts
+        # , updating the stats
+
     def __init__frame110(self):
         frame110 = ttk.Frame(self)
         self.providerTree=ProviderTree(frame110, "<<ProviderRowSelected>>", debug_var=self.variables['debug_var'])
@@ -173,3 +180,5 @@ class ClassicView(tk.Frame):
         alist=['a','b','c']
         variables['subnet_list_json'].set(json.dumps(alist))
         variables['debug_var'].set(True)
+
+        parent.bind("<<Providerlist Updated>>", self._on_providerlist_update)
