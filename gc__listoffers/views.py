@@ -1,15 +1,46 @@
 import tkinter as tk
 from tkinter import ttk
 import json
+from collections import namedtuple, UserList
 
 from . widgets import CheckbuttonEntry
 from . widgets import MyCheckbutton
 from . widgets import MyButton
 from . widgets import SubnetRadio
 from . widgets import CountSummary
-from . widgets import InsertDict, ProviderTree
+from . widgets import ProviderTree
 from . widgets import Console
 
+RecordTuple = namedtuple('RecordTuple',
+                            ['offerRowID', 'name', 'address', 'cpu_sec',
+                             'duration_sec', 'fixed', 'cores', 'threads',
+                             'version', 'most_recent_timestamp', 'modelname',
+                             'freq', 'token_kind', 'features',
+                             'featuresFiltered', 'mem_gib',
+                             'storage_gib', 'json'
+                             ])
+
+class ProviderList(UserList):
+    longestname = "name"
+
+    
+    def __init__(self, sequence=None):
+        super().__init__(sequence)
+        self._update_longest_name()
+
+    def append(self, elem):
+        self.data.append(elem)
+        if len(elem.name) > len(self.longestname):
+            self.longestname = elem.name
+
+    def extend(self):
+        raise "extend not supported"
+
+    def _update_longest_name(self):
+        for insertiontuple in self.data:
+            if len(insertiontuple.name) > len(self.longestname):
+                self.longestname = insertiontuple.name
+        return len(self.longestname)
 
 class ClassicView(tk.Frame):
 
@@ -111,9 +142,13 @@ class ClassicView(tk.Frame):
 
     def insert_provider_row(self, rowdict, last=False):
         self.providerTree.insert(rowdict, last)
+        if rowdict != None:
+            recordTuple = RecordTuple(**rowdict)
+            self.providerlist.append(recordTuple)
 
     def __init__(self, parent, variables, model=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.providerlist = ProviderList()
 
         self.model = model
         for rc in range(100,101):
