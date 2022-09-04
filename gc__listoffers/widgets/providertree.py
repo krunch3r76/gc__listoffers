@@ -4,9 +4,10 @@ import tkinter.font as tkfont
 from dataclasses import dataclass
 from collections import UserDict
 from decimal import Decimal, getcontext
-from collections import namedtuple
+from collections import namedtuple, UserList
 # InsertionTuple used to enforce agreement with records added via controller
 # irrelevant: most_recent_timestamp, highest_version
+_percentExpand = 0.5
 InsertionTuple = namedtuple('InsertionTuple',
                             ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
                              'threads', 'version', 'most_recent_timestamp', 
@@ -17,12 +18,13 @@ InsertionTuple = namedtuple('InsertionTuple',
 def dict_as_arranged(fixed_dict, column_placements, replacement_dict=None):
     """
         fixed_dict     fixed ordered dict to which column_placements place refers
-        column_placements   offsets corresponding to column_defs
+        column_placements   offsets corresponding to column_defs (excluding #0)
         replacement_dict optional values to copy in place of fixed dict
     """
     newDict = dict()
     # fixed_as_list = list(fixed_dict)[1:] # keys only
-    fixed_as_list = list(fixed_dict.keys())
+    fixed_as_list = list(fixed_dict.keys())[1:]
+    print(f"fixed_as_list: {fixed_as_list}")
     if replacement_dict == None:
         replacement_dict = fixed_dict
     for offset in column_placements:
@@ -47,7 +49,8 @@ def _measure(text, window=None):
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
     # font=tkfont.nametofont(font_string, window)
     font=tkfont.nametofont(font_string)
-    return font.measure(text)
+    measurement = font.measure(text)
+    return int(measurement + measurement * _percentExpand)
 
 class InsertDict(UserDict):
     # notes, features will be used to compose a full list of unique features filterable
@@ -65,7 +68,7 @@ class InsertDict(UserDict):
         tdict['paymentForm'] = merge.token_kind
         tdict['features'] = self.features # revise to curtail
         tdict['name'] = merge.name
-        tdict['address'] = merge.address
+        tdict['address'] = merge.address[0:8]
         tdict['cpu (/hr)'] = str(remove_exponent(Decimal(str(merge.cpu_sec))*Decimal('3600.0')))
         tdict['dur (/hr)'] = str(remove_exponent(Decimal(str(merge.duration_sec))*Decimal('3600.0')))
         tdict['start'] = merge.fixed
@@ -91,6 +94,28 @@ def insert_dict_from_tuple(insertionTuple):
 #         'storage': '4.321'
 #     }
 #         )
+
+class InsertionList(UserList):
+    longestname = "name"
+
+    
+    def __init__(self, sequence=None):
+        super().__init__(sequence)
+        self._update_longest_name()
+
+    def append(self, elem):
+        self.data.append(elem)
+        if len(elem.name) > len(self.longestname):
+            self.longestname = elem.name
+
+    def extend(self):
+        raise "extend not supported"
+
+    def _update_longest_name(self):
+        for insertiontuple in self.data:
+            if len(insertiontuple.name) > len(self.longestname):
+                self.longestname = insertiontuple.name
+        return len(self.longestname)
 
 
 class ProviderTree(ttk.Frame):
@@ -118,14 +143,15 @@ class ProviderTree(ttk.Frame):
             **kwargs
             ):
         super().__init__(parent, **kwargs)
-        self.insertionTuples = list()
+        self.hiddencolumns = [0, 1]
+        self.insertionTuples = InsertionList()
         self.column_defs = { 
             '#0': { 'width': 0, 'minwidth': 0, 'stretch': False },
             'rowId': { },
             'paymentForm': { },
-            'name': {  'minwidth': _measure("name"), 'stretch': True },
-            'address': { 'minwidth': _measure("0x12345"),
-                         'width': _measure("0x12345"),
+                            'name': {'width': _measure("name"), 'stretch': False },
+            'address': { 'minwidth': _measure("0x123456"),
+                         'width': _measure("0x123456"),
                          'stretch': False
                         },
             'cpu (/hr)': { },
@@ -139,7 +165,7 @@ class ProviderTree(ttk.Frame):
             'version': { },
             'features': { },
             }
-        self.column_placements = [ i for i in range(1,len(list(self.column_defs))) ]
+        self.column_placements = [ i-1 for i in range(1,len(list(self.column_defs))) ]
         column_defs_dict = dict(self.column_defs.items())
         column_defs_dict.pop('#0')
         for key, value in column_defs_dict.items():
@@ -171,11 +197,23 @@ class ProviderTree(ttk.Frame):
         if debug_var != None:
             debug_var.trace_add('write', self._debug)
 
+    def _displaycolumns(self):
+        # return set difference of columns and non-display columns
+        # in: .hiddencolumns, .column_placements
+        # out: displaycolumns 
+        displaycolumns = list()
+        for column_placement in self.column_placements:
+            if column_placement not in self.hiddencolumns:
+                displaycolumns.append(column_placement)
+
+        return displaycolumns
+        
     def draw(self):
         try:
-            self.treeview.grid_remove()
+            self.treeview.grid_forget()
         except:
             pass
+        self.treeview=ttk.Treeview(self, columns=list())
         ## convert to dict
         colDict = dict(self.column_defs.items())
         from pprint import pprint
@@ -190,13 +228,13 @@ class ProviderTree(ttk.Frame):
         pprint(arrDict.keys())
         self.treeview['columns'] = list(arrDict.keys())
 
-        hidden_column_placements = [ 2 ]
-        hidden_column_placements.append(1)
-        display_columns = list()
-        for column_placement in self.column_placements:
-            if column_placement not in hidden_column_placements:
-                display_columns.append(column_placement - 1)
-        self.treeview['displaycolumns'] = display_columns
+        # hidden_column_placements = [ 1 ]
+        # hidden_column_placements.append(0)
+        # display_columns = list()
+        # for column_placement in self.column_placements:
+        #     if column_placement not in hidden_column_placements:
+        #         display_columns.append(column_placement)
+        self.treeview['displaycolumns'] = self._displaycolumns()
 
         ## define columns
         self.treeview.column('#0', **self.column_defs['#0'])
@@ -213,11 +251,10 @@ class ProviderTree(ttk.Frame):
             self.treeview.heading(name, text=label, anchor=anchor)
             self.treeview.column(name, anchor=anchor, minwidth=minwidth,
                                  width=width, stretch=stretch)
-        longestName = self._insert_rows() 
-        print(f"longestName:width = {longestName}:{len(longestName)}", flush=True)
-        self.treeview.column('name', width=_measure(longestName))
+        print(f"longest name is: {self.insertionTuples.longestname}")
+        self.treeview.column('name', width=_measure(self.insertionTuples.longestname))
 
-
+        self._insert_rows()
         self.treeview.grid(sticky="news")
 
     def _insert_rows(self):
