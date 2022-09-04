@@ -159,6 +159,7 @@ class ProviderTree(ttk.Frame):
 
         self.treeview.bind("<Button-1>", self._on_drag_start)
         self.treeview.bind("<ButtonRelease-1>", self._on_drag_release)
+        self.treeview.bind("<Motion>", self._on_motion)
 
         if debug_var != None:
             debug_var.trace_add('write', self._debug)
@@ -220,11 +221,24 @@ class ProviderTree(ttk.Frame):
             # self._last_column_pressed_label = self.treeview.column(column)['id']
             self._last_column_pressed_label = self.treeview.heading(column)['text']
             logger.debug(f"button pressed on column: {self._last_column_pressed}: {self._last_column_pressed_label}")
+        else:
+            return "break"
 
-    def _on_drag_release(self, event):
+    def _on_motion(self, event):
+        widget = event.widget
+        region = event.widget.identify_region(event.x, event.y)
+        if region == "separator":
+            return "break"
+        elif region == "heading" and self._state_dragging_column == True:
+            column = widget.identify_column(event.x)
+            if column != self._last_column_pressed:
+                self._on_drag_release(event, motion=True)
+
+    def _on_drag_release(self, event, motion=False):
         # check that this is a drag release
         if self._state_dragging_column == True:
-            self._state_dragging_column = False
+            if motion==False:
+                self._state_dragging_column = False
             widget = event.widget
             column = widget.identify_column(event.x)
             # column_label = self.treeview.column(column)['id']
@@ -240,6 +254,8 @@ class ProviderTree(ttk.Frame):
             self.treeview.heading(column, text=column_label_last)
             self._swap_column_values(self._last_column_pressed, column)
             self._update_column_header_widths() # temporary because name shall be fixed
+            if motion==True:
+                self._last_column_pressed = column
             # self._set_column_headers()
 
     def _set_column_headers(self):
