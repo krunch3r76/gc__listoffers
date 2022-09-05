@@ -8,7 +8,7 @@ from collections import namedtuple, UserList
 
 from debug import logger
 
-_percentExpand = 0.5
+_percentExpand = 0.50
 
 # the ProviderTree widget also holds abstractions of the data
 # inserted than may be accessed by higher levels of the view
@@ -125,7 +125,7 @@ class ProviderTree(ttk.Frame):
             '#0': { 'width': 0, 'minwidth': 0, 'stretch': False },
             'rowId': { },
             'paymentForm': { },
-                            'name': {'width': _measure("0x123456"), 'stretch': False },
+            'name': {'width': _measure("0x123456"), 'stretch': False },
             'address': { 'minwidth': _measure("0x123456"),
                          'width': _measure("0x123456"),
                          'stretch': False
@@ -181,7 +181,6 @@ class ProviderTree(ttk.Frame):
         # ex on name
         longest_name = 'name'
         children_ids = self.treeview.get_children()
-        logger.debug(f"children_ids type is {type(children_ids)}")
         if len(children_ids) > 0:
             indexPlacement = find_column_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
             for id_ in children_ids:
@@ -258,7 +257,111 @@ class ProviderTree(ttk.Frame):
                 self._last_column_pressed = column
             # self._set_column_headers()
 
+            for next_col in range(3,11):
+                self._debug_sort(f"#{next_col}", top_iid_of_last_group=None)
+            # self._debug_sort()
+
+    def _debug_sort(self, col="#3", reverse=False, top_iid_of_last_group=None, sort_index=None):
+        # logger.debug(col)
+        # logger.debug(f"SORTING COL = {col}")
+        end_of_iids = False
+        tv = self.treeview
+        sort_index = list()
+        root_iid = None
+        def conform(value):
+            try:
+                value = Decimal(value)
+            except:
+                pass
+            return value
+
+        def list_of_preceding_column_values(iid, end_column_num, start_column=3):
+            seq = list()
+            end_column = int(end_column_num.strip('#'))
+            for col_int in range(start_column,end_column):
+                col_num = f"#{col_int}"
+                seq.append(conform(tv.set(iid, col_num)))
+            return seq
+
+        if col=='#3':
+            for iid in tv.get_children(''):
+                sort_value = conform(tv.set(iid, col)) if col != '#0' else iid
+                sort_index.append( (sort_value, iid, ) )
+            sort_index.sort(reverse=reverse)
+
+            for index, (_, iid) in enumerate(sort_index):
+                tv.move(iid, '', index)
+
+            next_col = int(col.strip('#'))+1
+            first_iid = tv.get_children()[0]
+            self._debug_sort(f"#{next_col}", top_iid_of_last_group=None)
+        else:
+            # implied top_iid_of_last_group provided
+            # move down the columns for which the previous column values are the same
+            #  as the first group
+            if sort_index == None:
+                sort_index = list()
+            if top_iid_of_last_group==None:
+                # top_iid_of_last_group = ''
+                top_iid_of_last_group = next(iter(tv.get_children()))
+            previous_column_int = int(col.strip('#'))-1
+            previous_column_number = f"#{previous_column_int}"
+            # previous_column_value_at_iid = conform(tv.set(top_iid_of_last_group, previous_column_number))
+            current_iid = tv.get_children()[0]
+            indexoffset=0
+            # traverse to beginning (top) of last group
+            while current_iid != top_iid_of_last_group:
+                current_iid = self.treeview.next(current_iid)
+                indexoffset+=1
+
+            k_prev_col_values_at_iid = list_of_preceding_column_values(top_iid_of_last_group, col)
+            prev_col_values_at_current_iid = k_prev_col_values_at_iid
+
+            while prev_col_values_at_current_iid == k_prev_col_values_at_iid:
+                # logger.debug(f"{prev_col_values_at_current_iid} == {k_prev_col_values_at_iid}")
+                sort_value = conform(tv.set(current_iid, col))
+                sort_index.append( (sort_value, current_iid, ) )
+                current_iid = tv.next(current_iid)
+                if current_iid == '':
+                    end_of_iids = True
+                    break
+                else:
+                    # previous_column_value_at_current_iid = conform(tv.set(current_iid, previous_column_number))
+                    prev_col_values_at_current_iid = list_of_preceding_column_values(current_iid, col)
+
+            # review this kludge
+            # sort_index_backup=sort_index.copy()
+            # sort_index.sort(reverse=reverse)
+            # if sort_index_backup != sort_index:
+            #     for index, (_, iid) in enumerate(sort_index):
+            #         tv.move(iid, '', index + indexoffset)
+            #     logger.debug(sort_index)
+            #     last_element = sort_index[-1]
+            #     last_iid = last_element[1]
+
+            def do_sort(sort_index, indexoffset=0, clear=False):
+                sort_index.sort(reverse=False, key=lambda x: x[0])
+                for index, (_, iid) in enumerate(sort_index):
+                    tv.move(iid, '', index + indexoffset)
+                if clear:
+                    sort_index.clear()
+
+
+            if not end_of_iids:
+                # logger.debug(current_iid)
+                do_sort(sort_index, indexoffset)
+                self._debug_sort(col, top_iid_of_last_group=current_iid, sort_index=None)
+
+
+            # else: # move on to next column
+            #     next_col = int(col.strip('#'))+1
+            #     if next_col <= 10:
+            #         # logger.debug(f"SORTING NEXT_COL = {next_col}")
+            #         self._debug_sort(f"#{next_col}", top_iid_of_last_group=None)
+
     def _set_column_headers(self):
+
+
         self.treeview.grid_remove()
         ## convert to dict
         colDict = dict(self.column_defs.items())

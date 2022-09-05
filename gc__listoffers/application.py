@@ -44,7 +44,7 @@ class Application(tk.Tk):
         self.localConnectionProcess = multiprocessing.Process(target=self.localConnection, daemon=False)
         self.localConnectionProcess.start()
         ss=select_rows()
-        pipemsg={ "id": "0", "msg": { "subnet-tag": "devnet-beta", "sql": ss } }
+        pipemsg={ "id": "0", "msg": { "subnet-tag": "public-beta", "sql": ss } }
         self.pipe_parent.send(pipemsg)
         def _debug_get_rows():
             if self.pipe_parent.poll():
