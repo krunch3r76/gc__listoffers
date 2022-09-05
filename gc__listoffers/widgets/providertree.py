@@ -152,6 +152,7 @@ class ProviderTree(ttk.Frame):
         for key, value in column_defs_dict.items():
             self.column_defs[key]['label'] = key
         self.treeview=ttk.Treeview(self, columns=list())
+        self.treeview['selectmode']='extended'
         self._set_column_headers()
         self.treeview.grid(sticky="news")
         self.columnconfigure(0, weight=1)
@@ -220,8 +221,8 @@ class ProviderTree(ttk.Frame):
             # self._last_column_pressed_label = self.treeview.column(column)['id']
             self._last_column_pressed_label = self.treeview.heading(column)['text']
             logger.debug(f"button pressed on column: {self._last_column_pressed}: {self._last_column_pressed_label}")
-        else:
-            return "break"
+        # else:
+        #     return "break"
 
     def _on_motion(self, event):
         widget = event.widget
@@ -268,11 +269,16 @@ class ProviderTree(ttk.Frame):
         tv = self.treeview
         sort_index = list()
         root_iid = None
-        def conform(value):
-            try:
+        def conform(value, colnum):
+            colText = tv.heading(colnum)
+            if colText in ['cpu (/hr)', 'dur (/hr)', 'start', 'cores', 'threads', 'mem', 'storage']:
                 value = Decimal(value)
-            except:
-                pass
+            elif colText in [ 'frequency' ]:
+                value = Decimal(value.strip('GHz'))
+            elif colText in [ 'features' ]:
+                value = Decimal('0.0')
+            elif colText in [ 'version' ]:
+                value = tuple(map(int, (v.spllit('.')))) # https://stackoverflow.com/a/11887825
             return value
 
         def list_of_preceding_column_values(iid, end_column_num, start_column=3):
@@ -280,12 +286,12 @@ class ProviderTree(ttk.Frame):
             end_column = int(end_column_num.strip('#'))
             for col_int in range(start_column,end_column):
                 col_num = f"#{col_int}"
-                seq.append(conform(tv.set(iid, col_num)))
+                seq.append(conform(tv.set(iid, col_num), col_num))
             return seq
 
         if col=='#3':
             for iid in tv.get_children(''):
-                sort_value = conform(tv.set(iid, col)) if col != '#0' else iid
+                sort_value = conform(tv.set(iid, col), col) if col != '#0' else iid
                 sort_index.append( (sort_value, iid, ) )
             sort_index.sort(reverse=reverse)
 
@@ -306,7 +312,6 @@ class ProviderTree(ttk.Frame):
                 top_iid_of_last_group = next(iter(tv.get_children()))
             previous_column_int = int(col.strip('#'))-1
             previous_column_number = f"#{previous_column_int}"
-            # previous_column_value_at_iid = conform(tv.set(top_iid_of_last_group, previous_column_number))
             current_iid = tv.get_children()[0]
             indexoffset=0
             # traverse to beginning (top) of last group
@@ -318,15 +323,13 @@ class ProviderTree(ttk.Frame):
             prev_col_values_at_current_iid = k_prev_col_values_at_iid
 
             while prev_col_values_at_current_iid == k_prev_col_values_at_iid:
-                # logger.debug(f"{prev_col_values_at_current_iid} == {k_prev_col_values_at_iid}")
-                sort_value = conform(tv.set(current_iid, col))
+                sort_value = conform(tv.set(current_iid, col), col)
                 sort_index.append( (sort_value, current_iid, ) )
                 current_iid = tv.next(current_iid)
                 if current_iid == '':
                     end_of_iids = True
                     break
                 else:
-                    # previous_column_value_at_current_iid = conform(tv.set(current_iid, previous_column_number))
                     prev_col_values_at_current_iid = list_of_preceding_column_values(current_iid, col)
 
             # review this kludge
