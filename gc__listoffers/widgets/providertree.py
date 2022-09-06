@@ -180,6 +180,7 @@ class ProviderTree(ttk.Frame):
         # check children and reconfigure column widths as needed
 
         # ex on name
+        self.treeview.grid_forget()
         longest_name = 'name'
         children_ids = self.treeview.get_children()
         if len(children_ids) > 0:
@@ -190,7 +191,12 @@ class ProviderTree(ttk.Frame):
                 if len(field_value) > len(longest_name):
                     longest_name = field_value
 
-        self.treeview.column('name', width=_measure(longest_name)) 
+        last_name_width = self.treeview.column('name')['width']
+        current_name_width = _measure(longest_name)
+        if last_name_width != current_name_width:
+            self.treeview.column('name', width=current_name_width) 
+        # self.treeview.column('name', width=_measure(longest_name)) 
+        self.treeview.grid(sticky="news")
 
         # todo, lookup fixed widths for other columns and enforce
 
@@ -253,7 +259,6 @@ class ProviderTree(ttk.Frame):
             self.treeview.heading(self._last_column_pressed, text=column_label)
             self.treeview.heading(column, text=column_label_last)
             self._swap_column_values(self._last_column_pressed, column)
-            self._update_column_header_widths() # temporary because name shall be fixed
             if motion==True:
                 self._last_column_pressed = column
             # self._set_column_headers()
@@ -261,7 +266,7 @@ class ProviderTree(ttk.Frame):
             for next_col in range(3,11):
                 self._debug_sort(f"#{next_col}", top_iid_of_last_group=None)
             # self._debug_sort()
-
+            self._update_column_header_widths() # temporary because name shall be fixed
     def _debug_sort(self, col="#3", reverse=False, top_iid_of_last_group=None, sort_index=None):
         # logger.debug(col)
         # logger.debug(f"SORTING COL = {col}")
