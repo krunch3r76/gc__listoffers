@@ -183,14 +183,16 @@ class ProviderTree(ttk.Frame):
         self.treeview.grid_forget()
         longest_name = 'name'
         children_ids = self.treeview.get_children()
-        if len(children_ids) > 0:
-            indexPlacement = find_column_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
-            for id_ in children_ids:
-                values = self.treeview.item(id_, option='values')
-                field_value = values[indexPlacement]
-                if len(field_value) > len(longest_name):
-                    longest_name = field_value
-
+        def find_longest_name():
+            if len(children_ids) > 0:
+                indexPlacement = find_column_offset('name', list(self.column_defs.keys())[1:], self.column_placements)
+                for id_ in children_ids:
+                    values = self.treeview.item(id_, option='values')
+                    field_value = values[indexPlacement]
+                    if len(field_value) > len(longest_name):
+                        longest_name = field_value
+            return longest_name
+        longest_name = find_longest_name()
         last_name_width = self.treeview.column('name')['width']
         current_name_width = _measure(longest_name)
         if last_name_width != current_name_width:
