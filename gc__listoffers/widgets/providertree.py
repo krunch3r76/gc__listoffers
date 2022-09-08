@@ -8,17 +8,33 @@ from collections import namedtuple, UserList
 
 from debug import logger
 
-_percentExpand = 0.50
+_percentExpand = 0.0
 
 # the ProviderTree widget also holds abstractions of the data
 # inserted than may be accessed by higher levels of the view
-def _measure(text, window=None):
+def _measure(text):
+    import math
+    # iterate over text and measure each character to identify longest
+    longest_character_measure = 0
+    longest_character = ' '
     s=ttk.Style()
     font_string = s.lookup('Treeview', 'font').split(' ')[0]
-    # font=tkfont.nametofont(font_string, window)
     font=tkfont.nametofont(font_string)
-    measurement = font.measure(text)
-    return int(measurement + measurement * _percentExpand)
+    lengths = []
+    for c in text:
+        m = font.measure(c)
+        lengths.append(m)
+
+    average_length=math.ceil(sum(lengths)/len(lengths))
+    return average_length * len(text)
+    # return longest_character_measure * len(text)
+
+    # s=ttk.Style()
+    # font_string = s.lookup('Treeview', 'font').split(' ')[0]
+    # # font=tkfont.nametofont(font_string, window)
+    # font=tkfont.nametofont(font_string)
+    # measurement = font.measure(text)
+    # return int(measurement)
 
 InsertionTuple = namedtuple('InsertionTuple',
                             ['offerRowID', 'name', 'address', 'cpu_sec',
@@ -101,10 +117,9 @@ class ProviderTree(ttk.Frame):
             '#0': { 'width': 0, 'minwidth': 0, 'stretch': False },
             'rowId': { },
             'paymentForm': { },
-            'name': {'width': _measure("0x123456"), 'stretch': False },
-            'address': { 'minwidth': _measure("0x123456"),
-                         'width': _measure("0x123456"),
-                         'stretch': False
+                            'name': { 'width': _measure("0x123456"), 'minwidth': _measure("0x123456"), 'stretch': False },
+            'address': { # 'minwidth': _measure("0x123456"),
+                         #'width': _measure("0x123456"),
                         },
             'cpu (/hr)': { },
             'dur (/hr)': { },
@@ -170,6 +185,7 @@ class ProviderTree(ttk.Frame):
         def remove_exponent(d):
             return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
 
+        tv = self.treeview
         if not last:
             insertionDict = dict()
             # define lookup_table to map columns from array of possible input
@@ -194,6 +210,7 @@ class ProviderTree(ttk.Frame):
             # create insertion dictionary via lookup_table
             def search(list_value, dict_):
                 # find the first key for which list_value occurs in the key's val
+                # optimize by building a lookup table TODO
                 corresponding_key = None
                 for key, value_as_list in dict_.items():
                     if list_value in value_as_list:
@@ -206,6 +223,9 @@ class ProviderTree(ttk.Frame):
                 if mapped_key != None:
                     if mapped_key in ['cpu (/hr)', 'dur (/hr)']:
                         value = str(remove_exponent(Decimal(str(value))*Decimal('3600.0')))
+                    elif mapped_key in ['address']:
+                        value = value[0:8]
+
                     insertionDict[mapped_key] = value
 
             fixed_keys = self._list_column_keys()
@@ -216,14 +236,32 @@ class ProviderTree(ttk.Frame):
             #     corresponding_key = fixed_keys[displaycolumn+1]
             #     insertionSequence.append(str(insertionDict[corresponding_key]))
 
-            print(self.treeview['displaycolumns'])
-            print(insertionSequence)
+            # print(self.treeview['displaycolumns'])
+            # print(insertionSequence)
 
             self.treeview.insert('', 'end', 
                                  iid=insertionDict['rowId'],
                                  values=insertionSequence
                                  )
 
+        if last:
+            logger.debug(tv.column('name'))
+            logger.debug(tv.column('address'))
+            longest_name = ''
+            index_to_name = self._list_column_keys().index('name')-1
+            for child in tv.get_children():
+                values = tv.item(child)['values']
+                # logger.debug(values)
+                name = values[index_to_name]
+                if len(str(name)) > len(longest_name):
+                    longest_name = name
+            measure_longest_name = _measure(longest_name)
+            logger.debug(f"longest_name: {longest_name}")
+            logger.debug(f"longest_name measure: {measure_longest_name}")
+            if measure_longest_name > tv.column('name')['minwidth']:
+                tv.column('name', minwidth=measure_longest_name, width=measure_longest_name)
+            logger.debug(tv.column('name'))
+            logger.debug(tv.column('address'))
     def _debug(self, *_):
         # primarily for debugging visual placement
         print("DEBUG FROM PROVIDERTREE")
