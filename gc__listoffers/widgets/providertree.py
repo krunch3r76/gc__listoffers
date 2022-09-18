@@ -143,12 +143,16 @@ class ProviderTree(ttk.Frame):
 
 
     def _on_drag_start(self, event, widget, region, column=None):
-        logger.debug("on drag start")
+        logger.debug(f"column pressed: {column}")
         if region == "separator":
             return "break"
         elif region == "heading":
-            self._state_dragging_column = True
-            self._last_column_pressed = column
+            if column not in [ "#1", "#2"]:
+                self._state_dragging_column = True
+                self._last_column_pressed = column
+            else:
+                self._sort_columns(column)
+
             return "break"
             # logger.debug(self.treeview.heading(column)['text'])
 
@@ -164,11 +168,76 @@ class ProviderTree(ttk.Frame):
                 return "break"
 
     def _on_drag_release(self, event, widget, region, column=None, moving=False):
-        self._state_dragging_column = False
+        if self._state_dragging_column:
+            self._state_dragging_column = False
+            self._sort_columns()
+
         # if self._state_dragging_column == True and column != self._last_column_pressed:
         #     self._state_dragging_column = False
 
+    def _sort_columns(self, col="#1"):
+        # sort columns from left to right
 
+        # process
+        #  each row
+        #   dict displayed
+        #   normalize
+        #   list
+        #   sort
+
+        tv = self.treeview
+        sort_index = []
+
+
+        def build_sort_index():
+            def normalize_value(colname, value):
+                normalized_value = None
+                if colname in ['cpu (/hr)', 'dur (/hr)', 'start', 'cores', 'threads', 'mem', 'storage']:
+                    normalized_value = Decimal(value)
+                elif colname in [ 'frequency' ]:
+                    if value == '':
+                        stripped_freq = '0.0'
+                    else:
+                        stripped_freq = value.strip('GHz')
+                    normalized_value = Decimal(stripped_freq)
+                elif colname in [ 'features' ]:
+                    normalized_value = Decimal('0.0')
+                elif colname in [ 'version' ]:
+                    normalized_value = tuple(map(int, (value.split('.')))) # https://stackoverflow.com/a/11887825
+                else:
+                    normalized_value = value
+                return normalized_value
+
+            for iid in tv.get_children(''):
+                all_column_values_dict = tv.set(iid)
+                # this assumes column headings match internal definitions
+                _displayed_dict = dict([ ( list(all_column_values_dict.keys())[displayed_index], list(all_column_values_dict.values())[displayed_index], ) for displayed_index in tv['displaycolumns'] ])
+                # logger.debug(_displayed_dict)
+                normalized_row = []
+                if col not in [ "#1", "#2" ]:
+                    for colname, value in _displayed_dict.items():
+                        if colname in [ 'name', 'address' ]:
+                            continue
+                        normalized_value = normalize_value(colname, value)
+                        normalized_row.append(normalized_value)
+                else:
+                    displayed_dict_list = list(_displayed_dict.values())[0:2]
+                    if col == "#1":
+                        normalized_value = displayed_dict_list[0]
+                    else:
+                        normalized_value = displayed_dict_list[1]
+                    normalized_row.append(normalized_value)
+                sort_index.append( (normalized_row, iid, ) )
+            return sort_index
+        
+        sort_index = build_sort_index()
+        sort_index.sort(reverse=False)
+
+        for index, (_, iid) in enumerate(sort_index):
+            tv.move(iid, '', index)
+                
+                # logger.debug(keys_of_cols_displayed)
+                # sort_values_displayed = [ index-1 for index in tv['displaycolumns'] ]
 
     def _column_dict(self):
         # map name to internal column offset
