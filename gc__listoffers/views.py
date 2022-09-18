@@ -158,7 +158,7 @@ class ClassicView(tk.Frame):
     def __init__(self, parent, variables, model=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.providerlist = ProviderList()
-
+        self.parent=parent
         self.model = model
         for rc in range(100,101):
             self.columnconfigure(rc, weight=1)

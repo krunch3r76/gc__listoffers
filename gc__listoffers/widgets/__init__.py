@@ -6,7 +6,7 @@ from .mycheckbutton import MyCheckbutton
 from .mybutton import MyButton
 from .subnetradio import SubnetRadio
 from .countsummary import CountSummary
-from .providertree import InsertDict, ProviderTree
+from .providertree import ProviderTree
 
 class Console(tk.Text):
     def __init__(

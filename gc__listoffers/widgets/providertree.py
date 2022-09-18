@@ -36,50 +36,14 @@ def _measure(text):
     # measurement = font.measure(text)
     # return int(measurement)
 
-InsertionTuple = namedtuple('InsertionTuple',
-                            ['offerRowID', 'name', 'address', 'cpu_sec',
-                             'duration_sec', 'fixed', 'cores',
-                             'threads', 'version', 'most_recent_timestamp', 
-                             'modelname', 'freq', 'token_kind', 'features',
-                             'featuresFiltered',
-                             'mem_gib', 'storage_gib', 'json'
-                             ])
 
 
-class InsertDict(UserDict):
-    # notes, features will be used to compose a full list of unique features
-    #filterable
-    def __init__(self, merge: InsertionTuple, column_defs, column_placements=None):
+def _on_event(event, fnc):
+    widget = event.widget
+    region = widget.identify_region(event.x, event.y)
+    column = widget.identify_column(event.x)
 
-        # representation of columns that may be inserted into the view, for
-        #export to controller
-        self.features = merge.features # revise to use filtered, and make as
-        #list
-        super().__init__()
-        def remove_exponent(d):
-            return d.quantize(Decimal(1)) if d == d.to_integral() else d.normalize()
-        getcontext().prec=8
-        tdict = dict()
-        tdict['rowId'] = merge.offerRowID
-        tdict['paymentForm'] = merge.token_kind
-        tdict['features'] = self.features # revise to curtail
-        tdict['name'] = merge.name
-        tdict['address'] = merge.address[0:8]
-        tdict['cpu (/hr)'] = str(remove_exponent(
-                Decimal(str(merge.cpu_sec))*Decimal('3600.0'))
-                                 )
-        tdict['dur (/hr)'] = str(remove_exponent(
-                Decimal(str(merge.duration_sec))*Decimal('3600.0'))
-                                 )
-        tdict['start'] = merge.fixed
-        tdict['cores'] = merge.cores
-        tdict['threads'] = merge.threads
-        tdict['frequency'] = merge.freq
-        tdict['version'] = merge.version
-        tdict['mem'] = merge.mem_gib
-        tdict['storage'] = merge.storage_gib
-
-        self.update(dict_as_arranged(column_defs, column_placements, tdict))
+    return fnc(event, widget, region, column)
 
 
 
@@ -111,13 +75,14 @@ class ProviderTree(ttk.Frame):
         getcontext().prec=8
         super().__init__(parent, **kwargs)
         self.hiddencolumns = [0, 1]
+        self.parent=parent # can just use internal tk function for this ...
 
         # self.insertionTuples = InsertionList()
         self.column_defs = { 
             '#0': { 'width': 0, 'minwidth': 0, 'stretch': False },
             'rowId': { },
             'paymentForm': { },
-                            'name': { 'width': _measure("0x123456"), 'minwidth': _measure("0x123456"), 'stretch': False },
+            'name': { 'width': _measure("0x123456"), 'minwidth': _measure("0x123456"), 'stretch': False },
             'address': { # 'minwidth': _measure("0x123456"),
                          #'width': _measure("0x123456"),
                         },
@@ -143,7 +108,6 @@ class ProviderTree(ttk.Frame):
             self.column_defs[key]['label'] = key
 
         self.treeview=ttk.Treeview(self, columns=list(column_defs_dict.keys()))
-        logger.debug(f"treeview columns: {self.treeview['columns']}")
         self.treeview['selectmode']='extended'
         self.treeview.column('#0', **self.column_defs['#0'])
         for name, definition in self.column_defs.items():
@@ -170,12 +134,67 @@ class ProviderTree(ttk.Frame):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        # self.treeview.bind("<Button-1>", self._on_drag_start)
-        # self.treeview.bind("<ButtonRelease-1>", self._on_drag_release)
-        # self.treeview.bind("<Motion>", self._on_motion)
+        self.treeview.bind("<Button-1>", lambda event: _on_event(event, self._on_drag_start))
+        self.treeview.bind("<ButtonRelease-1>", lambda event: _on_event(event, self._on_drag_release))
+        self.treeview.bind("<Motion>", lambda event: _on_event(event, self._on_motion))
 
         if debug_var != None:
             debug_var.trace_add('write', self._debug)
+
+
+    def _on_drag_start(self, event, widget, region, column=None):
+        logger.debug("on drag start")
+        if region == "separator":
+            return "break"
+        elif region == "heading":
+            self._state_dragging_column = True
+            self._last_column_pressed = column
+            # logger.debug(self.treeview.heading(column)['text'])
+
+    def _on_motion(self, event, widget, region, column=None):
+        if region == "separator":
+            return "break"
+        elif region == "heading" and self._state_dragging_column == True:
+            pass
+            if column != self._last_column_pressed:
+                self._swap_columns(self._last_column_pressed, column)
+                self._last_column_pressed = column
+                tk._default_root.geometry(tk._default_root.geometry())
+
+    def _on_drag_release(self, event, widget, region, column=None, moving=False):
+        self._state_dragging_column = False
+        # if self._state_dragging_column == True and column != self._last_column_pressed:
+        #     self._state_dragging_column = False
+
+
+
+    def _column_dict(self):
+        # map name to internal column offset
+        column_keys = self._list_column_keys()[1:]
+        column_keys.pop(0)
+        mappings = dict()
+        for i, column_key in enumerate(column_keys):
+            mappings[column_key] = i+1
+        return mappings
+        # return dict(zip(column_keys, list(self.column_defs.keys())[1:]))
+
+    def _swap_columns(self, col1, col2):
+        # ...
+        column_label = self.treeview.heading(col2)['text']
+        column_label_prior = self.treeview.heading(
+                col1
+                )['text']
+        mappings = self._column_dict()
+        internal_col_to_first = mappings[column_label]
+        internal_col_to_second = mappings[column_label_prior]
+        display_columns_list = list(self.treeview['displaycolumn'])
+        offset_to_displayed_1 = display_columns_list.index(internal_col_to_first)
+        offset_to_displayed_2 = display_columns_list.index(internal_col_to_second)
+        save = display_columns_list[offset_to_displayed_1]
+        display_columns_list[offset_to_displayed_1] = display_columns_list[offset_to_displayed_2]
+        display_columns_list[offset_to_displayed_2] = save
+
+        self.treeview.configure(displaycolumns=display_columns_list)
 
     def _list_column_keys(self):
         # may make a computed property
@@ -232,12 +251,6 @@ class ProviderTree(ttk.Frame):
             insertionSequence = list()
             for columnkey in self.treeview['columns']:
                 insertionSequence.append(str(insertionDict[columnkey]))
-            # for displaycolumn in self.treeview['columns']:
-            #     corresponding_key = fixed_keys[displaycolumn+1]
-            #     insertionSequence.append(str(insertionDict[corresponding_key]))
-
-            # print(self.treeview['displaycolumns'])
-            # print(insertionSequence)
 
             self.treeview.insert('', 'end', 
                                  iid=insertionDict['rowId'],
@@ -245,8 +258,8 @@ class ProviderTree(ttk.Frame):
                                  )
 
         if last:
-            logger.debug(tv.column('name'))
-            logger.debug(tv.column('address'))
+            # logger.debug(tv.column('name'))
+            # logger.debug(tv.column('address'))
             longest_name = ''
             index_to_name = self._list_column_keys().index('name')-1
             for child in tv.get_children():
@@ -256,15 +269,15 @@ class ProviderTree(ttk.Frame):
                 if len(str(name)) > len(longest_name):
                     longest_name = name
             measure_longest_name = _measure(longest_name)
-            logger.debug(f"longest_name: {longest_name}")
-            logger.debug(f"longest_name measure: {measure_longest_name}")
             if measure_longest_name > tv.column('name')['minwidth']:
-                tv.column('name', minwidth=measure_longest_name, width=measure_longest_name)
-            logger.debug(tv.column('name'))
-            logger.debug(tv.column('address'))
+                tv.column('name',
+                          minwidth=measure_longest_name,
+                          width=measure_longest_name)
+            # logger.debug(tv.column('name'))
+            # logger.debug(tv.column('address'))
+
     def _debug(self, *_):
         # primarily for debugging visual placement
-        print("DEBUG FROM PROVIDERTREE")
         try:
             self["borderwidth"] = 2
             self['relief']='solid'
