@@ -204,6 +204,8 @@ class ProviderTree(ttk.Frame):
                     normalized_value = Decimal('0.0')
                 elif colname in [ 'version' ]:
                     normalized_value = tuple(map(int, (value.split('.')))) # https://stackoverflow.com/a/11887825
+                elif colname in [ 'name' ]:
+                    normalized_value = value.lower()
                 else:
                     normalized_value = value
                 return normalized_value
@@ -223,10 +225,13 @@ class ProviderTree(ttk.Frame):
                 else:
                     displayed_dict_list = list(_displayed_dict.values())[0:2]
                     if col == "#1":
-                        normalized_value = displayed_dict_list[0].lower()
+                        value = displayed_dict_list[0]
+                        # normalized_value = displayed_dict_list[0].lower()
                     else:
-                        normalized_value = displayed_dict_list[1]
-                    normalized_row.append(normalized_value)
+                        value = displayed_dict_list[1]
+
+                    normalized_value = normalize_value(colname, value)
+                    normalized_row.append(colname, normalized_value)
                 sort_index.append( (normalized_row, iid, ) )
             return sort_index
         
