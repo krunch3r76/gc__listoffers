@@ -26,11 +26,16 @@ class Application(tk.Tk):
         super().__init__(*args, **kwargs)
         from pathlib import Path
         projectdir = Path(__file__).parent.parent
+        # self.tk.call(
+        #     "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
+        # )
+
         self.tk.call(
-            "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
+            "source", str(projectdir / "Sun-Valley-ttk-theme/sun-valley.tcl")
         )
         s=ttk.Style()
-        s.theme_use("forest-light")
+        # s.theme_use("forest-light")
+        self.tk.call("set_theme", "ight")
         self.variables = Variables()
         self.title("testing widgets")
         self.bind("<<Clicked Max CPU>>", self.on_max_cpu_click)

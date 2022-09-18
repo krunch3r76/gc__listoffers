@@ -149,6 +149,7 @@ class ProviderTree(ttk.Frame):
         elif region == "heading":
             self._state_dragging_column = True
             self._last_column_pressed = column
+            return "break"
             # logger.debug(self.treeview.heading(column)['text'])
 
     def _on_motion(self, event, widget, region, column=None):
@@ -160,6 +161,7 @@ class ProviderTree(ttk.Frame):
                 self._swap_columns(self._last_column_pressed, column)
                 self._last_column_pressed = column
                 tk._default_root.geometry(tk._default_root.geometry())
+                return "break"
 
     def _on_drag_release(self, event, widget, region, column=None, moving=False):
         self._state_dragging_column = False
