@@ -223,7 +223,7 @@ class ProviderTree(ttk.Frame):
                 else:
                     displayed_dict_list = list(_displayed_dict.values())[0:2]
                     if col == "#1":
-                        normalized_value = displayed_dict_list[0]
+                        normalized_value = displayed_dict_list[0].lower()
                     else:
                         normalized_value = displayed_dict_list[1]
                     normalized_row.append(normalized_value)
