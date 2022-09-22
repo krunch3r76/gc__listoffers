@@ -175,7 +175,7 @@ class ProviderTree(ttk.Frame):
         # if self._state_dragging_column == True and column != self._last_column_pressed:
         #     self._state_dragging_column = False
 
-    def _sort_columns(self, col="#3"):
+    def _sort_columns(self, col="#1"):
         # sort columns from left to right
 
         # process
@@ -225,17 +225,6 @@ class ProviderTree(ttk.Frame):
                 else:
                     displayed_dict_list = list(_displayed_dict.values())[0:2]
                     if col == "#1":
-<<<<<<< HEAD
-                        colname = "name"
-                        value = displayed_dict_list[0]
-                        # normalized_value = displayed_dict_list[0].lower()
-                    else:
-                        colname = "address"
-                        value = displayed_dict_list[1]
-
-                    normalized_value = normalize_value(colname, value)
-                    normalized_row.append(normalized_value)
-=======
                         value = displayed_dict_list[0]
                         # normalized_value = displayed_dict_list[0].lower()
                     else:
@@ -243,7 +232,6 @@ class ProviderTree(ttk.Frame):
 
                     normalized_value = normalize_value(colname, value)
                     normalized_row.append(colname, normalized_value)
->>>>>>> db3597692c4b5eb7440466042e119e9c95be8e53
                 sort_index.append( (normalized_row, iid, ) )
             return sort_index
         
