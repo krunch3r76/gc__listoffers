@@ -209,7 +209,7 @@ class AppView:
         # /treeframe
 
         self.subnet_var.set("public-beta")
-        self.other_entry_var.set("devnet-beta.2")
+        self.other_entry_var.set("hybrid-mainnet")
         self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
         #################################################
