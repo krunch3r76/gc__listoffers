@@ -141,6 +141,10 @@ class ProviderTree(ttk.Frame):
         if debug_var != None:
             debug_var.trace_add('write', self._debug)
 
+    def remove_rows(self):
+        children = self.treeview.get_children()
+        if len(children) > 0:
+            self.treeview.delete(*children)
 
     def _on_drag_start(self, event, widget, region, column=None):
         logger.debug(f"column pressed: {column}")

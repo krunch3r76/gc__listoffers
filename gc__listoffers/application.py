@@ -22,34 +22,13 @@ class Application(tk.Tk):
         self.view.console.write("woo hoo, you activated the max cpu filter entry!")
         pass
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        from pathlib import Path
-        projectdir = Path(__file__).parent.parent
-        # self.tk.call(
-        #     "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
-        # )
-
-        self.tk.call(
-            "source", str(projectdir / "Sun-Valley-ttk-theme/sun-valley.tcl")
-        )
-        s=ttk.Style()
-        # s.theme_use("forest-light")
-        self.tk.call("set_theme", "ight")
-        self.variables = Variables()
-        self.title("testing widgets")
-        self.bind("<<Clicked Max CPU>>", self.on_max_cpu_click)
-        self.view = ClassicView(self, self.variables)
-        self.view.grid(sticky="news")
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.offerLookup = OfferLookup()
-        self.pipe_parent, self.pipe_child = multiprocessing.Pipe()
-        self.localConnection = LocalConnection(self.pipe_child, self.offerLookup)
-        self.localConnectionProcess = multiprocessing.Process(target=self.localConnection, daemon=False)
-        self.localConnectionProcess.start()
+    def lookup_offers(self, refresh=True):
+        if refresh:
+            self.id += 1
+            # clear tree
+            self.view.clear_provider_tree()
         ss=select_rows()
-        pipemsg={ "id": "0", "msg": { "subnet-tag": "public-beta", "sql": ss } }
+        pipemsg={ "id": self.id, "msg": { "subnet-tag": "public-beta", "sql": ss } }
         self.pipe_parent.send(pipemsg)
         def _debug_get_rows():
             if self.pipe_parent.poll():
@@ -74,6 +53,37 @@ class Application(tk.Tk):
 
         logger.debug("fetching from stats")
         _debug_get_rows()
+
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.id = 1
+        from pathlib import Path
+        projectdir = Path(__file__).parent.parent
+        # self.tk.call(
+        #     "source", str(projectdir / "forest-ttk-theme/forest-light.tcl")
+        # )
+
+        self.tk.call(
+            "source", str(projectdir / "Sun-Valley-ttk-theme/sun-valley.tcl")
+        )
+        s=ttk.Style()
+        # s.theme_use("forest-light")
+        self.tk.call("set_theme", "ight")
+        self.variables = Variables()
+        self.title("testing widgets")
+        self.bind("<<Clicked Max CPU>>", self.on_max_cpu_click)
+        self.bind("<<Clicked Refresh>>", lambda e: self.lookup_offers())
+
+        self.view = ClassicView(self, self.variables)
+        self.view.grid(sticky="news")
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.offerLookup = OfferLookup()
+        self.pipe_parent, self.pipe_child = multiprocessing.Pipe()
+        self.localConnection = LocalConnection(self.pipe_child, self.offerLookup)
+        self.localConnectionProcess = multiprocessing.Process(target=self.localConnection, daemon=False)
+        self.localConnectionProcess.start()
 
 
         # result = self.offerLookup("1", "devnet-beta", ss, False)

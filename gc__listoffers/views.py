@@ -45,6 +45,8 @@ class ProviderList(UserList):
         return len(self.longestname)
 
 class ClassicView(tk.Frame):
+    def clear_provider_tree(self):
+        self.providerTree.remove_rows()
 
     def _on_providerlist_update(self, event):
         logger.debug("PROVIDER LIST UPDATED")
@@ -80,7 +82,7 @@ class ClassicView(tk.Frame):
         # </refresh button>
 
         # <update button>
-        MyButton(parent=frame130, label="Update", click_event="<<Clicked Update>>",
+        MyButton(parent=frame130, label="Apply", click_event="<<Clicked Update>>",
                  name='updateButton', disable_var=variables['disable_var'],
                  debug_var=variables['debug_var'], draw_disabled=True).grid(row=100, column=102, sticky="ws", padx=15)
 
