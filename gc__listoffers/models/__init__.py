@@ -6,13 +6,15 @@ import tkinter as tk
 class Variables(dict):
     def __init__(self):
         """pre: root window instantiated"""
-        self.filters = dict()
-        self.counts = dict()
-        self['filters'] = self.filters
-        self['counts'] = self.counts
+
+        self['filters'] = dict()
+        self['counts'] = dict()
+        self['signals'] = dict()
 
         self['debug_var']=tk.BooleanVar(value=False)
         self['disable_var']=tk.BooleanVar(value=False)
+        # self['disabled_var']['update']=tk.BooleanVar(value=False)
+
 
         self['filters']['max_cpu_checkVar']=tk.BooleanVar(value=False)
         self['filters']['max_cpu_entryVar']=tk.DoubleVar(value="23.5")
@@ -31,7 +33,9 @@ class Variables(dict):
         self['counts']['tglmNodes']=tk.IntVar(value=0)
         self['counts']['totalNodes']=tk.IntVar(value=0)
 
+        self['signals']['new_filter_criteria']=tk.BooleanVar(value=False)
 
+# review SelectionRecord placement
 from collections import namedtuple
 _SelectionColumns = ['offerRowID', 'name', 'address', 'cpu_sec', 'duration_sec', 'fixed', 'cores',
                     'threads', 'version', 'most_recent_timestamp',

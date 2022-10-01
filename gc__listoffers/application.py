@@ -20,6 +20,8 @@ class Application(tk.Tk):
     def on_max_cpu_click(self, event):
         # event.widget.variable determines whether off or on
         self.view.console.write("woo hoo, you activated the max cpu filter entry!")
+        self.variables['signals']['new_filter_criteria'].set(True)
+        self.activeFilterVariables.add('max_cpu_checkVar')
         pass
 
     def lookup_offers(self, refresh=True):
@@ -54,10 +56,15 @@ class Application(tk.Tk):
         logger.debug("fetching from stats")
         _debug_get_rows()
 
+    def _refresh_update_button(self, *args):
+        self.variables['signals']['new_filter_criteria'].set(False)
+        self.view.widgets['updateButton'].configure(state=tk.NORMAL)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.id = 1
+        self.activeFilterVariables = set()
+
         from pathlib import Path
         projectdir = Path(__file__).parent.parent
         # self.tk.call(
@@ -69,11 +76,12 @@ class Application(tk.Tk):
         )
         s=ttk.Style()
         # s.theme_use("forest-light")
-        self.tk.call("set_theme", "ight")
+        self.tk.call("set_theme", "sun-valley")
         self.variables = Variables()
         self.title("testing widgets")
         self.bind("<<Clicked Max CPU>>", self.on_max_cpu_click)
         self.bind("<<Clicked Refresh>>", lambda e: self.lookup_offers())
+        self.variables['signals']['new_filter_criteria'].trace_add('write', self._refresh_update_button)
 
         self.view = ClassicView(self, self.variables)
         self.view.grid(sticky="news")

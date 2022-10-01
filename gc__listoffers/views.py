@@ -65,6 +65,7 @@ class ClassicView(tk.Frame):
         return frame110
 
     def __init__frame130(self):
+
         variables = self.variables
         frame130 = ttk.Frame(self)
         for rc in range(100,104):
@@ -82,9 +83,10 @@ class ClassicView(tk.Frame):
         # </refresh button>
 
         # <update button>
-        MyButton(parent=frame130, label="Apply", click_event="<<Clicked Update>>",
+        self.widgets['updateButton'] = MyButton(parent=frame130, label="Apply", click_event="<<Clicked Update>>",
                  name='updateButton', disable_var=variables['disable_var'],
-                 debug_var=variables['debug_var'], draw_disabled=True).grid(row=100, column=102, sticky="ws", padx=15)
+                 debug_var=variables['debug_var'], draw_disabled=True)
+        self.widgets['updateButton'].grid(row=100, column=102, sticky="ws", padx=15)
 
         # MyButton(parent=refreshButtn
 
@@ -159,6 +161,7 @@ class ClassicView(tk.Frame):
 
     def __init__(self, parent, variables, model=None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.widgets = dict()
         self.providerlist = ProviderList()
         self.parent=parent
         self.model = model
