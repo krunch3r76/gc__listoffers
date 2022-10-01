@@ -23,7 +23,7 @@ class LocalConnection:  # later make subclass of abstract
         results_l = await self.signal_cb(
             signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"],
             signal["msg"].get("manual-probe", False),
-            signal["msg"]["appkey"]
+            signal["msg"].get("appkey", "")
         )  # signal from view
 
         if results_l and len(results_l) > 0:
