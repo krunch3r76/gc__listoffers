@@ -77,7 +77,7 @@ async def _list_offers(subnet_tag: str):
                     offer_d.clear()
                     try:
                         event = await asyncio.wait_for(
-                            ai.__anext__(), timeout=8
+                            ai.__anext__(), timeout=18
                         )  # <class 'yapapi.rest.market.OfferProposal'>
                         offer_d["offer-id"] = event.id
                         if offer_d["offer-id"] not in offer_ids_seen:

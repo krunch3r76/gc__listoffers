@@ -209,7 +209,7 @@ class AppView:
         # /treeframe
 
         self.subnet_var.set("public-beta")
-        self.other_entry_var.set("devnet-beta.2")
+        self.other_entry_var.set("hybrid-mainnet")
         self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
         #################################################
@@ -234,7 +234,7 @@ class AppView:
         # self.l_baseframe.columnconfigure(0, weight=1)
         # self.l_baseframe.rowconfigure(0, weight=1)
         self.l_baseframe.grid(column=0, row=0, sticky="wns")
-        self.l_baseframe["borderwidth"] = 2
+        # self.l_baseframe["borderwidth"] = 2
         # self.l_baseframe['relief']='solid'
 
         # l_baseframe++console
@@ -318,7 +318,7 @@ class AppView:
         self.feature_entryframe.grid(column=3, row=0, sticky="e", padx=10)
 
         filterframe["borderwidth"] = 2
-        # filterframe['relief']='ridge'
+        #filterframe['relief']='ridge'
         filterframe.grid(row=0, column=1, sticky="wnes")
         # //filterframe
 
@@ -330,20 +330,43 @@ class AppView:
         stubframe["borderwidth"] = 2
         # stubframe['relief']='ridge'
 
-        subbaseframe["borderwidth"] = 2
+        # subbaseframe["borderwidth"] = 2
         # subbaseframe['relief']='ridge'
-        self.cbv_manual_probe = BooleanVar()
-        self.manual_probe_cb = ttk.Checkbutton(
-            subbaseframe,
-            text="manual probe",
-            padding=(0, 0, 50, 0),
-            variable=self.cbv_manual_probe,
-        )
-        if yapapi_loader == None:
-            self.manual_probe_cb["state"] = "disabled"
-        self.manual_probe_cb.grid(row=0, column=4, sticky="")
+        # self.cbv_manual_probe = BooleanVar()
+        # self.manual_probe_cb = ttk.Checkbutton(
+        #     subbaseframe,
+        #     text="manual probe",
+        #     padding=(0, 0, 50, 0),
+        #     variable=self.cbv_manual_probe,
+        # )
+        # if yapapi_loader == None:
+        #     self.manual_probe_cb["state"] = "disabled"
+        # self.manual_probe_cb.grid(row=0, column=4, sticky="")
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
+
+
+        #########################################################
+        # probeframe                                            #
+        #########################################################
+        self.probeframe = ProbeFrame(root)
+        probeframe=self.probeframe
+        probeframe.rowconfigure(0, weight=0)
+        probeframe.columnconfigure(0, weight=1)
+        probeframe.grid(row=4, column=0, sticky="w")
+        probeframe.configure(padding=(5,0,0,0))
+        probeframe.entry.configure(show='*')
+        import os
+        probeframe.apikey_var.set(os.environ.get('YAGNA_APPKEY', ''))
+        # self.root.bind("<<OutFocused Manual Probe>>", self._debug1)
+        # self.root.bind("<<OutFocused Manual Probe>>", lambda e: print(probeframe.apikey_var.get()))
+        self.root.bind("<<OutFocused Manual Probe>>", lambda e: os.environ.update( {'YAGNA_APPKEY':probeframe.apikey_var.get()}))
+        # self.root.bind("<<OutFocused Manual Probe>>", lambda e: os.environ['YAGNA_APPKEY']=probeframe.apikey_var.get())
+        #print(os.environ.get('YAGNA_APPKEY', ""))
+
+        # /probeFrame
+        self.manual_probe_cb = probeframe.checkbutton
+        self.cbv_manual_probe = probeframe.check_var
 
         root.bind("<Escape>", self.on_escape_event)
 
@@ -354,6 +377,12 @@ class AppView:
         self.whetherUpdating = False
 
     #                           __call__                                     <
+
+    def _debug1(self, event):
+        os.environ['YAGNA_APPKEY']=self.probeframe.apikey_var.get()
+        # print(self.probeframe.apikey_var.get())
+        # print(os.environ['YAGNA_APPKEY'])
+
     def __call__(self):
         root = self.root
 
@@ -602,6 +631,7 @@ class AppView:
                 "subnet-tag": self.subnet_var.get(),
                 "sql": ss,
                 "manual-probe": self.cbv_manual_probe.get(),
+                "appkey": os.environ.get('YAGNA_APPKEY', "")
             },
         }
         self.q_out.put_nowait(msg_out)

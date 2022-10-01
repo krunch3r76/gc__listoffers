@@ -19,7 +19,7 @@ it shall attempt to connect then send the request and get the server's response 
 """
 
 import http.client
-
+import os
 
 class RemoteConnection:
     """functor that sets up full duplex queues to the view and monitors for then relays requests to remote model"""
@@ -45,6 +45,7 @@ class RemoteConnection:
                     "msg": {
                         "subnet-tag": signal["msg"]["subnet-tag"],
                         "sql": signal["msg"]["sql"],
+                        "apikey": os.environ.get('YAGNA_APPKEY', "")
                     },
                 }
                 body_as_json = json.dumps(body)
