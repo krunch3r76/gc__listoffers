@@ -72,10 +72,10 @@ dialogs.append(dialog4)
 
 dialog5 = {
     "script": "uh oh! it looks like your API key is unset or invalid."
-    " please exit to double check it, then restart."
-    " the environment variable to set is YAGNA_APPKEY."
+    "please paste a valid key into the entry field next to manual probe"
+    " or make sure the environment variable has been set to YAGNA_APPKEY."
     " if you don't know what to do, please refer to the README on github."
-    " Also, make sure yagna (or golemsp) is running.",
+    " Also, make sure yagna (or golemsp) is running and that the yapapi sdk has been installed.",
     "substitutions": {"uh oh!": ["oh gosh!", "oh-my-gosh!", "oh bother."]},
 }
 dialogs.append(dialog5)
@@ -95,9 +95,9 @@ dialogs.append(dialog6)
 
 
 dialog7 = {
-    "script": "uh oh! it looks like your API key on the server is invalid."
-    " please exit to double check it, then restart the server and this client."
-    " the environment variable to set on the server is YAGNA_APPKEY."
+    "script": "uh oh! it looks like your API key for the server is invalid."
+    " please check it and paste it to the manual probe entry field on the bottom."
+    " or you can export the environment variable on the server side, YAGNA_APPKEY, as well and then run the server again."
     " if you don't know what to do, please refer to the README on github.",
     "substitutions": {"uh oh!": ["oh gosh!", "oh-my-gosh!", "oh bother."]},
 }

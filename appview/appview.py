@@ -703,7 +703,7 @@ class AppView:
         if more_d == None:
             more_d = dict()
         if more_d.get("cmd", None) == "check version":
-            print(f"Checking version {self.cbv_lastversion.get()}")
+            # print(f"Checking version {self.cbv_lastversion.get()}")
             self.treeframe.change_visibility(
                 self.treeframe.Field.version, not self.cbv_lastversion.get()
             )
