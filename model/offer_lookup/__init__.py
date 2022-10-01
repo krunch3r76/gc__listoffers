@@ -29,7 +29,7 @@ class OfferLookup:
         self._con = None
 
     # _-_-_-_- __call __ _-_-_-_-
-    async def __call__(self, id_, subnet_tag, sql, manual_probe, appkey):
+    async def __call__(self, id_, subnet_tag, sql, manual_probe=False, appkey=""):
         """find offers, recreate database, execute sql
         , return sqlite rows"""
         # print(f"[OfferLookup::__call__()] called with id {id_}")
