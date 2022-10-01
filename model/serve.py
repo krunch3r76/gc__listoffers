@@ -95,7 +95,7 @@ async def async_run_server(ip, port):
             signal = None
         if signal:  # interact with yagna to lookup the offer
             results_l = await offerLookup(
-                signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"]
+                signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"], signal["msg"]["appkey"]
             )
             if results_l and len(results_l) > 0:
                 if results_l[0] == "error" and results_l[1] == 401:

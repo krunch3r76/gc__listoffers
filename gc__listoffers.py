@@ -105,5 +105,7 @@ if __name__ == "__main__":
                 sys.argv[0]
             )
         )
-
-    controller_process.terminate()
+    try:
+        controller_process.terminate()
+    except:
+        pass
