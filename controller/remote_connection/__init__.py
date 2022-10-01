@@ -45,7 +45,7 @@ class RemoteConnection:
                     "msg": {
                         "subnet-tag": signal["msg"]["subnet-tag"],
                         "sql": signal["msg"]["sql"],
-                        "appkey": os.environ.get('YAGNA_APPKEY', "")
+                        "appkey": signal["msg"].get("appkey", os.environ.get('YAGNA_APPKEY', ""))
                     },
                 }
                 body_as_json = json.dumps(body)
