@@ -40,7 +40,7 @@ class OfferLookup:
         if id_ != self._session_id:
             # scan offers anew
             try:
-                offers = await list_offers(subnet_tag, manual_probe)  # this is the one
+                offers = await list_offers(subnet_tag, manual_probe, timeout=18 if subnet_tag == "hybrid-mainnet" else 8)  # this is the one
                 # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid

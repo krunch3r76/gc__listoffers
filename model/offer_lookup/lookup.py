@@ -33,7 +33,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-async def _list_offers(subnet_tag: str):
+async def _list_offers(subnet_tag: str, timeout=8):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
     pre: none
@@ -77,7 +77,7 @@ async def _list_offers(subnet_tag: str):
                     offer_d.clear()
                     try:
                         event = await asyncio.wait_for(
-                            ai.__anext__(), timeout=18
+                            ai.__anext__(), timeout=timeout
                         )  # <class 'yapapi.rest.market.OfferProposal'>
                         offer_d["offer-id"] = event.id
                         if offer_d["offer-id"] not in offer_ids_seen:
@@ -173,7 +173,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     send_end.send(offers)
 
 
-async def list_offers(subnet_tag: str, manual_probing=False):
+async def list_offers(subnet_tag: str, manual_probing=False, timeout=8):
     """query stats api otherwise scan yagna for offers then
     debug.dlog("listoffers called")
     return offers as a list of dictionary objects"""
@@ -217,7 +217,7 @@ async def list_offers(subnet_tag: str, manual_probing=False):
             )
             debug.dlog("falling back to offer probe")
         try:
-            offers = await _list_offers(subnet_tag)
+            offers = await _list_offers(subnet_tag, timeout)
         except yapapi.rest.configuration.MissingConfiguration as e:
             debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
             raise e

@@ -321,6 +321,7 @@ class NumSummaryFrame:
     def fill(self, values):
         # debug.dlog(pformat(values))
         # debug.dlog(pformat(values[1:-1]))
+        # print(values)
         values_strlists = []
         if values == None:
             self.clear()  # review
