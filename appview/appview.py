@@ -544,7 +544,8 @@ class AppView:
         # debug.dlog(pformat(self.tree.numerical_summary(False if self.subnet_var.get() =='public-beta' else True)))
         self.numSummaryFrame.fill(
             self.treeframe.numerical_summary(
-                False if self.subnet_var.get() == "public-beta" else True
+                tglm=True if self.subnet_var.get() == "devnet-beta" else False
+                # False if self.subnet_var.get() == "public-beta" else True
             )
         )
 
