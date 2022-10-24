@@ -25,7 +25,7 @@ class OfferLookup:
 
     # _-_-_-_- __init__ _-_-_-_-
     def __init__(self):
-        self._session_id = "1"
+        self._session_id = "-1"
         self._con = None
 
     # _-_-_-_- __call __ _-_-_-_-
@@ -34,13 +34,20 @@ class OfferLookup:
         , return sqlite rows"""
         # print(f"[OfferLookup::__call__()] called with id {id_}")
         import os
-        os.environ['YAGNA_APPKEY']=appkey if appkey != "" else os.environ.get('YAGNA_APPKEY', "")
+
+        os.environ["YAGNA_APPKEY"] = (
+            appkey if appkey != "" else os.environ.get("YAGNA_APPKEY", "")
+        )
         rows = []
 
         if id_ != self._session_id:
             # scan offers anew
             try:
-                offers = await list_offers(subnet_tag, manual_probe, timeout=18 if subnet_tag == "hybrid-mainnet" else 8)  # this is the one
+                offers = await list_offers(
+                    subnet_tag,
+                    manual_probe,
+                    timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
+                )  # this is the one
                 # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid
@@ -73,6 +80,5 @@ class OfferLookup:
             cur.execute("PRAGMA foreign_keys=ON")
             debug.dlog(sql)
             rows = cur.execute(sql).fetchall()
-
         # rows = self._con.execute(sql).fetchall()
         return rows

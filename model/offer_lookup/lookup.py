@@ -9,6 +9,7 @@ import json
 import sys
 import pathlib
 import debug
+import sqlite3
 
 import importlib
 
@@ -33,7 +34,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-async def _list_offers(subnet_tag: str, timeout=8):
+async def _list_offers(subnet_tag: str, timeout="Infinity"):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
     pre: none
@@ -66,46 +67,35 @@ async def _list_offers(subnet_tag: str, timeout=8):
         offers = []
         offer_ids_seen = set()
         dupcount = 0
-        try:
-            async with market_api.subscribe(
-                dbuild.properties, dbuild.constraints
-            ) as subscription:
-                offer_d = dict()
-                ai = subscription.events().__aiter__()
-                timed_out = False
-                while not timed_out:
-                    offer_d.clear()
-                    try:
-                        event = await asyncio.wait_for(
-                            ai.__anext__(), timeout=timeout
-                        )  # <class 'yapapi.rest.market.OfferProposal'>
-                        offer_d["offer-id"] = event.id
-                        if offer_d["offer-id"] not in offer_ids_seen:
-                            offer_ids_seen.add(offer_d["offer-id"])
-                            offer_d["timestamp"] = datetime.now()  # note, naive
-                            offer_d["issuer-address"] = event.issuer
-                            offer_d["props"] = event.props  # dict
-                            offers.append(dict(offer_d))
-                            print(
-                                f"unfiltered offers collected so far on all {subnet_tag}:"
-                                f" {len(offers)}",
-                                end="\r",
-                            )
-                            # a dict copy, i.e. with a unique handle
-                        else:
-                            dupcount += 1
-                            debug.dlog(f"duplicate count: {dupcount}")
-                    except TimeoutError as e:
-                        timed_out = True
-                    except Exception as e:
-                        print(f"unhandled exception in lookup.py, marked timeout: {e}")
-                        timed_out = True
-            print("")
-            debug.dlog(f"number of offer_ids_seen: {len(offer_ids_seen)}")
-            return offers
-
-        except ya_market.exceptions.ApiException as e:
-            raise e
+        async with market_api.subscribe(
+            dbuild.properties, dbuild.constraints
+        ) as subscription:
+            offer_d = dict()
+            timeout_threshold_between_events = 2
+            time_start = datetime.now()
+            async for event in subscription.events():
+                offer_d.clear()
+                offer_d["offer-id"] = event.id
+                if offer_d["offer-id"] not in offer_ids_seen:
+                    offer_ids_seen.add(offer_d["offer-id"])
+                    offer_d["timestamp"] = datetime.now()  # note, naive
+                    offer_d["issuer-address"] = event.issuer
+                    offer_d["props"] = event.props  # dict
+                    offers.append(dict(offer_d))
+                    print(
+                        f"unfiltered offers collected so far on all {subnet_tag}:"
+                        f" {len(offers)}",
+                        end="\r",
+                    )
+                    # a dict copy, i.e. with a unique handle
+                else:
+                    dupcount += 1
+                    debug.dlog(f"duplicate count: {dupcount}")
+                if (
+                    datetime.now() - time_start
+                ).seconds > timeout_threshold_between_events:
+                    return offers
+        return offers
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
@@ -173,7 +163,9 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
     send_end.send(offers)
 
 
-async def list_offers(subnet_tag: str, manual_probing=False, timeout=8):
+async def list_offers(
+    subnet_tag: str, manual_probing=False, timeout=1
+):  # timeout not implemented yet
     """query stats api otherwise scan yagna for offers then
     debug.dlog("listoffers called")
     return offers as a list of dictionary objects"""
@@ -187,6 +179,63 @@ async def list_offers(subnet_tag: str, manual_probing=False, timeout=8):
     calls: _list_offers || _list_offers_on_stats
     raises: MissingConfiguration || ApiException || ClientConnectorError
     """
+
+    class DatetimeEncoder(json.JSONEncoder):
+        def default(self, o):
+            if isinstance(o, datetime):
+                return str(o)
+            return super(datetime, self).default(o)
+
+    def adapt_dictionary(python_dict):
+        import json
+
+        # return json.JSONEncoder().encode(python_dict)  # str
+        return DatetimeEncoder().encode(python_dict)  # str
+
+    def convert_dictionary(json_string_object):
+        import json
+
+        return json.JSONDecoder().decode(json_string_object, cls=DatetimeEncoder)
+
+    def create_memory_connection():
+        debug.dlog("CREATE")
+        sqlite3.register_converter("DICT", convert_dictionary)
+        sqlite3.register_adapter(dict, adapt_dictionary)
+        con = sqlite3.connect(
+            ":memory:", isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES
+        )
+        query = "CREATE TABLE offers_ (rowid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, issuer_address TEXT UNIQUE, full_record DICT)"
+        con.execute(query)
+        # query = "CREATE TABLE candidateOffers (rowid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, issuer_address TEXT UNIQUE, full_record DICT)"
+        # con.execute(query)
+        # query = "CREATE TABLE uniqueIssuers (rowid INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, issuer_address TEXT UNIQUE)"
+        # con.execute(query)
+
+        return con
+
+    # def add_candidateOffers(con, offers):
+    #     # drop the current table rows and insert new offers
+    #     query = "INSERT INTO offers (issuer_address, full_record) "
+
+    def replace_offer(con, issuer, offer):
+        query = "REPLACE INTO offers_ (issuer_address, full_record) VALUES (?, ?)"
+        cur = con.cursor()
+        cur.execute(query, (issuer, offer))
+
+    def count_records(con):
+        query = "SELECT COUNT(*) FROM offers_"
+        cur = con.cursor()
+        res = cur.execute(query)
+        row = res.fetchone()
+        return row[0]
+
+    def records_to_list(con):
+        offers = []
+        query = "SELECT full_record FROM offers_"
+        res = con.execute(query)
+        for row in res:
+            offers.append(row[0])
+
     offers = None
     fallback = False
 
@@ -209,32 +258,71 @@ async def list_offers(subnet_tag: str, manual_probing=False, timeout=8):
             fallback = True
 
     if (fallback or manual_probing) and yapapi_loader:
+        con = create_memory_connection()
+
+        now = datetime.now()
         offers = []
+        timed_out = False
+        timeout_threshold = 10
         if fallback:
             print(
                 "there was a problem connecting to stats, falling back to probing."
                 " this might take awhile"
             )
             debug.dlog("falling back to offer probe")
-        try:
-            offers = await _list_offers(subnet_tag, timeout)
-        except yapapi.rest.configuration.MissingConfiguration as e:
-            debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
-            raise e
-        except ya_market.exceptions.ApiException as e:
-            raise e
-        except aiohttp.client_exceptions.ClientConnectorError as e:
-            raise e
-        except Exception as e:
-            debug.dlog(e)
-            debug.dlog(type(e))
-            debug.dlog(e.__class__.__name__)
-    elif fallback:
-        print(
-            "there was a problem connecting to stats and fallback was not"
-            " available! make sure you are connected"
-            " to the internet. if so, stats may be unavailable."
-            " you can try running yagna to perform a manual probe."
-        )
-        offers = []
+        while not timed_out:
+            try:
+
+                # offers = await _list_offers(subnet_tag, timeout=2)
+                offers = await asyncio.wait_for(
+                    _list_offers(subnet_tag), timeout=float("inf")
+                )
+                # 10212022 make a new in memory database or new table and perform a union operation
+                # then compare count change, alternatively, compare and replace individually
+                count_previous = count_records(con)
+                for offer_dict in offers:
+                    unity = replace_offer(
+                        con, issuer=offer_dict["issuer-address"], offer=offer_dict
+                    )
+                count = count_records(con)
+                changed = count_previous - count
+                if changed == 0:
+                    timed_out = True
+                else:
+                    debug.dlog(f"\ncount: {count}, changed: {changed}\n")
+                # set_length_before_union = len(offers_set)
+                # from pprint import pprint
+
+                # pprint(offers[0])
+                # offers_set |= set(offers)
+                # print(f"length of offers_set: {len(offers_set)}", flush=True)
+                # if len(offers_set) != set_length_before_union:
+                #     now = datetime.now()
+                # else:
+                #     timed_out = True
+                # elapsed = (datetime.now() - now).seconds
+                # if elapsed > timeout_threshold:
+                #     timed_out = True
+            except yapapi.rest.configuration.MissingConfiguration as e:
+                debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
+                raise e
+            except ya_market.exceptions.ApiException as e:
+                raise e
+            except aiohttp.client_exceptions.ClientConnectorError as e:
+                raise e
+            except Exception as e:
+                debug.dlog(e)
+                debug.dlog(type(e))
+                debug.dlog(e.__class__.__name__)
+    # elif fallback:
+    #     print(
+    #         "there was a problem connecting to stats and fallback was not"
+    #         " available! make sure you are connected"
+    #         " to the internet. if so, stats may be unavailable."
+    #         " you can try running yagna to perform a manual probe."
+    #     )
+    #     offers = []
+
+    # here we can union sets of offers until so many offers come up empty (timeout)
+
     return offers
