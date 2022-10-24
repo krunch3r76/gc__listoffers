@@ -34,7 +34,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-async def _list_offers(subnet_tag: str, timeout="Infinity"):
+async def _list_offers(subnet_tag: str, timeout=None, offers=None):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
     pre: none
@@ -64,7 +64,8 @@ async def _list_offers(subnet_tag: str, timeout="Infinity"):
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
         await dbuild.decorate(MyPayload())
         debug.dlog(dbuild)
-        offers = []
+        offers.clear()
+        # offers = []
         offer_ids_seen = set()
         dupcount = 0
         async with market_api.subscribe(
@@ -91,11 +92,10 @@ async def _list_offers(subnet_tag: str, timeout="Infinity"):
                 else:
                     dupcount += 1
                     debug.dlog(f"duplicate count: {dupcount}")
-                if (
-                    datetime.now() - time_start
-                ).seconds > timeout_threshold_between_events:
-                    return offers
-        return offers
+                # if (
+                #     datetime.now() - time_start
+                # ).seconds > timeout_threshold_between_events:
+                #     return offers
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
@@ -272,10 +272,10 @@ async def list_offers(
             debug.dlog("falling back to offer probe")
         while not timed_out:
             try:
-
+                offers = []
                 # offers = await _list_offers(subnet_tag, timeout=2)
-                offers = await asyncio.wait_for(
-                    _list_offers(subnet_tag), timeout=float("inf")
+                await asyncio.wait_for(
+                    _list_offers(subnet_tag, offers=offers), timeout=180
                 )
                 # 10212022 make a new in memory database or new table and perform a union operation
                 # then compare count change, alternatively, compare and replace individually
@@ -310,6 +310,12 @@ async def list_offers(
                 raise e
             except aiohttp.client_exceptions.ClientConnectorError as e:
                 raise e
+            except asyncio.TimeoutError:
+                for offer_dict in offers:
+                    unity = replace_offer(
+                        con, issuer=offer_dict["issuer-address"], offer=offer_dict
+                    )
+                timed_out = True
             except Exception as e:
                 debug.dlog(e)
                 debug.dlog(type(e))
