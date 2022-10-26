@@ -35,6 +35,7 @@ class OfferLookup:
         # print(f"[OfferLookup::__call__()] called with id {id_}")
         import os
 
+        offers = []
         os.environ["YAGNA_APPKEY"] = (
             appkey if appkey != "" else os.environ.get("YAGNA_APPKEY", "")
         )
@@ -43,11 +44,17 @@ class OfferLookup:
         if id_ != self._session_id:
             # scan offers anew
             try:
-                offers = await list_offers(
+                async for offers_sub in list_offers(
                     subnet_tag,
                     manual_probe,
                     timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
-                )  # this is the one
+                ):
+                    offers.extend(offers_sub)
+                # offers = await list_offers(
+                #     subnet_tag,
+                #     manual_probe,
+                #     timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
+                # )  # this is the one
                 # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid
@@ -63,7 +70,7 @@ class OfferLookup:
                 if offers != None:  # kludge
                     if len(offers) > 0:
                         debug.dlog(
-                            f"outputting first offer returned by"
+                            f"outputting first offer of type {type(offers[0])} returned by"
                             + f"list_offers routine: {offers[0]}",
                             2,
                         )

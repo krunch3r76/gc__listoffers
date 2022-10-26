@@ -85,9 +85,13 @@ async def _list_offers(subnet_tag: str, timeout=None, offers=None):
                     offers.append(dict(offer_d))
                     print(
                         f"unfiltered offers collected so far on all {subnet_tag}:"
-                        f" {len(offers)}",
+                        f" {len(offers)}, \t\t\ttime: {(datetime.now() - time_start).seconds}",
                         end="\r",
                     )
+                    if (
+                        datetime.now() - time_start
+                    ).seconds > timeout_threshold_between_events:
+                        break
                     # a dict copy, i.e. with a unique handle
                 else:
                     dupcount += 1
@@ -187,20 +191,27 @@ async def list_offers(
             return super(datetime, self).default(o)
 
     def adapt_dictionary(python_dict):
+        # convert to json string
         import json
 
         # return json.JSONEncoder().encode(python_dict)  # str
-        return DatetimeEncoder().encode(python_dict)  # str
+        return DatetimeEncoder().encode(python_dict)
+        # return json.dumps(python_dict)  # str
 
-    def convert_dictionary(json_string_object):
+    def convert_dictionary(json_object):
+        # convert to python type
+        # str -> dict
         import json
 
-        return json.JSONDecoder().decode(json_string_object, cls=DatetimeEncoder)
+        rv = json.loads(json_object)
+        # rv = json.JSONDecoder().decode(json_object_as_string)
+        return rv
 
     def create_memory_connection():
         debug.dlog("CREATE")
         sqlite3.register_converter("DICT", convert_dictionary)
         sqlite3.register_adapter(dict, adapt_dictionary)
+
         con = sqlite3.connect(
             ":memory:", isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES
         )
@@ -234,7 +245,9 @@ async def list_offers(
         query = "SELECT full_record FROM offers_"
         res = con.execute(query)
         for row in res:
+            # debug.dlog(type(row[0]))
             offers.append(row[0])
+        return offers
 
     offers = None
     fallback = False
@@ -256,6 +269,8 @@ async def list_offers(
 
         if len(offers) > 0 and offers[0] == "error":  # review TODO
             fallback = True
+        else:
+            yield offers
 
     if (fallback or manual_probing) and yapapi_loader:
         con = create_memory_connection()
@@ -285,11 +300,11 @@ async def list_offers(
                         con, issuer=offer_dict["issuer-address"], offer=offer_dict
                     )
                 count = count_records(con)
-                changed = count_previous - count
-                if changed == 0:
+                changed = count - count_previous
+                debug.dlog(f"count: {count}, changed: {changed}")
+                if count > 0 and changed == 0 or (datetime.now() - now).seconds > 120:
                     timed_out = True
-                else:
-                    debug.dlog(f"\ncount: {count}, changed: {changed}\n")
+                    yield records_to_list(con)
                 # set_length_before_union = len(offers_set)
                 # from pprint import pprint
 
@@ -316,6 +331,7 @@ async def list_offers(
                         con, issuer=offer_dict["issuer-address"], offer=offer_dict
                     )
                 timed_out = True
+                yield records_to_list(con)
             except Exception as e:
                 debug.dlog(e)
                 debug.dlog(type(e))
@@ -331,4 +347,4 @@ async def list_offers(
 
     # here we can union sets of offers until so many offers come up empty (timeout)
 
-    return offers
+    # return offers
