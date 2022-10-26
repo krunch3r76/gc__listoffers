@@ -34,7 +34,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-async def _list_offers(subnet_tag: str, timeout=None, offers=None):
+async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
     pre: none
@@ -64,7 +64,7 @@ async def _list_offers(subnet_tag: str, timeout=None, offers=None):
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
         await dbuild.decorate(MyPayload())
         debug.dlog(dbuild)
-        offers.clear()
+        # offers.clear()
         # offers = []
         offer_ids_seen = set()
         dupcount = 0
@@ -82,12 +82,12 @@ async def _list_offers(subnet_tag: str, timeout=None, offers=None):
                     offer_d["timestamp"] = datetime.now()  # note, naive
                     offer_d["issuer-address"] = event.issuer
                     offer_d["props"] = event.props  # dict
-                    offers.append(dict(offer_d))
-                    print(
-                        f"unfiltered offers collected so far on all {subnet_tag}:"
-                        f" {len(offers)}, \t\t\ttime: {(datetime.now() - time_start).seconds}",
-                        end="\r",
-                    )
+                    on_offer(dict(offer_d))
+                    # print(
+                    #     f"unfiltered offers collected so far on all {subnet_tag}:"
+                    #     f" {len(offers)}, \t\t\ttime: {(datetime.now() - time_start).seconds}",
+                    #     end="\r",
+                    # )
                     if (
                         datetime.now() - time_start
                     ).seconds > timeout_threshold_between_events:
@@ -290,7 +290,8 @@ async def list_offers(
                 offers = []
                 # offers = await _list_offers(subnet_tag, timeout=2)
                 await asyncio.wait_for(
-                    _list_offers(subnet_tag, offers=offers), timeout=180
+                    _list_offers(subnet_tag, on_offer=lambda o: offers.append(o)),
+                    timeout=180,
                 )
                 # 10212022 make a new in memory database or new table and perform a union operation
                 # then compare count change, alternatively, compare and replace individually
