@@ -21,9 +21,11 @@ class LocalConnection:  # later make subclass of abstract
         to the handler and send result signal back to view"""
         # print(f"[LocalConnection] handling signal {signal}")
         results_l = await self.signal_cb(
-            signal["id"], signal["msg"]["subnet-tag"], signal["msg"]["sql"],
+            signal["id"],
+            signal["msg"]["subnet-tag"],
+            signal["msg"]["sql"],
             signal["msg"].get("manual-probe", False),
-            signal["msg"].get("appkey", "")
+            signal["msg"].get("appkey", ""),
         )  # signal from view
 
         if results_l and len(results_l) > 0:
@@ -40,6 +42,9 @@ class LocalConnection:  # later make subclass of abstract
                     f"got a result back from the callback"
                     + " and placing in queue to view!"
                 )
+                from pprint import pformat
+
+                debug.dlog(f"first result: {pformat(results_l[0])}")
                 # revise callback, results should contain the id,
                 # as is the case with the remote server TODO
                 msg_out = {"id": signal["id"], "msg": results_l}

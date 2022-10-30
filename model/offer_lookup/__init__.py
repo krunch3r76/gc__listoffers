@@ -45,17 +45,11 @@ class OfferLookup:
             # scan offers anew
             try:
                 async for offers_sub in list_offers(
-                    subnet_tag,
-                    manual_probe,
-                    timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
+                    event_timeout=5,
+                    subnet_tag=subnet_tag,
+                    manual_probing=manual_probe,
                 ):
                     offers.extend(offers_sub)
-                # offers = await list_offers(
-                #     subnet_tag,
-                #     manual_probe,
-                #     timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
-                # )  # this is the one
-                # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid
                 # application key
@@ -68,10 +62,13 @@ class OfferLookup:
                 print(f"unhandled exception {e}")
             else:
                 if offers != None:  # kludge
+                    from pprint import pformat
+
                     if len(offers) > 0:
                         debug.dlog(
-                            f"outputting first offer of type {type(offers[0])} returned by"
-                            + f"list_offers routine: {offers[0]}",
+                            f"outputting first two offers of type {type(offers[0])} returned by"
+                            + f"list_offers routine: {pformat(offers[0])}"
+                            + f"\n{pformat(offers[1])}",
                             2,
                         )
 

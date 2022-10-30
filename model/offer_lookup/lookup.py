@@ -34,7 +34,7 @@ examples_dir = pathlib.Path(__file__).resolve().parent.parent
 sys.path.append(str(examples_dir))
 
 
-async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
+async def _list_offers(subnet_tag: str, event_timeout, on_offer=None):
     """interact with the yagna daemon to query for offers and return a
     list of dictionary objects describing them
     pre: none
@@ -64,42 +64,31 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
         await dbuild.decorate(MyPayload())
         debug.dlog(dbuild)
-        # offers.clear()
-        # offers = []
         offer_ids_seen = set()
+        issuers_seen = set()
         dupcount = 0
         async with market_api.subscribe(
             dbuild.properties, dbuild.constraints
         ) as subscription:
             offer_d = dict()
-            timeout_threshold_between_events = 2
             time_start = datetime.now()
             async for event in subscription.events():
                 offer_d.clear()
                 offer_d["offer-id"] = event.id
-                if offer_d["offer-id"] not in offer_ids_seen:
-                    offer_ids_seen.add(offer_d["offer-id"])
+                if event.issuer not in issuers_seen:
+                    # if offer_d["offer-id"] not in offer_ids_seen:
+                    # offer_ids_seen.add(offer_d["offer-id"])
+                    issuers_seen.add(event.issuer)
                     offer_d["timestamp"] = datetime.now()  # note, naive
                     offer_d["issuer-address"] = event.issuer
                     offer_d["props"] = event.props  # dict
                     on_offer(dict(offer_d))
-                    # print(
-                    #     f"unfiltered offers collected so far on all {subnet_tag}:"
-                    #     f" {len(offers)}, \t\t\ttime: {(datetime.now() - time_start).seconds}",
-                    #     end="\r",
-                    # )
-                    if (
-                        datetime.now() - time_start
-                    ).seconds > timeout_threshold_between_events:
-                        break
-                    # a dict copy, i.e. with a unique handle
                 else:
+                    if (datetime.now() - time_start).seconds > event_timeout:
+                        break
                     dupcount += 1
-                    debug.dlog(f"duplicate count: {dupcount}")
-                # if (
-                #     datetime.now() - time_start
-                # ).seconds > timeout_threshold_between_events:
-                #     return offers
+                    # debug.dlog(f"duplicate count: {dupcount}")
+                # await asyncio.sleep(0.1)
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
@@ -168,7 +157,7 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
 
 
 async def list_offers(
-    subnet_tag: str, manual_probing=False, timeout=1
+    subnet_tag: str, event_timeout, manual_probing=False, on_offer=None
 ):  # timeout not implemented yet
     """query stats api otherwise scan yagna for offers then
     debug.dlog("listoffers called")
@@ -208,7 +197,6 @@ async def list_offers(
         return rv
 
     def create_memory_connection():
-        debug.dlog("CREATE")
         sqlite3.register_converter("DICT", convert_dictionary)
         sqlite3.register_adapter(dict, adapt_dictionary)
 
@@ -245,7 +233,6 @@ async def list_offers(
         query = "SELECT full_record FROM offers_"
         res = con.execute(query)
         for row in res:
-            # debug.dlog(type(row[0]))
             offers.append(row[0])
         return offers
 
@@ -275,24 +262,34 @@ async def list_offers(
     if (fallback or manual_probing) and yapapi_loader:
         con = create_memory_connection()
 
-        now = datetime.now()
+        start_time = datetime.now()
         offers = []
         timed_out = False
-        timeout_threshold = 10
+        timeout_threshold = 60
         if fallback:
             print(
                 "there was a problem connecting to stats, falling back to probing."
                 " this might take awhile"
             )
             debug.dlog("falling back to offer probe")
+        TIMEOUT = 180
         while not timed_out:
             try:
                 offers = []
-                # offers = await _list_offers(subnet_tag, timeout=2)
-                await asyncio.wait_for(
-                    _list_offers(subnet_tag, on_offer=lambda o: offers.append(o)),
-                    timeout=180,
-                )
+                try:
+                    await asyncio.wait_for(
+                        _list_offers(
+                            subnet_tag,
+                            on_offer=lambda o: offers.append(o)
+                            if on_offer == None
+                            else on_offer,
+                            event_timeout=event_timeout,
+                        ),
+                        timeout=180,
+                    )
+                except asyncio.TimeoutError:
+                    debug.dlog("TIMEOUT")
+                # print(".", end="", flush=True)
                 # 10212022 make a new in memory database or new table and perform a union operation
                 # then compare count change, alternatively, compare and replace individually
                 count_previous = count_records(con)
@@ -303,22 +300,18 @@ async def list_offers(
                 count = count_records(con)
                 changed = count - count_previous
                 debug.dlog(f"count: {count}, changed: {changed}")
-                if count > 0 and changed == 0 or (datetime.now() - now).seconds > 120:
+
+                if (
+                    count > 0
+                    and changed == 0
+                    or (datetime.now() - start_time).seconds > TIMEOUT
+                ):
                     timed_out = True
                     yield records_to_list(con)
-                # set_length_before_union = len(offers_set)
-                # from pprint import pprint
-
-                # pprint(offers[0])
-                # offers_set |= set(offers)
-                # print(f"length of offers_set: {len(offers_set)}", flush=True)
-                # if len(offers_set) != set_length_before_union:
-                #     now = datetime.now()
-                # else:
-                #     timed_out = True
-                # elapsed = (datetime.now() - now).seconds
-                # if elapsed > timeout_threshold:
-                #     timed_out = True
+                else:
+                    if timeout_threshold < TIMEOUT:
+                        timeout_threshold += 60
+                    pass
             except yapapi.rest.configuration.MissingConfiguration as e:
                 debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
                 raise e
