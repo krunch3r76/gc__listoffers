@@ -23,7 +23,7 @@ this video demos basic functionality
 (gc_listoffers)$ git fetch
 From github.com:krunch3r76/gc__listoffers
    d87b579..01f72be  master     -> origin/master
- * [new tag]         v0.8.0     -> v0.8.0
+ * [new tag]         v0.8.1     -> v0.8.1
 ```
 
 # upgrade installation to latest tag, wiping current installation
@@ -32,7 +32,7 @@ From github.com:krunch3r76/gc__listoffers
 (gc__listoffers)$ git reset --hard HEAD
 (gc__listoffers)$ git pull
 (gc__listoffers)$ git clean -dfx
-(gc__listoffers)$ git checkout v0.8.0
+(gc__listoffers)$ git checkout v0.8.1
 ```
 # usage
 ## ensure python3-tk is installed
@@ -43,7 +43,7 @@ From github.com:krunch3r76/gc__listoffers
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-./gc__listoffers$ git checkout v0.8.0
+./gc__listoffers$ git checkout v0.8.1
 ./gc__listoffers$ python3 gc__listoffers.py
 ```
 On Windows:
