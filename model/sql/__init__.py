@@ -146,7 +146,7 @@ def build_database(con, offers):
         _insert_record(
             "com.payment.debit-notes",
             "accept_timeout",
-            offer["props"]["golem.com.payment.debit-notes.accept-timeout?"],
+            offer["props"].get("golem.com.payment.debit-notes.accept-timeout?", ""),
         )
 
         # com.payment.platform
