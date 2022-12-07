@@ -22,9 +22,9 @@ class RefreshFrame:
             # create publicbeta_rb
             self.publicbeta_rb = ttk.Radiobutton(
                 self.w,
-                text="public-beta",
+                text="public",
                 variable=self.master.subnet_var,
-                value="public-beta",
+                value="public",
                 command=self.master._refresh_cmd,
             )
 
@@ -62,7 +62,7 @@ class RefreshFrame:
 
             # grid components
             self.publicbeta_rb.grid(column=0, row=0, sticky="w")
-            self.publicdevnet_rb.grid(column=1, row=0, sticky="w")
+            # self.publicdevnet_rb.grid(column=1, row=0, sticky="w")
             self.other_rb.grid(column=0, row=1, sticky="w")
             self.other_entry.grid(column=1, row=1, sticky="w")
 

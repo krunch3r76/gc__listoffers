@@ -208,8 +208,8 @@ class AppView:
         treeframe.grid(column=0, row=0, sticky="news")
         # /treeframe
 
-        self.subnet_var.set("public-beta")
-        self.other_entry_var.set("hybrid-mainnet")
+        self.subnet_var.set("public")
+        self.other_entry_var.set("")
         self.other_entry_var.trace_add("write", self._on_other_entry_change)
 
         #################################################
@@ -318,7 +318,7 @@ class AppView:
         self.feature_entryframe.grid(column=3, row=0, sticky="e", padx=10)
 
         filterframe["borderwidth"] = 2
-        #filterframe['relief']='ridge'
+        # filterframe['relief']='ridge'
         filterframe.grid(row=0, column=1, sticky="wnes")
         # //filterframe
 
@@ -345,28 +345,33 @@ class AppView:
         subbaseframe.grid(row=3, column=0, sticky="we")
         # /subbaseframe
 
-
         #########################################################
         # probeframe                                            #
         #########################################################
         self.probeframe = ProbeFrame(root)
-        probeframe=self.probeframe
+        probeframe = self.probeframe
         probeframe.rowconfigure(0, weight=0)
         probeframe.columnconfigure(0, weight=1)
         probeframe.grid(row=4, column=0, sticky="w")
-        probeframe.configure(padding=(5,0,0,0))
-        probeframe.entry.configure(show='*')
+        probeframe.configure(padding=(5, 0, 0, 0))
+        probeframe.entry.configure(show="*")
         import os
-        probeframe.apikey_var.set(os.environ.get('YAGNA_APPKEY', ''))
+
+        probeframe.apikey_var.set(os.environ.get("YAGNA_APPKEY", ""))
         # self.root.bind("<<OutFocused Manual Probe>>", self._debug1)
         # self.root.bind("<<OutFocused Manual Probe>>", lambda e: print(probeframe.apikey_var.get()))
-        self.root.bind("<<OutFocused Manual Probe>>", lambda e: os.environ.update( {'YAGNA_APPKEY':probeframe.apikey_var.get()}))
+        self.root.bind(
+            "<<OutFocused Manual Probe>>",
+            lambda e: os.environ.update({"YAGNA_APPKEY": probeframe.apikey_var.get()}),
+        )
         # self.root.bind("<<OutFocused Manual Probe>>", lambda e: os.environ['YAGNA_APPKEY']=probeframe.apikey_var.get())
-        #print(os.environ.get('YAGNA_APPKEY', ""))
+        # print(os.environ.get('YAGNA_APPKEY', ""))
 
         # /probeFrame
         self.manual_probe_cb = probeframe.checkbutton
         self.cbv_manual_probe = probeframe.check_var
+        # kludge mandating manual probing
+        self.cbv_manual_probe.set(1)
 
         root.bind("<Escape>", self.on_escape_event)
 
@@ -379,7 +384,7 @@ class AppView:
     #                           __call__                                     <
 
     def _debug1(self, event):
-        os.environ['YAGNA_APPKEY']=self.probeframe.apikey_var.get()
+        os.environ["YAGNA_APPKEY"] = self.probeframe.apikey_var.get()
         # print(self.probeframe.apikey_var.get())
         # print(os.environ['YAGNA_APPKEY'])
 
@@ -536,7 +541,8 @@ class AppView:
         # query tree for glm and tglm counts
 
         glmcounts = self.treeframe.glmcounts(
-            reverse=False if self.subnet_var.get() == "public-beta" else True
+            reverse=True
+            # reverse=False if self.subnet_var.get() == "public-beta" else True
         )
 
         self.count_frame.update_counts(str(current_resultcount), *glmcounts, "")
@@ -544,7 +550,9 @@ class AppView:
         # debug.dlog(pformat(self.tree.numerical_summary(False if self.subnet_var.get() =='public-beta' else True)))
         self.numSummaryFrame.fill(
             self.treeframe.numerical_summary(
-                tglm=True if self.subnet_var.get() == "devnet-beta" else False
+                tglm=True
+                if self.subnet_var.get() == "devnet-beta"
+                else False
                 # False if self.subnet_var.get() == "public-beta" else True
             )
         )
@@ -632,9 +640,10 @@ class AppView:
                 "subnet-tag": self.subnet_var.get(),
                 "sql": ss,
                 "manual-probe": self.cbv_manual_probe.get(),
-                "appkey": os.environ.get('YAGNA_APPKEY', "")
+                "appkey": os.environ.get("YAGNA_APPKEY", ""),
             },
         }
+        debug.dlog(msg_out)
         self.q_out.put_nowait(msg_out)
 
         # wait on reply
