@@ -23,7 +23,7 @@ this video demos basic functionality
 (gc_listoffers)$ git fetch
 From github.com:krunch3r76/gc__listoffers
    d87b579..01f72be  master     -> origin/master
- * [new tag]         v0.8.1     -> v0.8.1
+ * [new tag]         v0.9.0     -> v0.9.0
 ```
 
 # upgrade installation to latest tag, wiping current installation
@@ -32,7 +32,7 @@ From github.com:krunch3r76/gc__listoffers
 (gc__listoffers)$ git reset --hard HEAD
 (gc__listoffers)$ git pull
 (gc__listoffers)$ git clean -dfx
-(gc__listoffers)$ git checkout v0.8.1
+(gc__listoffers)$ git checkout v0.9.0
 ```
 # usage
 ## ensure python3-tk is installed
@@ -43,7 +43,7 @@ From github.com:krunch3r76/gc__listoffers
 ```bash
 $ git clone https://github.com/krunch3r76/gc__listoffers.git
 $ cd gc__listoffers
-./gc__listoffers$ git checkout v0.8.1
+./gc__listoffers$ git checkout v0.9.0
 ./gc__listoffers$ python3 gc__listoffers.py
 ```
 On Windows:
@@ -57,17 +57,17 @@ if name or address headings are clicked on, sorting is strictly on either of the
 
 # requirements
 
-for systems that do not allow https outbound connection, either yagna or golemsp must be running and the app-key should be in the environment (see section on app-key for details)
+yapapi
+either yagna or golemsp must be running
+the app-key should be in the environment (see section on app-key for details)
 
 _python should have been compiled with Tcl support_. this is the default on Windows. this is available as a package on ubuntu. see below. 
-
-**if https connections are not allowed on your machine, it is necessary to be running yagna or golemsp, see the advanced section for this**
 
 
 ## usage tips
 touch the radio button pertaining to the subnet of interest
 
-offer scanning can take up to a minute, please be patient, maybe try your hand at a picasso replica
+offer scanning can take up to a few minutes, please be patient, maybe try your hand at a picasso replica
 
 check the boxes to set upper limits on cpu time and env time. go to https://stats.golem.network and use the median values for cpu and env time as a starting point
 
@@ -77,10 +77,30 @@ the total number of offers is listed in large digits near the right
 
 see offer details via the contextual menu system!
 
+red nodes are nodes on the tglm payment network (testing payment network)
 
 
-# advanced
+## what is an app key?
+an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers and looking up the pertinent name:
+```bash
+$ yagna app-key list --json
+[
+  {
+    "created": "2022-11-29T07:31:46.995858851",
+    "id": "0x19ca46449dd7a8a4acf91313c8641981ca65b6f0",
+    "key": "66f80425db2b48fabe8cf11e27377dc4",
+    "name": "golem-cli",
+    "role": "manager"
+  }
+]
+$ export YAGNA_APPKEY=66f80425db2b48fabe8cf11e27377dc4# use your key not mine
+$ python3 ./gc__listoffers.py
+```
+follow a similar logic for Windows
+
+# advanced (TEMPORARILY NON-APPLICABLE)
 ### starting for remote interaction (for systems without internet connectivity besides containerized golem)
+**REMOTE INTERACTION IS BROKEN, IT WILL BE FIXED SOON**
 ```bash
 # on the machine running yagna/golemsp, e.g. in docker, wsl, vmware
 $ export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an app key?" below on getting it 
@@ -88,32 +108,6 @@ $ export YAGNA_APPKEY=<appkey> # if not already done. see section "what is an ap
 
 # on the remote machine (Windows okay)
 (client) ./gc__listoffers $ python3 gc__listoffers.py client <ip-address-of-server> 8000
-```
-
-## what is an app key?
-an app key is what requestors use to run requests. to find and set your app key before running gc__listoffers and looking up the pertinent name:
-```bash
-$ yagna app-key list --json
-{
-  "headers": [
-    "name",
-    "key", # this tells you that the key comes at the 2nd position in valeues <see below>
-    "id",
-    "role",
-    "created"
-  ],
-  "values": [
-    [
-      "golem-cli",
-      "591184ff4e7d495aa32ce16c0c72228a", # this is the app key when golemsp is running
-      "0xe50dd37bbd930b1bb860010385056ee016b392c3",
-      "manager",
-      "2021-11-13T01:36:34.907106973"
-    ]
-  ]
-}
-$ export YAGNA_APPKEY=591184ff4e7d495aa32ce16c0c72228a # use your key not mine
-$ python3 ./gc__listoffers.py
 ```
 
 # TODO
