@@ -54,6 +54,21 @@ class Application(tk.Tk):
                         sampleNT = SelectionRecord(
                             **dict(sample)
                         )  # enforce model and controller agree
+                        import datetime
+
+                        print(
+                            datetime.datetime.fromtimestamp(
+                                sampleNT.most_recent_timestamp
+                            )
+                        )
+                        # dt = datetime.datetime.fromisoformat(
+                        #     sampleNT.most_recent_timestamp
+                        # )
+                        # dt_local = dt.fromtimestamp(dt.timestamp())
+                        # print(dt.isoformat(), dt.timestamp(), dt_local)
+                        # print(
+                        #     f"{type(sampleNT.most_recent_timestamp)}: {sampleNT.most_recent_timestamp}\ttoken kind: {sampleNT.token_kind}"
+                        # )
                     except:
                         pass
                     else:
@@ -83,7 +98,7 @@ class Application(tk.Tk):
             self.subnetSelected = subnetOtherTyped
         else:
             self.subnetSelected = radio_label
-            print("refreshing")
+            print(f"refreshing {self.subnetSelected}")
             self.lookup_offers()
 
     def __init__(self, *args, **kwargs):

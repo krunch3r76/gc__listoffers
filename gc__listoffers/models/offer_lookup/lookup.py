@@ -161,7 +161,10 @@ def _list_offers_on_stats(send_end, subnet_tag: str):
                 props["golem.runtime.name"] == "vm"
                 and props["golem.node.debug.subnet"] == subnet_tag
             ):
-                offer_d["timestamp"] = datetime.fromisoformat(result["updated_at"])
+                # offer_d["timestamp"] = datetime.fromisoformat(result["updated_at"])
+                offer_d["timestamp"] = datetime.fromisoformat(
+                    result["updated_at"]
+                ).timestamp()
                 offer_d["offer-id"] = 0
                 offer_d["issuer-address"] = result["node_id"]
                 offer_d["props"] = props
