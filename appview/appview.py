@@ -511,6 +511,7 @@ class AppView:
                     "filtered_features",
                     "mem",
                     "storage",
+                    "ispublic",
                 ],
             )
             resultsNT = ResultsNT(*result)
@@ -533,6 +534,7 @@ class AppView:
                     resultsNT.mem,  # 11
                     resultsNT.storage,  # 12
                     resultsNT.modelfreq,  # 13
+                    resultsNT.ispublic,
                 ),
                 currency_unit=currency_unit,
             )
@@ -794,15 +796,16 @@ select 'node.id'.offerRowID
         """
 
         ss += f""",(
-                SELECT json_group_array(value) FROM
-                ( SELECT value FROM json_each('inf.cpu'.[capabilities])
-                WHERE json_each.value LIKE '%{feature_filter}%' )
-                ) AS filteredFeatures
+SELECT json_group_array(value) FROM
+( SELECT value FROM json_each('inf.cpu'.[capabilities])
+WHERE json_each.value LIKE '%{feature_filter}%' )
+) AS filteredFeatures
         """
 
         ss += f"""
 , ROUND('inf.mem'.gib,2)
 , ROUND('inf.storage'.gib,2)
+, 'node.net'.ispublic
 """
         ss = (
             ss + " FROM 'node.id'"
@@ -813,6 +816,7 @@ select 'node.id'.offerRowID
             " JOIN 'com.payment.platform' USING (offerRowID)"
             " JOIN 'inf.mem' USING (offerRowID)"
             " JOIN 'inf.storage' USING (offerRowID)"
+            " JOIN 'node.net' USING (offerRowID)"
             " WHERE 'runtime'.name = 'vm'"
         )
 

@@ -97,6 +97,7 @@ def create_database():
     execute_create("inf.storage", ["gib FLOAT"])
     execute_create("node.debug", ["subnet TEXT"])
     execute_create("node.id", ["name TEXT"])
+    execute_create("node.net", ["ispublic INTEGER DEFAULT 0"])
     execute_create(
         "runtime", ["name TEXT", "version TEXT", 'capabilities DEFAULT "[]"']
     )
@@ -219,6 +220,13 @@ def build_database(con, offers):
         # node.id
         _insert_record("node.id", "name", props["golem.node.id.name"])
 
+        # node.net
+
+        _insert_record(
+            "node.net",
+            "ispublic",
+            0 if props["golem.node.net.is-public"] == False else True,
+        )
         # runtime
         _insert_record(
             "runtime",

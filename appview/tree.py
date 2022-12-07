@@ -16,7 +16,9 @@ PricingQuintiles = namedtuple("PricingQuintiles", ["cpu", "env", "start"])
 PricingSummaries = namedtuple("PricingStats", ["cpu", "env", "start"])
 
 from pathlib import Path
+
 projectdir = Path(__file__).parent.parent
+
 
 @dataclass
 class Pricing:
@@ -113,7 +115,8 @@ class TreeFrame(ttk.Frame):
         features = 10
         mem = 11
         storage = 12
-        freq=13
+        freq = 13
+        ispublic = 14
 
     class StateHolder:
         __swapping = False
@@ -184,7 +187,8 @@ class TreeFrame(ttk.Frame):
         "features",  # 10
         "mem",  # 11
         "storage",  # 12
-        "frequency", #13
+        "frequency",  # 13
+        "public",  # 14
     )
 
     _kheadings_sql_paths = (
@@ -201,11 +205,12 @@ class TreeFrame(ttk.Frame):
         "filteredFeatures",
         "'inf.mem'.gib",
         "'inf.storage'.gib",
-        "freq"
+        "freq",
+        "'node.net'.ispublic",
     )
 
     _heading_map = [num for num in range(len(_kheadings))]
-    _heading_map = [0,1,2,3,4,5,6,7,13,8,9,10,11,12,]
+    _heading_map = [0, 1, 2, 3, 4, 5, 6, 7, 13, 8, 9, 10, 11, 12, 14]
     # e.g. (0, 1, 2, ...)
     _kheadings_init = tuple(
         [str(num) for num in range(len(_kheadings))]
@@ -404,8 +409,8 @@ class TreeFrame(ttk.Frame):
         # deprecated kludge, need to redraw headings to enforce initial widths...
         # self.grid_remove()
         # self._ctx.treeframe.grid_remove()
-        #self.tree.tag_configure('ci', image=self.cpuimg)
-        #self.tree.column("#0", tags=('ci'))
+        # self.tree.tag_configure('ci', image=self.cpuimg)
+        # self.tree.column("#0", tags=('ci'))
         self.tree.heading("#0", image=self.cpuimg)
         for offset, heading_index in enumerate(self._heading_map):
             map_heading_from_kheadings(offset, heading_index)
@@ -568,14 +573,16 @@ class TreeFrame(ttk.Frame):
         # TODO: consider retaining named tuple form as input
         # or use TreeFrame.Field somehow from appview
         value_list = list(kwargs["values"])
-        node_address = value_list[TreeFrame.Field.address] # warning, Field.address not fixed
+        node_address = value_list[
+            TreeFrame.Field.address
+        ]  # warning, Field.address not fixed
         value_list[TreeFrame.Field.address] = value_list[TreeFrame.Field.address][:9]
         currency_unit = kwargs["currency_unit"]
-        modelname=value_list[9]
-        modelfreq=value_list[13]
+        modelname = value_list[9]
+        modelfreq = value_list[13]
         map_new = []
         for i, v in enumerate(value_list):
-            if i==13 and v=='':
+            if i == 13 and v == "":
                 map_new.append(value_list[9])
             else:
                 map_new.append(v)
@@ -592,18 +599,22 @@ class TreeFrame(ttk.Frame):
             self._pricingTglmIntermediate.append(pricingData)
             tags = ("tglm",)
 
+        if value_list[TreeFrame.Field.ispublic] == 1:
+            value_list[TreeFrame.Field.ispublic] = "Y"
+        else:
+            value_list[TreeFrame.Field.ispublic] = ""
+
         inserted = self.tree.insert(
             "",
             "end",
             values=self._values_reordered(value_list),
             iid=node_address,
             tags=tags,
-            image='' if modelname == '' else self.cpuimg,
+            image="" if modelname == "" else self.cpuimg,
         )
         # debug.dlog(kwargs)
         # item_inserted = self.tree.item(inserted)
         # item_inserted['image']=self.cpuimg
-
 
     def get_heading(self, index):
         """return the heading name currently at the specified index"""

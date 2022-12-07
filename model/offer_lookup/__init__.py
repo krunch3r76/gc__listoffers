@@ -47,7 +47,7 @@ class OfferLookup:
                 async for offers_sub in list_offers(
                     subnet_tag,
                     manual_probe,
-                    timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
+                    timeout=8,
                 ):
                     offers.extend(offers_sub)
                 # offers = await list_offers(
