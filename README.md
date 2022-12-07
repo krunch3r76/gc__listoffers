@@ -56,7 +56,7 @@ REM clone as above (or double click from explorer)
 if name or address headings are clicked on, sorting is strictly on either of these. however, if you click any of the other columns, sorting occurs from left to right, first sorting on the far left, then next level on the right, and so on.
 
 # requirements
-
+yagna or golemsp version v0.12.0++ (beginning with Marble Castle)
 yapapi
 either yagna or golemsp must be running
 the app-key should be in the environment (see section on app-key for details)
