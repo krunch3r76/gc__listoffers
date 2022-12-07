@@ -541,7 +541,7 @@ class AppView:
         # query tree for glm and tglm counts
 
         glmcounts = self.treeframe.glmcounts(
-            reverse=True
+            reverse=False
             # reverse=False if self.subnet_var.get() == "public-beta" else True
         )
 

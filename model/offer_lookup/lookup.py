@@ -69,14 +69,9 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
         dupcount = 0
         from pprint import pprint
 
-        mgr = market_api.subscribe(dbuild.properties, dbuild.constraints)
-        aexit = type(mgr).__aexit__
-        aenter = type(mgr).__aenter__
-        subscription = await aenter(mgr)
-        try:
-            # async with market_api.subscribe(
-            #     dbuild.properties, dbuild.constraints
-            # ) as subscription:
+        async with market_api.subscribe(
+            dbuild.properties, dbuild.constraints
+        ) as subscription:
             offer_d = dict()
 
             timeout_threshold_between_events = 2
@@ -107,13 +102,6 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
                 #     datetime.now() - time_start
                 # ).seconds > timeout_threshold_between_events:
                 #     return offers
-        except ValueError:
-            print("VALUE ERROR")
-        except:
-            if not await aexit(mgr, *sys.exc_info()):
-                raise
-        else:
-            await aexit(mgr, None, None, None)
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
