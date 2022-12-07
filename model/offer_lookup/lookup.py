@@ -63,15 +63,22 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
         dbuild.add(yp.NodeInfo(name="some scanning node", subnet_tag=subnet_tag))
         dbuild.add(yp.Activity(expiration=datetime.now(timezone.utc)))
         await dbuild.decorate(MyPayload())
-        debug.dlog(dbuild)
         # offers.clear()
         # offers = []
         offer_ids_seen = set()
         dupcount = 0
-        async with market_api.subscribe(
-            dbuild.properties, dbuild.constraints
-        ) as subscription:
+        from pprint import pprint
+
+        mgr = market_api.subscribe(dbuild.properties, dbuild.constraints)
+        aexit = type(mgr).__aexit__
+        aenter = type(mgr).__aenter__
+        subscription = await aenter(mgr)
+        try:
+            # async with market_api.subscribe(
+            #     dbuild.properties, dbuild.constraints
+            # ) as subscription:
             offer_d = dict()
+
             timeout_threshold_between_events = 2
             time_start = datetime.now()
             async for event in subscription.events():
@@ -100,6 +107,13 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
                 #     datetime.now() - time_start
                 # ).seconds > timeout_threshold_between_events:
                 #     return offers
+        except ValueError:
+            print("VALUE ERROR")
+        except:
+            if not await aexit(mgr, *sys.exc_info()):
+                raise
+        else:
+            await aexit(mgr, None, None, None)
 
 
 def _list_offers_on_stats(send_end, subnet_tag: str):
