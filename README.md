@@ -57,8 +57,20 @@ if name or address headings are clicked on, sorting is strictly on either of the
 
 # requirements
 yagna or golemsp version v0.12.0++ (beginning with Marble Castle)
+```bash
+$ curl -sSf https://join.golem.network/as-requestor | bash -
+```
+
 yapapi
+```bash
+$ pip install -U yapapi
+```
+
 either yagna or golemsp must be running
+```bash
+$ yagna service run
+```
+
 the app-key should be in the environment (see section on app-key for details)
 
 _python should have been compiled with Tcl support_. this is the default on Windows. this is available as a package on ubuntu. see below. 
