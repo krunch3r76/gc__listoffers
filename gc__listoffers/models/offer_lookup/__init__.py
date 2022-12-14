@@ -1,9 +1,10 @@
-from gc__listoffers.models.sql import create_database, build_database
+from model.sql import create_database, build_database
 from .lookup import list_offers
 import sys  # debug
 import json
 import debug
-from debug import logger
+
+
 import importlib
 
 yapapi_loader = importlib.util.find_spec("yapapi")
@@ -24,21 +25,36 @@ class OfferLookup:
 
     # _-_-_-_- __init__ _-_-_-_-
     def __init__(self):
-        self._session_id = 1 # updates from input if change
+        self._session_id = "-1"
         self._con = None
 
     # _-_-_-_- __call __ _-_-_-_-
-    async def __call__(self, id_, subnet_tag, sql, manual_probe):
+    async def __call__(self, id_, subnet_tag, sql, manual_probe=False, appkey=""):
         """find offers, recreate database, execute sql
         , return sqlite rows"""
         # print(f"[OfferLookup::__call__()] called with id {id_}")
+        import os
+
+        offers = []
+        os.environ["YAGNA_APPKEY"] = (
+            appkey if appkey != "" else os.environ.get("YAGNA_APPKEY", "")
+        )
         rows = []
 
         if id_ != self._session_id:
-            self._session_id = id_
             # scan offers anew
             try:
-                offers = await list_offers(subnet_tag, manual_probe)  # this is the one
+                async for offers_sub in list_offers(
+                    subnet_tag,
+                    manual_probe,
+                    timeout=8,
+                ):
+                    offers.extend(offers_sub)
+                # offers = await list_offers(
+                #     subnet_tag,
+                #     manual_probe,
+                #     timeout=18 if subnet_tag == "hybrid-mainnet" else 8,
+                # )  # this is the one
                 # on mainnet
             except ya_market.exceptions.ApiException as e:
                 rows.extend(["error", e.status])  # 401 is invalid
@@ -54,27 +70,22 @@ class OfferLookup:
                 if offers != None:  # kludge
                     if len(offers) > 0:
                         debug.dlog(
-                            f"outputting first offer returned by"
+                            f"outputting first offer of type {type(offers[0])} returned by"
                             + f"list_offers routine: {offers[0]}",
                             2,
                         )
 
                     # recreate in memory database
-                    if self._con != None:
+                    if self._con:
                         self._con.close()
                     self._con = create_database()
-                    logger.debug("DB CREATED")
                     build_database(self._con, offers)
+                    self._session_id = id_
 
         if len(rows) == 0:
             cur = self._con.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
             debug.dlog(sql)
             rows = cur.execute(sql).fetchall()
-
         # rows = self._con.execute(sql).fetchall()
-                # nt = SelectionRecord(**recv)
-                # pprint(nt)
-        # rows_as_nts = [ SelectionRecord(**row) for row in rows ]
-        # return rows_as_nts
         return rows
