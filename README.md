@@ -7,7 +7,7 @@ the problem gc__listoffers solves is 1) for providers to see at a cursory glance
 
 **PEACE OF MIND: THIS IS A COMPLETELY FREE SERVICE. it does not spend any glm. the app-key may be necessary, however, to get information about providers**
 
-**NOTE: you will see yourself listed among the results unless the probe for offers was made manually (non-default)**
+**NOTE: you won't see yourself listed among the results unless the probe for offers was made over stats (disabled feature)**
 
 # quick install
 head over to releases and download the zip or tar file from the latest release. extract and double click gc__listoffers.py
