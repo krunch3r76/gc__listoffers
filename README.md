@@ -110,6 +110,9 @@ $ python3 ./gc__listoffers.py
 ```
 follow a similar logic for Windows
 
+# troubleshooting
+if the console helper reports not understanding why it got no results, your yapapi library is most likely not up to date. please run `pip install yapapi -U`
+
 # advanced (TEMPORARILY NON-APPLICABLE)
 ### starting for remote interaction (for systems without internet connectivity besides containerized golem)
 **REMOTE INTERACTION IS BROKEN, IT WILL BE FIXED SOON**
