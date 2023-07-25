@@ -24,6 +24,7 @@ if yapapi_loader:
     from yapapi.rest import Configuration, Market, Activity, Payment  # noqa
     import yapapi
     import aiohttp
+    from yapapi.config import ApiConfig
 
 from dataclasses import dataclass
 
@@ -55,7 +56,9 @@ async def _list_offers(subnet_tag: str, timeout=None, on_offer=None):
         )
 
     # fp = open("debugmsg.txt", "w")
-    conf = Configuration()  # this configures access to the yagna daemon
+    conf = Configuration(
+        api_config=ApiConfig()
+    )  # this configures access to the yagna daemon
     # using the environment appkey
     async with conf.market() as client:
         market_api = Market(client)
@@ -321,9 +324,9 @@ async def list_offers(
                 # elapsed = (datetime.now() - now).seconds
                 # if elapsed > timeout_threshold:
                 #     timed_out = True
-            except yapapi.rest.configuration.MissingConfiguration as e:
-                debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
-                raise e
+            # except yapapi.rest.configuration.MissingConfiguration as e:
+            #     debug.dlog("raising " "yapapi.rest.configuration.MissingConfiguration")
+            #     raise e
             except ya_market.exceptions.ApiException as e:
                 raise e
             except aiohttp.client_exceptions.ClientConnectorError as e:
