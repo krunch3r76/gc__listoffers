@@ -22,7 +22,6 @@ if yapapi_loader:
 
 
 class OfferLookup:
-
     # _-_-_-_- __init__ _-_-_-_-
     def __init__(self):
         self._session_id = "-1"
@@ -60,7 +59,7 @@ class OfferLookup:
                 rows.extend(["error", e.status])  # 401 is invalid
                 # application key
                 debug.dlog(rows)
-            except yapapi.rest.configuration.MissingConfiguration:
+            except yapapi.config.MissingConfiguration:
                 rows.extend(["error", 401])
             except aiohttp.client_exceptions.ClientConnectorError:
                 rows.extend(["error", 111])
